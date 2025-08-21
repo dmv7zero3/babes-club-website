@@ -1,0 +1,219 @@
+.
+├── AWS_Lambda_Functions
+├── babel.config.js
+├── cspell.json
+├── package-lock.json
+├── package.json
+├── postcss.config.cjs
+├── public
+│   ├── images
+│   │   └── logo
+│   │       └── street-lawyer-services-logo.jpg
+│   ├── index.html
+│   ├── js
+│   │   └── gsap
+│   │       ├── MorphSVGPlugin.js
+│   │       ├── MorphSVGPlugin.min.js
+│   │       ├── MorphSVGPlugin.min.js.map
+│   │       ├── SplitText.min.js
+│   │       ├── SplitText.min.js.map
+│   │       ├── TextPlugin.min.js
+│   │       └── TextPlugin.min.js.map
+│   ├── offline.html
+│   └── videos
+├── README.md
+├── scripts
+│   ├── cloudfront
+│   │   └── invalidate-distribution.sh
+│   ├── cloudfront-distribution.js
+│   ├── convert-fonts.sh
+│   ├── fix-s3-caching.sh
+│   ├── generate-optimized-images.js
+│   ├── generate-sitemap.js
+│   ├── generate-static-templates.js
+│   ├── s3-caching
+│   │   ├── fix-all-caching.sh
+│   │   ├── fix-css-caching.sh
+│   │   ├── fix-fonts-caching.sh
+│   │   ├── fix-html-caching.sh
+│   │   ├── fix-images-caching.sh
+│   │   ├── fix-js-caching.sh
+│   │   └── verify-caching.sh
+│   ├── set-s3-cacheing-commands.md
+│   └── setup-cloudfront-behaviors.sh
+├── src
+│   ├── App.tsx
+│   ├── assets
+│   │   ├── images
+│   │   └── videos
+│   ├── businessInfo
+│   │   ├── business-data.json
+│   │   └── business.ts
+│   ├── components
+│   │   ├── ContactForm
+│   │   │   ├── ContactForm.tsx
+│   │   │   └── form.actions.ts
+│   │   ├── Footer
+│   │   │   ├── Credentials.tsx
+│   │   │   └── index.tsx
+│   │   ├── Galleries
+│   │   │   └── Swiper
+│   │   │       └── swiper.css
+│   │   ├── Header
+│   │   │   ├── DesktopHeader
+│   │   │   │   └── index.tsx
+│   │   │   ├── index.tsx
+│   │   │   ├── MobileHeader
+│   │   │   │   ├── index.tsx
+│   │   │   │   ├── MenuButton.tsx
+│   │   │   │   └── MobileMenuOverlay
+│   │   │   │       ├── components
+│   │   │   │       │   ├── MenuContactInfo.tsx
+│   │   │   │       │   ├── MenuLogo.tsx
+│   │   │   │       │   ├── MenuNavigation.tsx
+│   │   │   │       │   ├── MenuParticles.tsx
+│   │   │   │       │   └── MenuSocial.tsx
+│   │   │   │       ├── hooks
+│   │   │   │       │   ├── useBodyScrollLock.ts
+│   │   │   │       │   ├── useKeyboardHandler.ts
+│   │   │   │       │   └── useMenuAnimation.ts
+│   │   │   │       ├── index.tsx
+│   │   │   │       ├── styles
+│   │   │   │       │   └── overlayStyles.ts
+│   │   │   │       └── types
+│   │   │   │           └── menuTypes.ts
+│   │   │   └── MobileHeader.zip
+│   │   ├── Icons
+│   │   │   └── index.tsx
+│   │   ├── MorphIcon
+│   │   │   └── index.tsx
+│   │   └── Toast
+│   │       └── index.tsx
+│   ├── data
+│   │   ├── links
+│   │   │   ├── appLinks.ts
+│   │   │   ├── navLinks.ts
+│   │   │   └── socialLinks.ts
+│   │   └── seo
+│   │       ├── backlinks.ts
+│   │       ├── defaultMeta.js
+│   │       ├── defaultMeta.ts
+│   │       ├── mediaLinks.tsx
+│   │       └── sameas.ts
+│   ├── declarations.d.ts
+│   ├── env
+│   │   └── env.ts
+│   ├── error
+│   │   ├── ApiError.ts
+│   │   ├── ErrorBoundary
+│   │   │   ├── index.tsx
+│   │   │   └── types.ts
+│   │   ├── FormError.ts
+│   │   ├── MissingEnvVarError.ts
+│   │   ├── NotFoundPage
+│   │   │   ├── index.tsx
+│   │   │   └── types.ts
+│   │   └── PermissionError.ts
+│   ├── fonts
+│   │   ├── OpenSans
+│   │   │   ├── OpenSans-Bold.ttf
+│   │   │   ├── OpenSans-Bold.woff
+│   │   │   ├── OpenSans-Bold.woff2
+│   │   │   ├── OpenSans-BoldItalic.ttf
+│   │   │   ├── OpenSans-BoldItalic.woff
+│   │   │   ├── OpenSans-BoldItalic.woff2
+│   │   │   ├── OpenSans-ExtraBold.ttf
+│   │   │   ├── OpenSans-ExtraBold.woff
+│   │   │   ├── OpenSans-ExtraBold.woff2
+│   │   │   ├── OpenSans-ExtraBoldItalic.ttf
+│   │   │   ├── OpenSans-ExtraBoldItalic.woff
+│   │   │   ├── OpenSans-ExtraBoldItalic.woff2
+│   │   │   ├── OpenSans-Italic.ttf
+│   │   │   ├── OpenSans-Italic.woff
+│   │   │   ├── OpenSans-Italic.woff2
+│   │   │   ├── OpenSans-Medium.ttf
+│   │   │   ├── OpenSans-Medium.woff
+│   │   │   ├── OpenSans-Medium.woff2
+│   │   │   ├── OpenSans-MediumItalic.ttf
+│   │   │   ├── OpenSans-MediumItalic.woff
+│   │   │   ├── OpenSans-MediumItalic.woff2
+│   │   │   ├── OpenSans-Regular.ttf
+│   │   │   ├── OpenSans-Regular.woff
+│   │   │   ├── OpenSans-Regular.woff2
+│   │   │   ├── OpenSans-SemiBold.ttf
+│   │   │   ├── OpenSans-SemiBold.woff
+│   │   │   ├── OpenSans-SemiBold.woff2
+│   │   │   ├── OpenSans-SemiBoldItalic.ttf
+│   │   │   ├── OpenSans-SemiBoldItalic.woff
+│   │   │   └── OpenSans-SemiBoldItalic.woff2
+│   │   └── Oswald
+│   │       ├── Oswald-Bold.ttf
+│   │       ├── Oswald-Bold.woff
+│   │       ├── Oswald-Bold.woff2
+│   │       ├── Oswald-ExtraLight.ttf
+│   │       ├── Oswald-ExtraLight.woff
+│   │       ├── Oswald-ExtraLight.woff2
+│   │       ├── Oswald-Light.ttf
+│   │       ├── Oswald-Light.woff
+│   │       ├── Oswald-Light.woff2
+│   │       ├── Oswald-Medium.ttf
+│   │       ├── Oswald-Medium.woff
+│   │       ├── Oswald-Medium.woff2
+│   │       ├── Oswald-Regular.ttf
+│   │       ├── Oswald-Regular.woff
+│   │       ├── Oswald-Regular.woff2
+│   │       ├── Oswald-SemiBold.ttf
+│   │       ├── Oswald-SemiBold.woff
+│   │       └── Oswald-SemiBold.woff2
+│   ├── index.tsx
+│   ├── layouts
+│   ├── lib
+│   │   ├── api
+│   │   │   └── apiClient.ts
+│   │   ├── context
+│   │   │   └── README.md
+│   │   ├── hooks
+│   │   │   └── README.md
+│   │   ├── README.md
+│   │   └── types
+│   │       └── README.md
+│   ├── pages
+│   │   └── Homepage
+│   │       └── index.tsx
+│   ├── routes.tsx
+│   ├── styles
+│   │   ├── buttons.css
+│   │   ├── fonts.css
+│   │   ├── gradients.css
+│   │   ├── index.css
+│   │   └── reset.css
+│   └── utils
+│       ├── accordion.js
+│       ├── autoplay-videos.tsx
+│       ├── bounceAnimation.js
+│       ├── docs
+│       │   ├── morph-icons.md
+│       │   └── video-image-optimization-guide.md
+│       ├── horizontal-helper-gsap.js
+│       ├── index.ts
+│       ├── morph-icons.ts
+│       └── ScrollToTop.tsx
+├── tailwind.config.js
+├── tree-directory-structure.txt
+├── tsconfig.json
+└── webpack
+    ├── config
+    │   ├── optimization.js
+    │   ├── paths.js
+    │   ├── plugins
+    │   │   ├── common.js
+    │   │   ├── dev.js
+    │   │   ├── prod.js
+    │   │   └── s3-upload-plugin.js
+    │   ├── routes-meta.js
+    │   └── rules.js
+    ├── webpack.common.js
+    ├── webpack.dev.js
+    └── webpack.prod.js
+
+56 directories, 161 files
