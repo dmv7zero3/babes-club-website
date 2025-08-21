@@ -1,0 +1,40 @@
+{
+  "Name": "moon-lounge-cors-policy",
+  "Comment": "CORS policy for Moon Lounge fonts and assets",
+  "CorsConfig": {
+    "AccessControlAllowOrigins": {
+      "Quantity": 1,
+      "Items": ["*"]
+    },
+    "AccessControlAllowHeaders": {
+      "Quantity": 4,
+      "Items": [
+        "Origin",
+        "Access-Control-Request-Method",
+        "Access-Control-Request-Headers",
+        "Content-Type"
+      ]
+    },
+    "AccessControlAllowMethods": {
+      "Quantity": 2,
+      "Items": ["GET", "HEAD"]
+    },
+    "AccessControlAllowCredentials": false,
+    "AccessControlExposeHeaders": {
+      "Quantity": 1,
+      "Items": ["Access-Control-Allow-Origin"]
+    },
+    "AccessControlMaxAgeSec": 86400,
+    "OriginOverride": true
+  },
+  "CustomHeadersConfig": {
+    "Quantity": 1,
+    "Items": [
+      {
+        "Header": "Cache-Control",
+        "Value": "public, max-age=31536000",
+        "Override": false
+      }
+    ]
+  }
+}

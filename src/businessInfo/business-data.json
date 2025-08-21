@@ -1,0 +1,75 @@
+{
+  "sls-dc": {
+    "business_id": "sls-dc",
+    "business_name": "Street Lawyer Services DC",
+    "description": "The Official page of Street Lawyer Services (SLS) DC. DC’s legendary Cannabis dispensary- Located at 3400 Connecticut Avenue NW. We are opening soon🔥",
+    "tagline": "DC’s Legendary Cannabis Dispensary",
+    "established": "2025",
+    "business_type": ["Cannabis Dispensary", "Weed Shop"],
+    "address": {
+      "street": "3400 Connecticut Avenue NW",
+      "city": "Washington",
+      "state": "DC",
+      "zipCode": "20008",
+      "formatted": "3400 Connecticut Avenue NW, Washington, DC 20008"
+    },
+    "contact": {
+      "email": "info@streetlawyerservices.com",
+      "website": "https://streetlawyerservices.com"
+    },
+    "hours": {
+      "monday": "Coming Soon",
+      "tuesday": "Coming Soon",
+      "wednesday": "Coming Soon",
+      "thursday": "Coming Soon",
+      "friday": "Coming Soon",
+      "saturday": "Coming Soon",
+      "sunday": "Coming Soon"
+    },
+    "features": {
+      "products": [
+        "Premium Cannabis Flower",
+        "Edibles",
+        "Pre-rolls",
+        "Vapes",
+        "Concentrates",
+        "CBD Products"
+      ],
+      "atmosphere": ["Welcoming", "Modern", "Knowledgeable Staff"],
+      "payment": ["Cash", "Debit Card"]
+    },
+    "specialties": [
+      "Premium Cannabis Selection",
+      "Expert Budtenders",
+      "Exclusive DC Strains",
+      "Safe & Legal Access"
+    ],
+    "popular_items": [
+      "SLS Premium Flower",
+      "Edibles",
+      "Pre-rolls",
+      "Vape Cartridges"
+    ],
+    "events": {
+      "grand_opening": "Coming Soon"
+    },
+    "social_media": {
+      "instagram": "https://www.instagram.com/streetlawyerservices/",
+      "facebook": "https://www.facebook.com/profile.php?id=100083761881964",
+      "google_maps": "https://www.google.com/maps/place/SLS+DC+Weed+Dispensary/data=!4m2!3m1!1s0x0:0xe788a107da450fd5?sa=X&ved=1t:2428&ictx=111"
+    },
+    "target_audience": [
+      "Cannabis Enthusiasts",
+      "Medical Patients",
+      "DC Residents",
+      "Visitors 21+"
+    ],
+    "competitive_advantages": [
+      "Legendary DC Brand",
+      "Premium Product Selection",
+      "Central DC Location",
+      "Knowledgeable & Friendly Staff"
+    ],
+    "logo": "/images/logo/street-lawyer-services-logo.jpg"
+  }
+}

@@ -1,0 +1,44 @@
+//tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2015",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "allowJs": true,
+    "checkJs": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": false,
+    "jsx": "react-jsx",
+    "baseUrl": "src",
+    "paths": {
+      "@/*": ["*"],
+      "@templates/*": ["components/templates/*"],
+      "@photos/*": ["assets/images/*"],
+      "@videos/*": ["assets/videos/*"],
+      "@ui/*": ["components/ui/*"]
+    },
+    "outDir": "./dist",
+    "incremental": true,
+    "tsBuildInfoFile": "./node_modules/.cache/typescript/tsbuildinfo"
+  },
+  "include": ["src/**/*"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "_notes",
+    "webpack",
+    "webpack_copy",
+    "copywebpack",
+    "python",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
+}

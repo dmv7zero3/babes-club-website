@@ -1,0 +1,20 @@
+{
+  "Name": "Street Lawyer Services",
+  "Comment": "Simple CORS policy for font files",
+  "CorsConfig": {
+    "AccessControlAllowOrigins": {
+      "Quantity": 1,
+      "Items": ["*"]
+    },
+    "AccessControlAllowHeaders": {
+      "Quantity": 1,
+      "Items": ["*"]
+    },
+    "AccessControlAllowMethods": {
+      "Quantity": 2,
+      "Items": ["GET", "HEAD"]
+    },
+    "AccessControlAllowCredentials": false,
+    "OriginOverride": true
+  }
+}
