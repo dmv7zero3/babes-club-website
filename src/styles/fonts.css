@@ -1,0 +1,42 @@
+/* ==============================================
+   LATO - Regular & Bold
+   ============================================== */
+
+@font-face {
+  font-family: "Lato";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    url("../fonts/Lato/Lato-Regular.woff2") format("woff2"),
+    url("../fonts/Lato/Lato-Regular.woff") format("woff"),
+    url("../fonts/Lato/Lato-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Lato";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src:
+    url("../fonts/Lato/Lato-Bold.woff2") format("woff2"),
+    url("../fonts/Lato/Lato-Bold.woff") format("woff"),
+    url("../fonts/Lato/Lato-Bold.ttf") format("truetype");
+}
+
+/* ==============================================
+   PLAYFAIR DISPLAY - Regular
+   ============================================== */
+
+@font-face {
+  font-family: "Playfair Display";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    url("../fonts/Playfair_Display/PlayfairDisplay-Regular.woff2")
+      format("woff2"),
+    url("../fonts/Playfair_Display/PlayfairDisplay-Regular.woff") format("woff"),
+    url("../fonts/Playfair_Display/PlayfairDisplay-Regular.ttf")
+      format("truetype");
+}
