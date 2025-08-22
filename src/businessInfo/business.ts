@@ -3,7 +3,7 @@ import businessData from "./business-data.json";
 
 type BusinessJson = typeof businessData;
 
-const ACTIVE_BUSINESS_ID = "sls-dc";
+const ACTIVE_BUSINESS_ID = "cafe-opera";
 const ACTIVE_BUSINESS = (businessData as BusinessJson)[ACTIVE_BUSINESS_ID];
 
 if (!ACTIVE_BUSINESS) {
@@ -24,7 +24,7 @@ export const BUSINESS_STATE = ACTIVE_BUSINESS.address.state;
 export const BUSINESS_ZIP = ACTIVE_BUSINESS.address.zipCode;
 export const EMAIL = ACTIVE_BUSINESS.contact.email;
 
-// Hours (all days are 'Coming Soon' for now)
+// Hours
 export const BUSINESS_HOURS = ACTIVE_BUSINESS.hours;
 
 // Social Media
@@ -33,9 +33,15 @@ export const INSTAGRAM_URL = SOCIAL_MEDIA.instagram || "";
 export const FACEBOOK_URL = SOCIAL_MEDIA.facebook || "";
 export const GOOGLE_MAPS_URL = SOCIAL_MEDIA.google_maps || "";
 
+// Online Ordering
+export const ONLINE_ORDERING_URL = ACTIVE_BUSINESS.online_ordering || "";
+
+// Dine-in Notice
+export const DINE_IN_NOTICE = ACTIVE_BUSINESS.dine_in_notice || "";
+
 // Logo
 export const LOGO_URL =
-  ACTIVE_BUSINESS.logo || "/images/logo/street-lawyer-services-logo.jpg";
+  ACTIVE_BUSINESS.logo || "/images/logo/cafe-opera-logo.png";
 
 // Helper: formatted address
 export const getFormattedAddress = (): string => {

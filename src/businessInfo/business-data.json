@@ -1,75 +1,111 @@
 {
-  "sls-dc": {
-    "business_id": "sls-dc",
-    "business_name": "Street Lawyer Services DC",
-    "description": "The Official page of Street Lawyer Services (SLS) DC. DC’s legendary Cannabis dispensary- Located at 3400 Connecticut Avenue NW. We are opening soon🔥",
-    "tagline": "DC’s Legendary Cannabis Dispensary",
-    "established": "2025",
-    "business_type": ["Cannabis Dispensary", "Weed Shop"],
+  "cafe-opera": {
+    "business_id": "cafe-opera",
+    "business_name": "Cafe Opera",
+    "description": "Casual Chinese eatery serving authentic dishes with health-minded items (no trans fats), including vegetarian plates. Experience the finest Chinese and Pan-Asian cuisine with fresh ingredients and meticulous cooking.",
+    "tagline": "Authentic Chinese & Pan-Asian Cuisine",
+    "established": "2010",
+    "business_type": ["Chinese Restaurant", "Asian Cuisine", "Casual Dining"],
     "address": {
-      "street": "3400 Connecticut Avenue NW",
-      "city": "Washington",
-      "state": "DC",
-      "zipCode": "20008",
-      "formatted": "3400 Connecticut Avenue NW, Washington, DC 20008"
+      "street": "42882 Truro Parish Dr STE 104",
+      "city": "Ashburn",
+      "state": "VA",
+      "zipCode": "20148",
+      "formatted": "42882 Truro Parish Dr STE 104, Ashburn, VA 20148"
     },
     "contact": {
-      "email": "info@streetlawyerservices.com",
-      "website": "https://streetlawyerservices.com"
+      "phone": "(703) 858-1441",
+      "email": "info@cafeopera.net",
+      "website": "https://cafeopera.net"
     },
     "hours": {
-      "monday": "Coming Soon",
-      "tuesday": "Coming Soon",
-      "wednesday": "Coming Soon",
-      "thursday": "Coming Soon",
-      "friday": "Coming Soon",
-      "saturday": "Coming Soon",
-      "sunday": "Coming Soon"
+      "monday": "11:00 AM - 9:00 PM",
+      "tuesday": "11:00 AM - 9:00 PM",
+      "wednesday": "11:00 AM - 9:00 PM",
+      "thursday": "11:00 AM - 9:00 PM",
+      "friday": "11:00 AM - 9:30 PM",
+      "saturday": "12:00 PM - 9:30 PM",
+      "sunday": "12:00 PM - 9:00 PM"
     },
     "features": {
-      "products": [
-        "Premium Cannabis Flower",
-        "Edibles",
-        "Pre-rolls",
-        "Vapes",
-        "Concentrates",
-        "CBD Products"
+      "dining_options": ["Dine-in", "Takeout", "Delivery"],
+      "service_options": [
+        "Vegan Options",
+        "Vegetarian Plates",
+        "Kids Menu",
+        "Wi-Fi",
+        "Health-Minded Items (No Trans Fats)"
       ],
-      "atmosphere": ["Welcoming", "Modern", "Knowledgeable Staff"],
-      "payment": ["Cash", "Debit Card"]
+      "atmosphere": ["Casual", "Family-Friendly", "Authentic"],
+      "payment": ["Cash", "Credit Cards", "Debit Cards"]
     },
     "specialties": [
-      "Premium Cannabis Selection",
-      "Expert Budtenders",
-      "Exclusive DC Strains",
-      "Safe & Legal Access"
+      "Sweet & Sour Chicken",
+      "Kung Pao Chicken",
+      "General Tso's Chicken",
+      "Orange Chicken",
+      "Shrimp with Walnuts",
+      "Pineapple Fried Rice",
+      "Crispy Beef",
+      "Panang Chicken"
     ],
     "popular_items": [
-      "SLS Premium Flower",
-      "Edibles",
-      "Pre-rolls",
-      "Vape Cartridges"
+      "Sweet & Sour Chicken",
+      "Kung Pao Chicken",
+      "General Tso's Chicken",
+      "Orange Chicken",
+      "Pineapple Fried Rice",
+      "Spring Rolls",
+      "Crab Rangoon",
+      "Chicken Satay"
+    ],
+    "cuisine_types": [
+      "Chinese",
+      "Pan-Asian",
+      "Thai",
+      "Vegetarian",
+      "Vegan Options"
+    ],
+    "dietary_accommodations": [
+      "Vegetarian",
+      "Vegan Options",
+      "No Trans Fats",
+      "Health-Conscious Options",
+      "Kids Menu"
     ],
     "events": {
-      "grand_opening": "Coming Soon"
+      "family_dining": "Daily",
+      "lunch_specials": "Monday - Friday"
     },
     "social_media": {
-      "instagram": "https://www.instagram.com/streetlawyerservices/",
-      "facebook": "https://www.facebook.com/profile.php?id=100083761881964",
-      "google_maps": "https://www.google.com/maps/place/SLS+DC+Weed+Dispensary/data=!4m2!3m1!1s0x0:0xe788a107da450fd5?sa=X&ved=1t:2428&ictx=111"
+      "website": "https://cafeopera.net",
+      "google_maps": "https://www.google.com/maps/place/Cafe+Opera/@39.0436,-77.4875,17z",
+      "facebook": "https://www.facebook.com/CafeOpera.VA",
+      "instagram": "https://www.instagram.com/cafe_opera_asian_cuisine/"
     },
     "target_audience": [
-      "Cannabis Enthusiasts",
-      "Medical Patients",
-      "DC Residents",
-      "Visitors 21+"
+      "Families",
+      "Chinese Food Enthusiasts",
+      "Health-Conscious Diners",
+      "Local Ashburn Community",
+      "Vegetarians & Vegans",
+      "Lunch & Dinner Customers"
     ],
     "competitive_advantages": [
-      "Legendary DC Brand",
-      "Premium Product Selection",
-      "Central DC Location",
-      "Knowledgeable & Friendly Staff"
+      "Authentic Chinese & Pan-Asian Cuisine",
+      "Health-Minded Cooking (No Trans Fats)",
+      "Extensive Vegetarian & Vegan Options",
+      "Family-Friendly Atmosphere",
+      "Fresh Ingredients & Meticulous Cooking",
+      "Convenient Ashburn Location",
+      "Kids Menu Available"
     ],
-    "logo": "/images/logo/street-lawyer-services-logo.jpg"
+    "logo": "/images/logo/cafe-opera-logo.png",
+    "dine_in_notice": "No Dine-in Service From 2:30pm – 4:30pm Daily",
+    "location_details": {
+      "parking": "Available",
+      "accessibility": "Wheelchair Accessible"
+    },
+    "online_ordering": "https://www.mealage.com/2foodmenu8.jsp?sessionid=1423263736473A2601:a:401:3674:259d:4e38:cddb:1847dgmicgflvwztemsjxgrswgdvlumg&restaurantId=9503"
   }
 }
