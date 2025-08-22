@@ -4,8 +4,6 @@
 set -e
 
 FONT_DIRS=(
-  "src/fonts/Lato"
-  "src/fonts/Playfair_Display"
   "src/fonts/Kristi"
 )
 

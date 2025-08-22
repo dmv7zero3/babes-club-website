@@ -16,7 +16,7 @@ const designTokens = {
       500: "#627d98",
       600: "#486581",
       700: "#334e68",
-      800: "#243b53", 
+      800: "#243b53",
       900: "#1B365D", // Primary Heritage Opera Blue
       950: "#102a4c",
       DEFAULT: "#1B365D",
@@ -181,7 +181,10 @@ export default {
       },
 
       // Typography system
-      fontFamily: designTokens.typography.fontFamily,
+      fontFamily: {
+        ...designTokens.typography.fontFamily,
+        kristi: ["Kristi", "cursive"],
+      },
       fontSize: designTokens.typography.fontSize,
 
       // Consistent spacing system (8px grid)
@@ -233,7 +236,7 @@ export default {
         "slide-down": "slideDown 0.4s ease-out",
         "scale-in": "scaleIn 0.3s ease-out",
         "glow-pulse": "glowPulse 2s ease-in-out infinite",
-        "float": "float 3s ease-in-out infinite",
+        float: "float 3s ease-in-out infinite",
       },
 
       keyframes: {
