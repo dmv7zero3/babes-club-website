@@ -1,4 +1,18 @@
 /* ==============================================
+   KRISTI - Regular
+   ============================================== */
+
+@font-face {
+  font-family: "Kristi";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    url("../fonts/Kristi/Kristi-Regular.woff2") format("woff2"),
+    url("../fonts/Kristi/Kristi-Regular.woff") format("woff"),
+    url("../fonts/Kristi/Kristi-Regular.ttf") format("truetype");
+}
+/* ==============================================
    LATO - Regular & Bold
    ============================================== */
 
