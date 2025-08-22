@@ -4,8 +4,8 @@
 set -e
 
 FONT_DIRS=(
-  "src/fonts/OpenSans"
-  "src/fonts/Oswald"
+  "src/fonts/Lato"
+  "src/fonts/Playfair_Display"
 )
 
 # Activate venv if not already active

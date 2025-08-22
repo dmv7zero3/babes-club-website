@@ -1,7 +1,6 @@
-import React from "react";
-
+import CafeOperaHeroBanner from "./components/CafeOperaHeroBanner";
 const HomePage: React.FC = () => {
-  return <div>Hello World</div>;
+  return <CafeOperaHeroBanner />;
 };
 
 export default HomePage;
