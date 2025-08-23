@@ -1,17 +1,19 @@
 // src/pages/AboutPage/index.tsx
 
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import InnerPageHero from "../../components/Hero/InnerPageHero";
+import AboutContent from "./components/AboutContent";
+import FeaturedArticle from "./components/FeaturedArticle";
 
 const AboutPage: React.FC = () => {
-  const sectionRef = useRef<HTMLElement>(null);
-
   return (
     <>
       <InnerPageHero
         backgroundImage="/images/banner/appetizer-layout.jpg"
         text="About"
       />
+      <AboutContent />
+      <FeaturedArticle />
     </>
   );
 };
