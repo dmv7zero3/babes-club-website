@@ -43,12 +43,12 @@ const FoodShowcase: React.FC = () => {
   return (
     <section
       ref={sectionRef}
-      className="relative overflow-hidden section-light bg-warm-ivory-100"
+      className="relative overflow-hidden bg-warm-ivory-100"
     >
       {/* Background Accent */}
-      <div className="absolute inset-0 opacity-50 bg-gradient-to-br from-warm-ivory-50 to-warm-ivory-200" />
+      {/* <div className="absolute inset-0 opacity-50 bg-gradient-to-br from-warm-ivory-50 to-warm-ivory-200" /> */}
 
-      <div className="relative z-10 layout-container">
+      <div className="relative z-10 w-11/12 mx-auto max-w-7xl py-22 lg:py-24">
         <SectionHeader title="delightful" subtitle="EXPERIENCE" />
 
         <FoodGrid items={foodItems} />

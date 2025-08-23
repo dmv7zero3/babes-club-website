@@ -66,7 +66,7 @@ const ParallaxSection: React.FC<ParallaxSectionProps> = ({
           background-image: linear-gradient(rgba(0,0,0,${overlay}), rgba(0,0,0,${overlay})), url(${imagePath});
           background-size: cover;
           background-attachment: scroll;
-          min-height: 400px;
+          min-height: 405px;
         }
 
         @media (min-width: 1024px) {

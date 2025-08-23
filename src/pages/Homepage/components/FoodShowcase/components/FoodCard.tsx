@@ -25,10 +25,10 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, index }) => {
 
       {/* Content */}
       <div className="p-8 lg:p-8">
-        <h2 className="mb-6 text-5xl font-semibold transition-colors duration-300 md:text-3xl lg:mb-3 font-heading lg:text-2xl text-heritage-blue ">
+        <h2 className="mb-6 text-6xl font-semibold transition-colors duration-300 md:text-3xl lg:mb-3 font-heading lg:text-2xl text-heritage-blue ">
           {item.name}
         </h2>
-        <p className="text-4xl md:text-3xl text-rich-mahogany-700 lg:text-lg">
+        <p className="text-5xl md:text-3xl text-rich-mahogany-700 lg:text-lg">
           {item.description}
         </p>
       </div>

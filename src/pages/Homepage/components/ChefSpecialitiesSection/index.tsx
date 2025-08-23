@@ -56,13 +56,13 @@ const ChefSpecialitiesSection: React.FC = () => {
           <div className="space-y-8 lg:pl-8">
             {/* Section Header */}
             <div className="space-y-4">
-              <h1 className="text-4xl font-semibold tracking-wide uppercase font-heading md:text-5xl lg:text-6xl text-heritage-blue">
+              <h1 className="text-5xl font-normal tracking-wide text-center uppercase lg:text-left mb-14 font-heading text-heritage-blue">
                 Chef Specialties
               </h1>
             </div>
 
             {/* Chef Specialties List */}
-            <div className="space-y-6">
+            <div className="space-y-7 lg:space-y-4">
               {chefSpecialties.map((item, index) => (
                 <div
                   key={item.id}
@@ -71,12 +71,12 @@ const ChefSpecialitiesSection: React.FC = () => {
                     animationDelay: `${index * 100}ms`,
                   }}
                 >
-                  <div className="space-y-2">
-                    <h2 className="text-2xl font-semibold transition-colors duration-300 font-heading lg:text-2xl text-heritage-blue hover:text-heritage-gold">
+                  <div className="space-y-5">
+                    <h2 className="text-5xl font-normal transition-colors duration-300 lg:text-3xl font-heading text-heritage-blue">
                       {item.name}
                     </h2>
                     {item.description && (
-                      <p className="text-sm leading-relaxed text-rich-mahogany-700 lg:text-base">
+                      <p className="text-4xl font-normal leading-relaxed text-rich-mahogany-700 lg:text-base">
                         {item.description}
                       </p>
                     )}
@@ -86,12 +86,12 @@ const ChefSpecialitiesSection: React.FC = () => {
             </div>
 
             {/* Optional CTA or additional info */}
-            <div className="pt-4">
-              <p className="text-sm italic text-heritage-gold">
+            {/* <div className="pt-4">
+              <p className="text-sm italic text-heritage-gold-700">
                 All chef specialties are freshly prepared to order using
                 authentic recipes and premium ingredients.
               </p>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

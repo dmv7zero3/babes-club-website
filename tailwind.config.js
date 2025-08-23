@@ -352,8 +352,7 @@ export default {
 
         // Layout helpers
         ".container": {
-          "@apply w-10/12 max-w-[1400px] mx-auto px-4 py-16 sm:px-6 lg:px-8 lg:py-24":
-            {},
+          "@apply w-10/12 max-w-[1400px] mx-auto  py-22  lg:px-8 lg:py-24": {},
         },
 
         ".layout-container": {
