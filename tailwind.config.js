@@ -197,25 +197,6 @@ export default {
         38: "9.5rem", // 152px
       },
 
-      // Container system for consistent layouts
-      container: {
-        center: true,
-        padding: {
-          DEFAULT: "1rem",
-          sm: "2rem",
-          lg: "4rem",
-          xl: "5rem",
-          "2xl": "6rem",
-        },
-        screens: {
-          sm: "640px",
-          md: "768px",
-          lg: "1024px",
-          xl: "1280px",
-          "2xl": "1400px",
-        },
-      },
-
       // Enhanced shadow system for Heritage Opera
       boxShadow: {
         opera: "0 4px 20px rgba(27, 54, 93, 0.08)",
@@ -370,6 +351,11 @@ export default {
         },
 
         // Layout helpers
+        ".container": {
+          "@apply w-10/12 max-w-[1400px] mx-auto px-4 py-16 sm:px-6 lg:px-8 lg:py-24":
+            {},
+        },
+
         ".layout-container": {
           "@apply container mx-auto px-4 sm:px-6 lg:px-8": {},
         },

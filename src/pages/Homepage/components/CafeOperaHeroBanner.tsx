@@ -3,7 +3,7 @@ import ScrollIndicator from "./ScrollIndicator";
 
 const CafeOperaHeroBanner = () => {
   return (
-    <div className="relative flex items-center justify-center h-screen overflow-hidden">
+    <div className="relative flex items-center justify-center h-[85vh] lg:h-[100vh] overflow-hidden">
       {/* Background Image */}
       <div
         className="absolute inset-0 bg-center bg-no-repeat bg-cover"

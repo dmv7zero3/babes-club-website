@@ -11,7 +11,7 @@ const businessDataPath = path.resolve(
   "src/businessInfo/business-data.json"
 );
 const businessData = JSON.parse(fs.readFileSync(businessDataPath, "utf-8"));
-const business = businessData["sls-dc"];
+const business = businessData["cafe-opera"];
 
 const ORIGIN =
   process.env.SITE_ORIGIN || business.contact.website || "https://example.com";
@@ -50,7 +50,7 @@ export const ROUTE_META = [
     path: "/",
     title: `${business.business_name} | ${business.tagline}`,
     description: business.description,
-    ogImage: `${ORIGIN}/images/og-image/sls-dc-og-image.jpg`,
+    ogImage: `${ORIGIN}/images/og-image/cafe-opera-og-image.jpg`,
     jsonLd: [ORG_ENTITY, WEBSITE_ENTITY],
   },
   // Add more routes as needed for SLS DC

@@ -24,11 +24,11 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, index }) => {
       </div>
 
       {/* Content */}
-      <div className="p-6 lg:p-8">
-        <h4 className="mb-3 text-xl font-semibold transition-colors duration-300 font-heading lg:text-2xl text-heritage-blue group-hover:text-heritage-gold">
+      <div className="p-8 lg:p-8">
+        <h2 className="mb-6 text-5xl font-semibold transition-colors duration-300 md:text-3xl lg:mb-3 font-heading lg:text-2xl text-heritage-blue ">
           {item.name}
-        </h4>
-        <p className="text-sm leading-relaxed text-rich-mahogany-700 lg:text-base">
+        </h2>
+        <p className="text-4xl md:text-3xl text-rich-mahogany-700 lg:text-lg">
           {item.description}
         </p>
       </div>

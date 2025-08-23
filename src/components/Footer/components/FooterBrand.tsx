@@ -12,32 +12,34 @@ const FooterBrand: React.FC<FooterBrandProps> = ({
   established,
 }) => {
   return (
-    <div className="space-y-6">
-      {/* Logo and Brand */}
+    <div className="space-y-4 sm:space-y-6">
+      {/* Logo and Brand - Mobile optimized */}
       <Link to="/" className="block">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3 sm:space-x-4">
           <img
             src={logo}
             alt={`${businessName} Logo`}
-            className="object-contain w-12 h-12"
+            className="object-contain w-10 h-10 sm:w-12 sm:h-12"
             loading="lazy"
           />
           <div>
-            <h3 className="text-2xl font-semibold font-heading text-heritage-ivory">
+            <h3 className="text-xl font-semibold sm:text-2xl font-heading text-heritage-ivory">
               {businessName}
             </h3>
-            <p className="text-sm font-medium text-heritage-gold">{tagline}</p>
+            <p className="text-xs font-medium sm:text-sm text-heritage-gold">
+              {tagline}
+            </p>
           </div>
         </div>
       </Link>
 
-      {/* Description */}
-      <p className="max-w-xs leading-relaxed text-warm-ivory-200">
+      {/* Description - Mobile optimized line height and max width */}
+      <p className="max-w-xs text-sm leading-relaxed sm:text-base sm:max-w-sm text-warm-ivory-200">
         {description}
       </p>
 
-      {/* Established */}
-      <div className="text-sm text-heritage-gold">
+      {/* Established - Mobile optimized */}
+      <div className="text-xs sm:text-sm text-heritage-gold">
         <span className="font-medium">Established {established}</span>
       </div>
     </div>

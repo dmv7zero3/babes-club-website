@@ -2,7 +2,10 @@ import CafeOperaHeroBanner from "./components/CafeOperaHeroBanner";
 import AboutSection from "./components/AboutSection";
 import ParallaxSection from "../../components/Parallax";
 import FoodShowcase from "./components/FoodShowcase";
-
+import AppetizersSection from "./components/AppetizersSection";
+import LunchSpecialsSection from "./components/LunchSpecialsSection";
+import ChefSpecialitiesSection from "./components/ChefSpecialitiesSection";
+import RestaurantSection from "./components/RestaurantSection";
 const HomePage: React.FC = () => {
   return (
     <>
@@ -11,15 +14,19 @@ const HomePage: React.FC = () => {
       <ParallaxSection
         imagePath="/images/banner/golden-chicken.jpg"
         height="60vh"
-      ></ParallaxSection>
+      />
       <FoodShowcase />
+
       <ParallaxSection
         imagePath="/images/banner/shrimp-walnuts.jpg"
         height="60vh"
-      ></ParallaxSection>
+      />
+      <AppetizersSection />
+      <LunchSpecialsSection />
+      <ChefSpecialitiesSection />
+      <RestaurantSection />
 
       {/* create full 100vh empty sections */}
-      <section className="h-screen"></section>
     </>
   );
 };

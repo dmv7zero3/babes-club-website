@@ -18,8 +18,7 @@ const FooterSocial: React.FC<FooterSocialProps> = ({
       case "instagram":
         return (
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 6.62 5.367 11.987 11.988 11.987 6.62 0 11.987-5.367 11.987-11.987C24.014 5.367 18.637.001 12.017.001zM8.449 16.988c-1.297 0-2.448-.477-3.34-1.388-.892-.91-1.388-2.062-1.388-3.359s.477-2.448 1.388-3.34c.892-.91 2.043-1.388 3.34-1.388s2.448.477 3.34 1.388c.91.892 1.388 2.043 1.388 3.34s-.477 2.448-1.388 3.359c-.892.91-2.043 1.388-3.34 1.388zm7.518-11.018c-.477 0-.892-.172-1.216-.496-.324-.343-.496-.739-.496-1.216s.172-.892.496-1.216c.324-.343.739-.496 1.216-.496s.892.172 1.216.496c.324.343.496.739.496 1.216s-.172.892-.496 1.216c-.343.324-.739.496-1.216.496z" />
-            <circle cx="12.017" cy="12.017" r="3.708" />
+            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1 1 12.324 0 6.162 6.162 0 0 1-12.324 0zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm4.965-10.405a1.44 1.44 0 1 1 0 2.881 1.44 1.44 0 0 1 0-2.881z" />
           </svg>
         );
       case "map-pin":
@@ -55,13 +54,13 @@ const FooterSocial: React.FC<FooterSocialProps> = ({
         Connect With Us
       </h4>
 
-      {/* Online Ordering CTA */}
+      {/* Online Ordering CTA - Mobile optimized */}
       <div className="mb-6">
         <a
           href={onlineOrderingUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center w-full px-6 py-3 bg-heritage-gold text-heritage-blue font-heading font-semibold rounded-lg hover:bg-champagne-gold-500 transition-all duration-300 hover:shadow-gold hover:-translate-y-0.5"
+          className="inline-flex items-center justify-center w-full px-4 py-3 text-sm sm:text-base bg-heritage-gold text-heritage-blue font-heading font-semibold rounded-lg hover:bg-champagne-gold-500 transition-all duration-300 hover:shadow-gold hover:-translate-y-0.5"
         >
           Order Online
           <svg
@@ -80,19 +79,19 @@ const FooterSocial: React.FC<FooterSocialProps> = ({
         </a>
       </div>
 
-      {/* Social Media Links */}
+      {/* Social Media Links - Mobile optimized spacing */}
       <div>
         <h5 className="mb-3 text-sm font-medium tracking-wide uppercase text-heritage-gold">
           Follow Us
         </h5>
-        <div className="flex space-x-4">
+        <div className="flex flex-wrap gap-3 sm:gap-4">
           {socialLinks.map((social) => (
             <a
               key={social.platform}
               href={social.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center w-10 h-10 transition-all duration-300 rounded-lg bg-warm-ivory-200/10 text-warm-ivory-200 hover:bg-heritage-gold hover:text-heritage-blue hover:scale-110"
+              className="flex items-center justify-center w-10 h-10 transition-all duration-300 rounded-lg sm:w-11 sm:h-11 bg-warm-ivory-200/10 text-warm-ivory-200 hover:bg-heritage-gold hover:text-heritage-blue hover:scale-110 touch-manipulation"
               aria-label={`Follow us on ${social.platform}`}
             >
               {renderIcon(social.icon)}

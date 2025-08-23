@@ -8,7 +8,7 @@
 ├── public
 │   ├── images
 │   │   └── logo
-│   │       └── street-lawyer-services-logo.jpg
+│   │       └── cafe-opera-logo.jpg
 │   ├── index.html
 │   ├── js
 │   │   └── gsap
