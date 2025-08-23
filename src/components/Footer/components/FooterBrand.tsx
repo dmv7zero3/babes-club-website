@@ -17,19 +17,19 @@ const FooterBrand: React.FC<FooterBrandProps> = ({
       <Link to="/" className="block">
         <div className="flex items-center space-x-3 sm:space-x-4">
           <img
-            src={logo}
+            src="/images/logo/cafe-opera-white.svg"
             alt={`${businessName} Logo`}
-            className="object-contain w-10 h-10 sm:w-12 sm:h-12"
+            className="object-contain w-40 h-auto"
             loading="lazy"
           />
-          <div>
+          {/* <div>
             <h3 className="text-xl font-semibold sm:text-2xl font-heading text-heritage-ivory">
               {businessName}
             </h3>
             <p className="text-xs font-medium sm:text-sm text-heritage-gold">
               {tagline}
             </p>
-          </div>
+          </div> */}
         </div>
       </Link>
 

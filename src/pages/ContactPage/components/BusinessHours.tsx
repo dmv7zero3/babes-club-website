@@ -20,8 +20,8 @@ const BusinessHours: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-heritage-gold/10">
-          <Clock className="w-8 h-8 text-heritage-gold" />
+        <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-opera-blue/10">
+          <Clock className="w-8 h-8 text-opera-blue" />
         </div>
         <h3 className="text-2xl font-semibold font-heading text-heritage-blue">
           Business Hours
@@ -81,7 +81,9 @@ const BusinessHours: React.FC = () => {
 
       {/* Call to Action */}
       <div className="p-6 text-center rounded-xl bg-gradient-to-br from-heritage-blue to-opera-blue-800 text-heritage-ivory">
-        <h4 className="mb-2 text-lg font-semibold">Ready to Order?</h4>
+        <h4 className="mb-2 text-lg font-semibold text-warm-ivory">
+          Ready to Order?
+        </h4>
         <p className="mb-4 text-sm opacity-90">
           Call ahead for faster pickup or dine in for the full experience
         </p>

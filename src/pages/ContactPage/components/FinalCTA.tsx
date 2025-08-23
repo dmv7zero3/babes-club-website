@@ -3,10 +3,10 @@ import { Star } from "lucide-react";
 
 const FinalCTA: React.FC = () => (
   <div className="mt-16 text-center">
-    <div className="inline-flex items-center px-6 py-3 text-sm font-medium rounded-full bg-jade-green/10 text-jade-green">
-      <Star className="w-4 h-4 mr-2 fill-current" />
-      Serving Sterling's finest Asian cuisine since establishment
-      <Star className="w-4 h-4 ml-2 fill-current" />
+    <div className="inline-flex items-center px-8 py-4 text-base font-bold rounded-full shadow-lg bg-jade-green-600 text-warm-ivory-50">
+      <Star className="w-5 h-5 mr-2 fill-current text-champagne-gold-300" />
+      Serving Sterling's finest Asian cuisine for 20+ years since 2003
+      <Star className="w-5 h-5 ml-2 fill-current text-champagne-gold-300" />
     </div>
   </div>
 );

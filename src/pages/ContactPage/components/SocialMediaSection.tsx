@@ -1,16 +1,15 @@
 import React from "react";
 import { Phone, MessageCircle } from "lucide-react";
 import { SOCIAL_MEDIA } from "../../../businessInfo/business";
-
 const phone = "(703) 858-1441";
 
 const SocialMediaSection: React.FC = () => (
-  <div className="p-8 text-center rounded-2xl bg-gradient-to-br from-heritage-blue to-opera-blue-800 text-heritage-ivory">
+  <div className="p-8 text-center border-2 shadow-2xl rounded-2xl bg-gradient-to-br from-opera-blue-900 to-opera-blue-950 text-warm-ivory-50 border-champagne-gold-400">
     <div className="max-w-3xl mx-auto">
-      <h3 className="mb-4 text-3xl font-semibold font-heading">
+      <h3 className="mb-4 text-3xl font-bold font-heading text-warm-ivory">
         Follow Our Culinary Journey
       </h3>
-      <p className="mb-8 text-lg opacity-90">
+      <p className="mb-8 text-lg font-medium text-warm-ivory-100">
         Stay connected for daily specials, behind-the-scenes moments, and the
         latest from our kitchen to yours.
       </p>
@@ -21,7 +20,7 @@ const SocialMediaSection: React.FC = () => (
             href={SOCIAL_MEDIA.facebook}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center px-6 py-3 transition-all duration-200 rounded-lg bg-heritage-ivory/10 hover:bg-heritage-ivory/20 hover:scale-105"
+            className="flex items-center px-6 py-3 font-bold transition-all duration-200 rounded-lg bg-warm-ivory text-opera-blue-900 hover:bg-champagne-gold-300 hover:scale-105 shadow-gold"
             aria-label="Follow us on Facebook"
           >
             <svg
@@ -39,7 +38,7 @@ const SocialMediaSection: React.FC = () => (
             href={SOCIAL_MEDIA.instagram}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center px-6 py-3 transition-all duration-200 rounded-lg bg-heritage-ivory/10 hover:bg-heritage-ivory/20 hover:scale-105"
+            className="flex items-center px-6 py-3 font-bold transition-all duration-200 rounded-lg shadow-lg bg-champagne-gold-300 text-heritage-blue hover:bg-jade-green-400 hover:scale-105"
             aria-label="Follow us on Instagram"
           >
             <svg
@@ -52,20 +51,6 @@ const SocialMediaSection: React.FC = () => (
             Instagram
           </a>
         )}
-      </div>
-      {/* Quick Actions */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
-        <a
-          href={`tel:${phone.replace(/\D/g, "")}`}
-          className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold transition-all duration-200 rounded-lg bg-heritage-gold text-heritage-blue hover:bg-champagne-gold-500 hover:shadow-gold hover:scale-105"
-        >
-          <Phone className="w-5 h-5 mr-2" />
-          Call to Order Now
-        </a>
-        <button className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold transition-all duration-200 border-2 rounded-lg border-heritage-ivory/30 text-heritage-ivory hover:bg-heritage-ivory/10 hover:border-heritage-ivory/50">
-          <MessageCircle className="w-5 h-5 mr-2" />
-          Leave a Review
-        </button>
       </div>
     </div>
   </div>

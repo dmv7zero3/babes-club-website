@@ -1,6 +1,12 @@
 // src/components/Footer/data/footerData.ts
 
 import { FooterLink, SocialLink } from "../types";
+import {
+  FACEBOOK_URL,
+  INSTAGRAM_URL,
+  GOOGLE_MAPS_URL,
+  ONLINE_ORDERING_URL,
+} from "../../../businessInfo/business";
 
 export const footerNavigationLinks: FooterLink[] = [
   {
@@ -8,16 +14,12 @@ export const footerNavigationLinks: FooterLink[] = [
     path: "/",
   },
   {
+    label: "About",
+    path: "/about",
+  },
+  {
     label: "Menu",
     path: "/menu",
-  },
-  {
-    label: "Events",
-    path: "/events",
-  },
-  {
-    label: "Catering",
-    path: "/catering",
   },
   {
     label: "Contact",
@@ -28,17 +30,17 @@ export const footerNavigationLinks: FooterLink[] = [
 export const socialMediaLinks: SocialLink[] = [
   {
     platform: "Facebook",
-    url: "https://www.facebook.com/CafeOperaDC",
+    url: FACEBOOK_URL,
     icon: "facebook",
   },
   {
     platform: "Instagram",
-    url: "https://www.instagram.com/cafeoperadc",
+    url: INSTAGRAM_URL,
     icon: "instagram",
   },
   {
     platform: "Google Maps",
-    url: "https://maps.google.com/?q=Cafe+Opera+Washington+DC",
+    url: GOOGLE_MAPS_URL,
     icon: "map-pin",
   },
 ];

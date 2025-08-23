@@ -68,9 +68,6 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* Credentials Section */}
-        <Credentials />
-
         {/* Bottom Section */}
         <div className="px-4 pb-6 md:px-6 md:pb-8 lg:px-8">
           <div className="mx-auto max-w-7xl">

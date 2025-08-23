@@ -19,7 +19,7 @@ const ContactPage: React.FC = () => {
 
       {/* Main Contact Content */}
       <section className="relative overflow-hidden bg-warm-ivory-100">
-        <div className="container">
+        <div className="w-11/12 py-16 mx-auto max-w-7xl">
           {/* Section Header */}
           <div className="mb-16 text-center">
             <h2 className="mb-4 text-4xl font-normal font-kristi md:text-5xl text-champagne-gold-900">

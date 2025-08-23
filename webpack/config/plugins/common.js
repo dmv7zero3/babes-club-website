@@ -7,7 +7,18 @@ import paths from "../paths.js";
 import CopyWebpackPlugin from "copy-webpack-plugin";
 
 // Whitelist env vars (add more as needed)
-const allowedEnv = ["NODE_ENV", "API_BASE_URL", "GOOGLE_MAPS_API_KEY"];
+const allowedEnv = [
+  "NODE_ENV",
+  "API_BASE_URL",
+  "GOOGLE_MAPS_API_KEY",
+  "S3_BUCKET_ARN",
+  "CLOUDFRONT_DOMAIN",
+  "CLOUDFRONT_DISTRIBUTION_ARN",
+  "CLOUDFRONT_DISTRIBUTION_ID",
+  "API_GATEWAY_ID",
+  "API_GATEWAY_URL",
+  "API_GATEWAY_RESOURCE_ID",
+];
 const raw = dotenvConfig().parsed || {};
 const filtered = Object.keys(raw)
   .filter((k) => allowedEnv.includes(k))
