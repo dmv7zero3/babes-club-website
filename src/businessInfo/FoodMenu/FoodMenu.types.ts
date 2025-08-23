@@ -13,7 +13,7 @@ export interface FoodMenu {
     [section: string]: {
       title: string;
       note?: string;
-      items: MenuItem[];
+      items?: MenuItem[];
       [key: string]: any;
     };
   };
