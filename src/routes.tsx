@@ -4,6 +4,7 @@ import NotFoundPage from "@/error/NotFoundPage";
 import HomePage from "@/pages/HomePage";
 import AboutPage from "@/pages/AboutPage";
 import MenuPage from "./pages/MenuPage";
+import ContactPage from "./pages/ContactPage";
 
 const routes: RouteObject[] = [
   {
@@ -18,6 +19,12 @@ const routes: RouteObject[] = [
     path: "/menu",
     element: <MenuPage />,
   },
+
+  {
+    path: "/contact",
+    element: <ContactPage />,
+  },
+
   // Catch-all 404 route (should be last)
   {
     path: "*",
