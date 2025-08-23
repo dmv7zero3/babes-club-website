@@ -8,25 +8,25 @@ const RestaurantSection: React.FC = () => {
           {/* Content Container */}
           <div className="space-y-8 lg:pr-8">
             {/* Section Header */}
-            <div className="space-y-4">
-              <h2 className="text-4xl font-kristi md:text-5xl lg:text-6xl text-heritage-gold">
+            <div>
+              <h2 className="mb-3 text-4xl font-normal font-kristi md:text-5xl text-champagne-gold-900">
                 Our
               </h2>
-              <h3 className="-mt-4 text-4xl font-semibold tracking-wide uppercase font-heading md:text-5xl lg:text-6xl text-heritage-blue">
+              <h3 className="text-5xl font-normal tracking-wide text-center uppercase lg:text-left mb-14 font-heading text-heritage-blue">
                 Restaurant
               </h3>
             </div>
 
             {/* Subtitle */}
             <div className="space-y-2">
-              <p className="text-lg font-medium tracking-wide uppercase text-heritage-blue lg:text-xl">
+              <p className="text-4xl font-medium tracking-wide uppercase text-heritage-blue lg:text-xl">
                 Checkout our restaurant and special dishes
               </p>
             </div>
 
             {/* Description */}
             <div className="space-y-6">
-              <p className="text-base leading-relaxed text-rich-mahogany-700 lg:text-lg">
+              <p className="paragraph">
                 Cafe Opera is serving real Hong Kong flavor to community in an
                 ambient environment. Order online or come visit us and enjoy a
                 dine in experience.
@@ -51,7 +51,7 @@ const RestaurantSection: React.FC = () => {
 
             {/* Additional Info */}
             <div className="pt-4">
-              <p className="text-sm italic text-heritage-gold">
+              <p className="text-sm italic text-champagne-gold-900">
                 Experience authentic Hong Kong cuisine in the heart of your
                 community.
               </p>

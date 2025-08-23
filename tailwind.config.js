@@ -86,6 +86,7 @@ const designTokens = {
     fontFamily: {
       heading: ["Playfair Display", "ui-serif", "Georgia", "Cambria", "serif"],
       body: ["Lato", "ui-sans-serif", "system-ui", "sans-serif"],
+      lato: ["Lato", "ui-sans-serif", "system-ui", "sans-serif"],
     },
     fontSize: {
       hero: [

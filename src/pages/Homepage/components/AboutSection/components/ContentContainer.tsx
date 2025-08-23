@@ -52,7 +52,7 @@ const ContentContainer: React.FC<ContentContainerProps> = () => {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="pt-4"
         >
-          <p className="mb-6 text-4xl leading-relaxed lg:text-lg text-rich-mahogany/70 font-body">
+          <p className="mb-6 paragraph">
             Since 2004, Arthur and Tin Kong have brought the authentic flavors
             of Hong Kong to Ashburn, Virginia. Our family-owned restaurant
             combines traditional Hong Kong cuisine with the warmth of American
@@ -60,7 +60,7 @@ const ContentContainer: React.FC<ContentContainerProps> = () => {
             all who seek exceptional food made with care.
           </p>
 
-          <p className="text-4xl leading-relaxed lg:text-lg text-rich-mahogany/70 font-body">
+          <p className="paragraph">
             Every dish is prepared fresh to order using only the finest
             ingredients, with no MSG, ensuring that each meal reflects our
             commitment to both authenticity and quality. As opera music fills

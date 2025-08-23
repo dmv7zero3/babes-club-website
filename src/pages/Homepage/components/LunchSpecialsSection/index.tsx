@@ -57,13 +57,9 @@ const LunchSpecialsSection: React.FC = () => {
                   }}
                 >
                   <div className="space-y-5">
-                    <h3 className="text-5xl font-normal transition-colors duration-300 lg:text-3xl font-heading text-heritage-blue ">
-                      {item.name}
-                    </h3>
+                    <h2 className="heading-1 ">{item.name}</h2>
                     {item.description && (
-                      <p className="text-4xl font-normal leading-relaxed text-rich-mahogany-700 lg:text-base">
-                        {item.description}
-                      </p>
+                      <p className="paragraph">{item.description}</p>
                     )}
                   </div>
                 </div>
