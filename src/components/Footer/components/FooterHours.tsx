@@ -30,7 +30,7 @@ const FooterHours: React.FC<FooterHoursProps> = ({ hours, diningNotice }) => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <h4 className="mb-3 text-lg font-semibold sm:mb-4 sm:text-xl font-heading text-heritage-ivory">
+      <h4 className="mb-3 footer-heading font-heading text-heritage-ivory">
         Hours
       </h4>
 
@@ -41,26 +41,24 @@ const FooterHours: React.FC<FooterHoursProps> = ({ hours, diningNotice }) => {
           return (
             <div
               key={day}
-              className={`flex justify-between items-center py-1 px-2 -mx-2 rounded ${
-                isToday ? "bg-heritage-gold/10" : ""
+              className={`footer-hours-row py-1 px-2 -mx-2 rounded ${
+                isToday ? "bg-heritage-gold/10 is-today" : ""
               }`}
             >
               <span
-                className={`text-base sm:text-sm capitalize ${
-                  isToday
-                    ? "font-semibold text-heritage-gold"
-                    : "text-warm-ivory-200"
+                className={`capitalize footer-text ${
+                  isToday ? "text-heritage-gold" : "text-warm-ivory-200"
                 }`}
               >
                 {day}
                 {isToday && (
-                  <span className="ml-1 text-base text-heritage-gold">
+                  <span className="ml-1 text-heritage-gold footer-text">
                     (Today)
                   </span>
                 )}
               </span>
               <span
-                className={`text-base sm:text-sm ${
+                className={`footer-text ${
                   isToday
                     ? "font-medium text-heritage-gold"
                     : "text-warm-ivory-300"
@@ -76,20 +74,8 @@ const FooterHours: React.FC<FooterHoursProps> = ({ hours, diningNotice }) => {
       {/* Dining Notice - Mobile optimized */}
       {diningNotice && (
         <div className="pt-3 mt-3 border-t border-warm-ivory-200/20">
-          <p className="text-base sm:text-sm text-heritage-gold">
-            <svg
-              className="inline-block w-3 h-3 sm:w-4 sm:h-4 mr-1 -mt-0.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+          <p className="flex items-center footer-small text-heritage-gold">
+            {/* Optionally replace with an icon from lucide-react if desired */}
             {diningNotice}
           </p>
         </div>

@@ -7,8 +7,10 @@ import FooterHours from "./components/FooterHours";
 import FooterNavigation from "./components/FooterNavigation";
 import FooterSocial from "./components/FooterSocial";
 import FooterBottom from "./components/FooterBottom";
-import Credentials from "./components/Credentials";
 import { footerNavigationLinks, socialMediaLinks } from "./data/footerData";
+
+// Import the CSS file for font size management
+import "./styles/footer.styles.css";
 
 // Import business data
 import businessData from "../../businessInfo/business-data.json";
@@ -19,16 +21,17 @@ const Footer: React.FC = () => {
   return (
     <footer className="relative overflow-hidden bg-heritage-blue text-warm-ivory-200">
       {/* Background Pattern */}
-      <div className="absolute inset-0 bg-gradient-to-br from-heritage-blue to-opera-blue-900 opacity-90" />
+      {/* <div className="absolute inset-0 bg-gradient-to-br from-heritage-blue to-opera-blue-900 opacity-90" /> */}
 
-      <div className="relative z-10">
-        {/* Main Footer Content - Optimized for mobile */}
-        <div className="px-4 py-12 md:px-6 md:py-16 lg:px-8">
+      <div className="relative z-10 w-10/12 mx-auto">
+        {/* Main Footer Content */}
+        <div className="py-22 lg:py-16">
           <div className="mx-auto max-w-7xl">
-            {/* Mobile-First Grid Layout */}
-            <div className="grid grid-cols-1 gap-8 xl:grid-cols-4 xl:gap-12">
-              {/* Brand Column - Full width on mobile */}
-              <div className="col-span-1 lg:col-span-1">
+            {/* Single Column Layout up to 1024px (lg breakpoint) */}
+            {/* Only becomes multi-column at lg (1024px) and above */}
+            <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 xl:grid-cols-4 lg:gap-12">
+              {/* Brand Column */}
+              <div className="items-center col-span-1 text-center lg:text-left lg:items-start">
                 <FooterBrand
                   businessName={business.business_name}
                   tagline={business.tagline}
@@ -37,7 +40,6 @@ const Footer: React.FC = () => {
                   established={business.established}
                 />
               </div>
-
               {/* Contact Column */}
               <div className="col-span-1">
                 <FooterContact
@@ -47,7 +49,6 @@ const Footer: React.FC = () => {
                   parking={business.location_details.parking}
                 />
               </div>
-
               {/* Hours Column */}
               <div className="col-span-1">
                 <FooterHours
@@ -55,9 +56,8 @@ const Footer: React.FC = () => {
                   diningNotice={business.dine_in_notice}
                 />
               </div>
-
               {/* Navigation & Social Column */}
-              <div className="col-span-1 space-y-8 sm:col-span-2 lg:col-span-1">
+              <div className="col-span-1 space-y-8">
                 <FooterNavigation links={footerNavigationLinks} />
                 <FooterSocial
                   socialLinks={socialMediaLinks}
@@ -69,7 +69,7 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Bottom Section */}
-        <div className="px-4 pb-6 md:px-6 md:pb-8 lg:px-8">
+        <div className="px-4 pb-14 lg:pb-8">
           <div className="mx-auto max-w-7xl">
             <FooterBottom
               businessName={business.business_name}

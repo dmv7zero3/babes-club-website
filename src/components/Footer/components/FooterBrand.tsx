@@ -12,35 +12,29 @@ const FooterBrand: React.FC<FooterBrandProps> = ({
   established,
 }) => {
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Logo and Brand - Mobile optimized */}
-      <Link to="/" className="block">
-        <div className="flex items-center space-x-3 sm:space-x-4">
+    <div className="space-y-9 ">
+      {/* Logo - Keep as is */}
+      <Link to="/" className="block ">
+        <div className="flex justify-center">
           <img
             src="/images/logo/cafe-opera-white.svg"
             alt={`${businessName} Logo`}
-            className="object-contain w-40 h-auto"
+            className="object-contain h-auto w-[28rem] lg:w-40"
             loading="lazy"
           />
-          {/* <div>
-            <h3 className="text-xl font-semibold sm:text-2xl font-heading text-heritage-ivory">
-              {businessName}
-            </h3>
-            <p className="text-xs font-medium sm:text-sm text-heritage-gold">
-              {tagline}
-            </p>
-          </div> */}
         </div>
       </Link>
 
-      {/* Description - Mobile optimized line height and max width */}
-      <p className="max-w-xs text-base leading-relaxed sm:text-lg sm:max-w-sm text-warm-ivory-200">
+      {/* Description - Use only footer-text for font size */}
+      <p className="lg:max-w-xs footer-text lg:text-left text-warm-ivory-200">
         {description}
       </p>
 
-      {/* Established - Mobile optimized */}
-      <div className="text-base sm:text-sm text-heritage-gold">
-        <span className="font-medium">Established {established}</span>
+      {/* Established - Use only footer-small for font size */}
+      <div className="footer-text text-heritage-gold">
+        <span className="font-medium">
+          Serving authentic cuisine since {established}
+        </span>
       </div>
     </div>
   );

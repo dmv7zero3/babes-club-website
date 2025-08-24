@@ -1,1 +1,36 @@
 /* src/components/Footer/styles/footer.styles.css */
+
+/* 
+ * Footer Typography System
+ * Mobile-first approach: Larger text on mobile, smaller on desktop
+ * All font sizes managed here for consistency
+ */
+
+.footer-text {
+  @apply text-4xl leading-relaxed lg:text-sm;
+}
+.footer-heading {
+  @apply text-5xl leading-snug font-normal lg:text-lg;
+}
+.footer-link {
+  @apply text-4xl leading-relaxed lg:text-sm;
+}
+.footer-small {
+  @apply text-4xl leading-normal lg:text-xs;
+}
+.footer-cta {
+  @apply text-4xl leading-tight lg:text-base;
+}
+
+/* Special case: Business hours need consistent alignment */
+.footer-hours-row {
+  @apply text-base lg:text-sm flex justify-between items-center;
+}
+
+.footer-hours-row.is-today {
+  @apply font-semibold;
+}
+
+.footer-social-icon {
+  @apply w-14 h-14 lg:w-5 lg:h-5;
+}

@@ -11,11 +11,11 @@ const FooterSocial: React.FC<FooterSocialProps> = ({
   const renderIcon = (iconName: string) => {
     switch (iconName) {
       case "facebook":
-        return <Facebook className="w-5 h-5" />;
+        return <Facebook className="footer-social-icon" />;
       case "instagram":
-        return <Instagram className="w-5 h-5" />;
+        return <Instagram className="footer-social-icon" />;
       case "map-pin":
-        return <MapPin className="w-5 h-5" />;
+        return <MapPin className="footer-social-icon" />;
       default:
         return null;
     }
@@ -23,21 +23,21 @@ const FooterSocial: React.FC<FooterSocialProps> = ({
 
   return (
     <div className="space-y-6">
-      <h4 className="mb-4 text-xl font-semibold font-heading text-heritage-ivory">
+      <h4 className="mb-8 lg:mb-4 footer-heading font-heading text-heritage-ivory">
         Connect With Us
       </h4>
 
       {/* Online Ordering CTA - Mobile optimized */}
-      <div className="mb-6">
+      <div className="mb-10 lg:mb-6">
         <a
           href={onlineOrderingUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center w-full px-4 py-3 text-base sm:text-lg bg-heritage-gold text-heritage-blue font-heading font-semibold rounded-lg hover:bg-champagne-gold-500 transition-all duration-300 hover:shadow-gold hover:-translate-y-0.5"
+          className="inline-flex items-center justify-center w-full px-4 py-6 lg:py-3 footer-cta bg-heritage-gold text-heritage-blue font-heading font-semibold rounded-lg hover:bg-champagne-gold-500 transition-all duration-300 hover:shadow-gold hover:-translate-y-0.5"
         >
           Order Online
           <svg
-            className="w-4 h-4 ml-2"
+            className="w-10 h-10 ml-2 lg:w-4 lg:h-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -54,17 +54,17 @@ const FooterSocial: React.FC<FooterSocialProps> = ({
 
       {/* Social Media Links - Mobile optimized spacing */}
       <div>
-        <h5 className="mb-3 text-base font-medium tracking-wide uppercase text-heritage-gold">
+        <h5 className="mt-10 mb-10 tracking-wide lg:mb-3 lg:mt-0 footer-heading text-heritage-gold">
           Follow Us
         </h5>
-        <div className="flex flex-wrap gap-3 sm:gap-4">
+        <div className="flex flex-wrap gap-8 lg:gap-4">
           {socialLinks.map((social) => (
             <a
               key={social.platform}
               href={social.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center w-10 h-10 transition-all duration-300 rounded-lg sm:w-11 sm:h-11 bg-warm-ivory-200/10 text-warm-ivory-200 hover:bg-heritage-gold hover:text-heritage-blue hover:scale-110 touch-manipulation"
+              className="flex items-center justify-center w-20 h-20 transition-all duration-300 rounded-lg lg:w-11 lg:h-11 bg-warm-ivory-200/10 text-warm-ivory-200 hover:bg-heritage-gold hover:text-heritage-blue hover:scale-110 touch-manipulation"
               aria-label={`Follow us on ${social.platform}`}
             >
               {renderIcon(social.icon)}
