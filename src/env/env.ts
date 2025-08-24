@@ -1,5 +1,5 @@
 // Hardcoded environment variables for debugging
-export const GOOGLE_MAPS_API_KEY = "AIzaSyBFUIzxEwVOnNgLtjKbUi2sLhdw0EbdPjw";
+export const GOOGLE_MAPS_API_KEY = "";
 export const S3_BUCKET_ARN = "hardcoded-s3-bucket-arn";
 export const CLOUDFRONT_DOMAIN = "dpw5m6g065bgh.cloudfront.net";
 export const CLOUDFRONT_DISTRIBUTION_ARN =
