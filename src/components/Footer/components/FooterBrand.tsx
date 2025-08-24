@@ -34,12 +34,12 @@ const FooterBrand: React.FC<FooterBrandProps> = ({
       </Link>
 
       {/* Description - Mobile optimized line height and max width */}
-      <p className="max-w-xs text-sm leading-relaxed sm:text-base sm:max-w-sm text-warm-ivory-200">
+      <p className="max-w-xs text-base leading-relaxed sm:text-lg sm:max-w-sm text-warm-ivory-200">
         {description}
       </p>
 
       {/* Established - Mobile optimized */}
-      <div className="text-xs sm:text-sm text-heritage-gold">
+      <div className="text-base sm:text-sm text-heritage-gold">
         <span className="font-medium">Established {established}</span>
       </div>
     </div>

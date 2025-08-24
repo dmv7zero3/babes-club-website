@@ -26,9 +26,9 @@ const Footer: React.FC = () => {
         <div className="px-4 py-12 md:px-6 md:py-16 lg:px-8">
           <div className="mx-auto max-w-7xl">
             {/* Mobile-First Grid Layout */}
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 xl:gap-12">
+            <div className="grid grid-cols-1 gap-8 xl:grid-cols-4 xl:gap-12">
               {/* Brand Column - Full width on mobile */}
-              <div className="col-span-1 sm:col-span-2 lg:col-span-1">
+              <div className="col-span-1 lg:col-span-1">
                 <FooterBrand
                   businessName={business.business_name}
                   tagline={business.tagline}

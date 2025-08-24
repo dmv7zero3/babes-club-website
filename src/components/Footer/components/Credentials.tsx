@@ -3,7 +3,7 @@
 import React from "react";
 
 const Credentials: React.FC = () => (
-  <p className="text-xs sm:text-sm text-warm-ivory-300">
+  <p className="text-base sm:text-sm text-warm-ivory-300">
     Website design from{" "}
     <a
       href="https://www.marketbrewer.com"

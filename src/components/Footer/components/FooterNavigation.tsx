@@ -7,7 +7,7 @@ import { FooterNavigationProps } from "../types";
 const FooterNavigation: React.FC<FooterNavigationProps> = ({ links }) => {
   return (
     <div className="space-y-6">
-      <h4 className="mb-4 text-lg font-semibold font-heading text-heritage-ivory">
+      <h4 className="mb-4 text-xl font-semibold font-heading text-heritage-ivory">
         Quick Links
       </h4>
 
@@ -20,7 +20,7 @@ const FooterNavigation: React.FC<FooterNavigationProps> = ({ links }) => {
                 href={link.path}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block text-sm font-medium transition-colors duration-300 text-warm-ivory-200 hover:text-heritage-gold"
+                className="block text-base font-medium transition-colors duration-300 text-warm-ivory-200 hover:text-heritage-gold"
               >
                 {link.label}
                 <svg
@@ -44,7 +44,7 @@ const FooterNavigation: React.FC<FooterNavigationProps> = ({ links }) => {
             <Link
               key={link.label}
               to={link.path}
-              className="block text-sm font-medium transition-colors duration-300 text-warm-ivory-200 hover:text-heritage-gold"
+              className="block text-base font-medium transition-colors duration-300 text-warm-ivory-200 hover:text-heritage-gold"
             >
               {link.label}
             </Link>

@@ -30,7 +30,7 @@ const FooterHours: React.FC<FooterHoursProps> = ({ hours, diningNotice }) => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <h4 className="mb-3 text-base font-semibold sm:mb-4 sm:text-lg font-heading text-heritage-ivory">
+      <h4 className="mb-3 text-lg font-semibold sm:mb-4 sm:text-xl font-heading text-heritage-ivory">
         Hours
       </h4>
 
@@ -46,7 +46,7 @@ const FooterHours: React.FC<FooterHoursProps> = ({ hours, diningNotice }) => {
               }`}
             >
               <span
-                className={`text-xs sm:text-sm capitalize ${
+                className={`text-base sm:text-sm capitalize ${
                   isToday
                     ? "font-semibold text-heritage-gold"
                     : "text-warm-ivory-200"
@@ -54,13 +54,13 @@ const FooterHours: React.FC<FooterHoursProps> = ({ hours, diningNotice }) => {
               >
                 {day}
                 {isToday && (
-                  <span className="ml-1 text-xs text-heritage-gold">
+                  <span className="ml-1 text-base text-heritage-gold">
                     (Today)
                   </span>
                 )}
               </span>
               <span
-                className={`text-xs sm:text-sm ${
+                className={`text-base sm:text-sm ${
                   isToday
                     ? "font-medium text-heritage-gold"
                     : "text-warm-ivory-300"
@@ -76,7 +76,7 @@ const FooterHours: React.FC<FooterHoursProps> = ({ hours, diningNotice }) => {
       {/* Dining Notice - Mobile optimized */}
       {diningNotice && (
         <div className="pt-3 mt-3 border-t border-warm-ivory-200/20">
-          <p className="text-xs sm:text-sm text-heritage-gold">
+          <p className="text-base sm:text-sm text-heritage-gold">
             <svg
               className="inline-block w-3 h-3 sm:w-4 sm:h-4 mr-1 -mt-0.5"
               fill="none"

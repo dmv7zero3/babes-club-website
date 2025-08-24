@@ -14,7 +14,7 @@ const FooterBottom: React.FC<FooterBottomProps> = ({
     <div className="pt-6 mt-6 border-t sm:mt-8 border-warm-ivory-200/20">
       <div className="flex flex-col items-center justify-between space-y-4 text-center md:flex-row md:space-y-0 md:text-left">
         {/* Copyright - Mobile optimized */}
-        <div className="text-xs sm:text-sm text-warm-ivory-300">
+        <div className="text-base sm:text-sm text-warm-ivory-300">
           <p>
             © {currentYear} {businessName}. All rights reserved.
           </p>

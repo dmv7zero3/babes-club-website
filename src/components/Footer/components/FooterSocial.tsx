@@ -23,7 +23,7 @@ const FooterSocial: React.FC<FooterSocialProps> = ({
 
   return (
     <div className="space-y-6">
-      <h4 className="mb-4 text-lg font-semibold font-heading text-heritage-ivory">
+      <h4 className="mb-4 text-xl font-semibold font-heading text-heritage-ivory">
         Connect With Us
       </h4>
 
@@ -33,7 +33,7 @@ const FooterSocial: React.FC<FooterSocialProps> = ({
           href={onlineOrderingUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center w-full px-4 py-3 text-sm sm:text-base bg-heritage-gold text-heritage-blue font-heading font-semibold rounded-lg hover:bg-champagne-gold-500 transition-all duration-300 hover:shadow-gold hover:-translate-y-0.5"
+          className="inline-flex items-center justify-center w-full px-4 py-3 text-base sm:text-lg bg-heritage-gold text-heritage-blue font-heading font-semibold rounded-lg hover:bg-champagne-gold-500 transition-all duration-300 hover:shadow-gold hover:-translate-y-0.5"
         >
           Order Online
           <svg
@@ -54,7 +54,7 @@ const FooterSocial: React.FC<FooterSocialProps> = ({
 
       {/* Social Media Links - Mobile optimized spacing */}
       <div>
-        <h5 className="mb-3 text-sm font-medium tracking-wide uppercase text-heritage-gold">
+        <h5 className="mb-3 text-base font-medium tracking-wide uppercase text-heritage-gold">
           Follow Us
         </h5>
         <div className="flex flex-wrap gap-3 sm:gap-4">
