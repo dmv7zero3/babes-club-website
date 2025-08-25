@@ -1,29 +1,45 @@
-// src/core/Components/Header/MobileHeader/MobileMenuOverlay/components/MenuContactInfo.tsx
+// src/components/Header/MobileHeader/MobileMenuOverlay/components/MenuContactInfo.tsx
 
 import React from "react";
-import { MapPin, Clock } from "lucide-react";
+import { MapPin, Clock, Phone } from "lucide-react";
+import {
+  getFormattedAddress,
+  BUSINESS_HOURS,
+} from "../../../../../businessInfo/business";
 
-/**
- * Contact information component for the mobile menu overlay
- * Displays location, hours, and brief description
- */
 const MenuContactInfo: React.FC = () => {
+  // Format business hours for display
+  const formatHours = () => {
+    const today = new Date()
+      .toLocaleDateString("en-US", { weekday: "long" })
+      .toLowerCase();
+    const todayHours = BUSINESS_HOURS[today as keyof typeof BUSINESS_HOURS];
+    return todayHours || "11:00 AM - 9:00 PM";
+  };
+
   return (
-    <div className="pb-6">
-      <div className="p-4 border border-white/10 bg-white/5 rounded-xl backdrop-blur-sm">
-        <div className="flex items-center justify-center gap-6 mb-2 text-sm sm:text-base md:text-lg text-moon-silver">
-          <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-moon-gold" />
-            <span>Sterling, VA</span>
+    <div className="flex justify-center w-full px-2 pb-8">
+      <div className="flex flex-col items-center w-full max-w-lg px-4 py-8">
+        <div className="flex flex-row items-center justify-center w-full gap-12 flex-nowrap">
+          {/* Location */}
+          <div className="flex flex-row items-center flex-shrink-0 gap-5">
+            <MapPin className="w-12 h-12 text-opera-blue" />
+            <p className="font-normal font-heading text-opera-blue whitespace-nowrap">
+              Ashburn, VA
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-moon-gold" />
-            <span>Open until 2 AM</span>
+          {/* Phone */}
+          <div className="flex flex-row items-center flex-shrink-0 gap-5">
+            <a
+              href="tel:(703) 858-1441"
+              className="flex items-center justify-center rounded-full"
+              aria-label="Call (703) 858-1441"
+            >
+              <Phone className="w-12 h-12 text-opera-blue" />
+            </a>
+            <p className=" text-opera-blue whitespace-nowrap">(703) 858-1441</p>
           </div>
         </div>
-        <p className="m-0 text-xs font-light text-center sm:text-sm md:text-base text-moon-silver font-poppins">
-          Premium hookah • Craft cocktails • Mediterranean cuisine
-        </p>
       </div>
     </div>
   );

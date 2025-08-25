@@ -25,8 +25,6 @@ const HomePage: React.FC = () => {
       <LunchSpecialsSection />
       <ChefSpecialitiesSection />
       <RestaurantSection />
-
-      {/* create full 100vh empty sections */}
     </>
   );
 };

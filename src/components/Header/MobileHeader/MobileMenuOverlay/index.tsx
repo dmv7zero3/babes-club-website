@@ -1,5 +1,4 @@
-// src/core/Components/Header/MobileHeader/MobileMenuOverlay/index.tsx
-
+// src/components/Header/MobileHeader/MobileMenuOverlay/index.tsx
 import React, { useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useMenuAnimation } from "./hooks/useMenuAnimation";
@@ -9,7 +8,8 @@ import MenuLogo from "./components/MenuLogo";
 import MenuNavigation from "./components/MenuNavigation";
 import MenuSocial from "./components/MenuSocial";
 import MenuContactInfo from "./components/MenuContactInfo";
-import MenuParticles from "./components/MenuParticles";
+import MenuCloseButton from "./components/MenuCloseButton";
+import MenuBackground from "./components/MenuBackground";
 import { injectStyles } from "./styles/overlayStyles";
 import type {
   MobileMenuOverlayProps,
@@ -19,41 +19,11 @@ import type {
 const NAV_LINKS = [
   { path: "/", label: "Home" },
   { path: "/menu", label: "Menu" },
-  { path: "/events", label: "Events" },
-  { path: "/catering", label: "Catering" },
+  { path: "/about", label: "About" },
   { path: "/contact", label: "Contact" },
 ] as const;
 
-/**
- * Close button component for the mobile menu overlay
- */
-const MenuCloseButton: React.FC<MenuCloseButtonProps> = ({
-  onClose,
-  isAnimating,
-}) => (
-  <button
-    onClick={onClose}
-    disabled={isAnimating}
-    className="absolute z-10 p-3 transition-all duration-200 border-none rounded-full cursor-pointer top-6 right-6 bg-white/10 backdrop-blur-sm hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
-    aria-label="Close menu"
-    type="button"
-  >
-    <svg
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-white"
-    >
-      <line x1="6" y1="6" x2="18" y2="18" />
-      <line x1="18" y1="6" x2="6" y2="18" />
-    </svg>
-  </button>
-);
+// ...existing code...
 
 /**
  * Main mobile menu overlay component
@@ -101,7 +71,7 @@ const MobileMenuOverlayContent: React.FC<MobileMenuOverlayProps> = ({
 
   const handleNavClick = useCallback(() => {
     // Small delay to allow visual feedback before closing
-    setTimeout(handleClose, 100);
+    setTimeout(handleClose, 150);
   }, [handleClose]);
 
   // Don't render if not needed
@@ -110,24 +80,31 @@ const MobileMenuOverlayContent: React.FC<MobileMenuOverlayProps> = ({
   return (
     <div
       ref={overlayRef}
-      className="menu-overlay-fixed"
+      className="menu-overlay-fixed bg-heritage-blue"
       onClick={handleBackdropClick}
     >
-      <MenuParticles />
-
+      {/* Removed MenuBackground for no gradient/floating elements */}
       <div
         ref={contentRef}
-        className="relative flex flex-col h-full p-6 overflow-y-auto menu-content-wrapper"
+        className="relative flex flex-col items-center justify-center h-full overflow-y-auto menu-content-wrapper"
       >
         <MenuCloseButton onClose={handleClose} isAnimating={isAnimating} />
-        <MenuLogo />
-        <MenuNavigation
-          navRef={navContainerRef}
-          onNavClick={handleNavClick}
-          links={NAV_LINKS}
-        />
-        <MenuSocial />
-        <MenuContactInfo />
+        <div className="flex flex-col items-center w-full max-w-lg ">
+          <MenuLogo />
+          <div className="mt-8">
+            <MenuNavigation
+              navRef={navContainerRef}
+              onNavClick={handleNavClick}
+              links={NAV_LINKS}
+            />
+          </div>
+          <div className="mt-8">
+            <MenuSocial />
+          </div>
+          <div className="mt-12">
+            <MenuContactInfo />
+          </div>
+        </div>
       </div>
     </div>
   );

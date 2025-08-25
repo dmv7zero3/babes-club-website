@@ -8,8 +8,8 @@ const RestaurantSection: React.FC = () => {
           {/* Content Container */}
           <div className="space-y-8 lg:pr-8">
             {/* Section Header */}
-            <div>
-              <h2 className="mb-3 text-4xl font-normal font-kristi md:text-5xl text-champagne-gold-900">
+            <div className="flex flex-col items-center lg:items-start">
+              <h2 className="mb-3 font-normal text-7xl font-kristi lg:text-5xl text-champagne-gold-900">
                 Our
               </h2>
               <h3 className="text-5xl font-normal tracking-wide text-center uppercase lg:text-left mb-14 font-heading text-heritage-blue">
@@ -36,7 +36,10 @@ const RestaurantSection: React.FC = () => {
               <div className="pt-4">
                 <a
                   href="tel:7038581441"
-                  className="inline-flex items-center text-xl font-semibold transition-colors duration-300 font-heading text-heritage-blue hover:text-heritage-gold lg:text-2xl"
+                  className="inline-flex items-center text-5xl font-semibold transition-colors duration-300 lg:text-2xl paragraph font-heading"
+                  style={{ color: "#1e335c" }}
+                  onMouseOver={(e) => (e.currentTarget.style.color = "#bfa14a")}
+                  onMouseOut={(e) => (e.currentTarget.style.color = "#1e335c")}
                 >
                   703.858.1441
                 </a>
@@ -51,9 +54,9 @@ const RestaurantSection: React.FC = () => {
 
             {/* Additional Info */}
             <div className="pt-4">
-              <p className="text-sm italic text-champagne-gold-900">
-                Experience authentic Hong Kong cuisine in the heart of your
-                community.
+              <p className="text-4xl italic leading-relaxed lg:text-base text-champagne-gold-950">
+                Experience authentic Hong Kong cuisine in the heart of
+                Broadlands, Va.
               </p>
             </div>
           </div>

@@ -1,11 +1,10 @@
-// src/core/Components/Header/MobileHeader/MobileMenuOverlay/hooks/useMenuAnimation.ts
-
+// src/components/Header/MobileHeader/MobileMenuOverlay/hooks/useMenuAnimation.ts
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import type { UseMenuAnimationReturn } from "../types/menuTypes";
 
 /**
- * Custom hook to handle GSAP animations for the mobile menu overlay
+ * Custom hook to handle GSAP animations for the Cafe Opera mobile menu overlay
  * Manages opening/closing animations with proper cleanup and anti-flicker
  */
 export const useMenuAnimation = (isOpen: boolean): UseMenuAnimationReturn => {
@@ -33,7 +32,7 @@ export const useMenuAnimation = (isOpen: boolean): UseMenuAnimationReturn => {
     }
 
     if (isOpen) {
-      // OPENING ANIMATION
+      // OPENING ANIMATION - Cafe Opera Style
       setShouldRender(true);
       setIsAnimating(true);
 
@@ -54,20 +53,22 @@ export const useMenuAnimation = (isOpen: boolean): UseMenuAnimationReturn => {
 
       gsap.set(content, {
         opacity: 0,
-        y: 40,
+        y: 60,
+        scale: 0.95,
         force3D: true,
       });
 
       gsap.set(navItems, {
         opacity: 0,
-        y: 32,
+        y: 40,
+        rotationX: -15,
         force3D: true,
       });
 
-      // Create optimized opening timeline
+      // Create sophisticated opening timeline - Asian elegance
       const tl = gsap.timeline({
         defaults: {
-          ease: "power2.out",
+          ease: "power3.out",
           force3D: true,
         },
         onComplete: () => {
@@ -81,17 +82,20 @@ export const useMenuAnimation = (isOpen: boolean): UseMenuAnimationReturn => {
         },
       });
 
-      // Staggered animation sequence
+      // Elegant staggered animation sequence
       tl.to(overlay, {
         opacity: 1,
-        duration: 0.3,
+        duration: 0.4,
+        ease: "power2.out",
       })
         .to(
           content,
           {
             opacity: 1,
             y: 0,
-            duration: 0.4,
+            scale: 1,
+            duration: 0.5,
+            ease: "back.out(1.2)",
           },
           "-=0.2"
         )
@@ -100,15 +104,20 @@ export const useMenuAnimation = (isOpen: boolean): UseMenuAnimationReturn => {
           {
             opacity: 1,
             y: 0,
-            duration: 0.3,
-            stagger: 0.08,
+            rotationX: 0,
+            duration: 0.4,
+            stagger: {
+              amount: 0.3,
+              from: "start",
+              ease: "power2.out",
+            },
           },
           "-=0.3"
         );
 
       animationRef.current = tl;
     } else {
-      // CLOSING ANIMATION
+      // CLOSING ANIMATION - Smooth and Quick
       if (!shouldRender) return; // Already closed
 
       setIsAnimating(true);
@@ -116,7 +125,7 @@ export const useMenuAnimation = (isOpen: boolean): UseMenuAnimationReturn => {
 
       const navItems = navContainer?.querySelectorAll(".menu-nav-item") || [];
 
-      // Create optimized closing timeline
+      // Create elegant closing timeline
       const tl = gsap.timeline({
         defaults: {
           ease: "power2.in",
@@ -134,21 +143,28 @@ export const useMenuAnimation = (isOpen: boolean): UseMenuAnimationReturn => {
         },
       });
 
-      // Reverse staggered animation
+      // Quick reverse staggered animation
       tl.to(navItems, {
         opacity: 0,
-        y: -20,
-        duration: 0.2,
-        stagger: 0.03, // Faster stagger for closing
+        y: -30,
+        rotationX: 15,
+        duration: 0.25,
+        stagger: {
+          amount: 0.15,
+          from: "end",
+          ease: "power2.in",
+        },
       })
         .to(
           content,
           {
             opacity: 0,
-            y: -30,
-            duration: 0.25,
+            y: -40,
+            scale: 0.9,
+            duration: 0.3,
+            ease: "power2.in",
           },
-          "-=0.15"
+          "-=0.1"
         )
         .to(
           overlay,
@@ -156,7 +172,7 @@ export const useMenuAnimation = (isOpen: boolean): UseMenuAnimationReturn => {
             opacity: 0,
             duration: 0.25,
           },
-          "-=0.2"
+          "-=0.15"
         );
 
       animationRef.current = tl;

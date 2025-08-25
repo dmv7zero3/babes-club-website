@@ -1,75 +1,91 @@
-// src/core/Components/Header/DesktopHeader/index.tsx
+// src/components/Header/DesktopHeader/index.tsx
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { Phone } from "lucide-react";
+import TopInfoBar from "../TopInfoBar";
 
 const DesktopHeader: React.FC = () => {
+  const location = useLocation();
+
+  // Helper function to check if current route is active
+  const isActiveRoute = (path: string) => {
+    return location.pathname === path;
+  };
+
+  // ...existing code...
   return (
-    <header className="z-40 hidden w-full bg-black lg:block">
-      <div className="relative flex items-center justify-between w-full px-8 py-6 mx-auto max-w-7xl">
+    <header className="relative z-40 hidden w-full shadow-lg bg-warm-ivory-200 lg:block">
+      <TopInfoBar />
+      {/* Main Header */}
+      <div className="relative flex items-center justify-between w-11/12 py-4 mx-auto max-w-7xl lg:py-6">
         {/* Logo/Brand Name */}
         <div className="flex items-center">
-          <Link to="/" className="block">
-            <h1 className="text-4xl tracking-widest font-bebas text-electric-blue text-shadow-glow-blue">
-              MOON LOUNGE
-            </h1>
+          <Link to="/" className="block group">
+            {/* SVG Logo */}
+            <img
+              src="/images/logo/cafe-opera-logo.svg"
+              alt="Cafe Opera Asian Cuisine"
+              className="h-12 transition-all duration-300 lg:h-14 group-hover:scale-105"
+            />
           </Link>
         </div>
 
         {/* Navigation */}
-        <nav className="flex items-center gap-10">
+        <nav className="flex items-center gap-8 text-center xl:gap-10">
           <Link
             to="/"
-            className="relative px-3 py-2 text-xl font-bebas text-moon-silver hover:text-electric-blue transition-all duration-300 tracking-wider after:absolute after:left-0 after:bottom-0 after:w-full after:h-0.5 after:bg-electric-blue after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300 after:origin-left"
+            className="relative px-3 py-2 text-lg font-semibold transition-all duration-300 font-heading text-heritage-blue hover:text-opera-blue-700 group"
           >
             HOME
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-heritage-gold transition-all duration-300 group-hover:w-full"></span>
           </Link>
           <Link
             to="/menu"
-            className="relative px-3 py-2 text-xl font-bebas text-moon-silver hover:text-electric-blue transition-all duration-300 tracking-wider after:absolute after:left-0 after:bottom-0 after:w-full after:h-0.5 after:bg-electric-blue after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300 after:origin-left"
+            className="relative px-3 py-2 text-lg font-semibold transition-all duration-300 font-heading text-heritage-blue hover:text-opera-blue-700 group"
           >
             MENU
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-heritage-gold transition-all duration-300 group-hover:w-full"></span>
           </Link>
           <Link
-            to="/catering"
-            className="relative px-3 py-2 text-xl font-bebas text-moon-silver hover:text-electric-blue transition-all duration-300 tracking-wider after:absolute after:left-0 after:bottom-0 after:w-full after:h-0.5 after:bg-electric-blue after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300 after:origin-left"
+            to="/about"
+            className="relative px-3 py-2 text-lg font-semibold transition-all duration-300 font-heading text-heritage-blue hover:text-opera-blue-700 group"
           >
-            CATERING
+            ABOUT
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-heritage-gold transition-all duration-300 group-hover:w-full"></span>
           </Link>
-          <Link
-            to="/events"
-            className="relative px-3 py-2 text-xl font-bebas text-moon-silver hover:text-electric-blue transition-all duration-300 tracking-wider after:absolute after:left-0 after:bottom-0 after:w-full after:h-0.5 after:bg-electric-blue after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300 after:origin-left"
-          >
-            EVENTS
-          </Link>
+
           <Link
             to="/contact"
-            className="relative px-3 py-2 text-xl font-bebas text-moon-silver hover:text-electric-blue transition-all duration-300 tracking-wider after:absolute after:left-0 after:bottom-0 after:w-full after:h-0.5 after:bg-electric-blue after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300 after:origin-left"
+            className="relative px-3 py-2 text-lg font-semibold transition-all duration-300 font-heading text-heritage-blue hover:text-opera-blue-700 group"
           >
             CONTACT
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-heritage-gold transition-all duration-300 group-hover:w-full"></span>
           </Link>
         </nav>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-4">
-          {/* Reserve Table Button */}
-          {/* <a
-            href={RESERVE_TABLE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-6 py-2 text-lg tracking-wider text-black transition-all duration-300 rounded-full font-bebas bg-electric-blue hover:bg-electric-blue-600 shadow-neon-blue hover:scale-105"
-          >
-            RESERVE TABLE
-          </a> */}
-
-          {/* Order Now Button */}
-          {/* <Link
+        <div className="flex items-center gap-3 text-center">
+          {/* Order Online Button */}
+          <Link
             to="/menu"
-            className="px-6 py-2 text-lg tracking-wider text-white transition-all duration-300 border-2 rounded-full font-bebas bg-moon-purple hover:bg-moon-purple border-moon-purple shadow-neon-purple hover:scale-105"
+            className="px-6 py-2.5 text-sm font-semibold transition-all duration-300 border-2 rounded-full font-heading bg-heritage-gold text-heritage-blue border-heritage-gold hover:bg-champagne-gold-500 hover:border-champagne-gold-500 hover:shadow-lg hover:scale-105"
           >
-            Call
-          </Link> */}
+            ORDER ONLINE
+          </Link>
+
+          {/* Call Now Button */}
+          <a
+            href="tel:(703) 858-1441"
+            className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white transition-all duration-300 border-2 rounded-full font-heading bg-jade-green-600 border-jade-green-600 hover:bg-jade-green-700 hover:border-jade-green-700 hover:shadow-lg hover:scale-105"
+          >
+            <Phone className="w-4 h-4" />
+            CALL NOW
+          </a>
         </div>
       </div>
+
+      {/* Decorative Border */}
+      <div className="w-full h-1 bg-gradient-to-r from-heritage-gold via-champagne-gold-400 to-heritage-gold opacity-60"></div>
     </header>
   );
 };

@@ -304,27 +304,32 @@ export default {
       addComponents({
         // Button system
         ".btn": {
-          "@apply inline-flex items-center justify-center font-heading font-semibold tracking-wide transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed":
+          // Responsive: larger tap targets on mobile
+          "@apply inline-flex items-center justify-center font-heading font-semibold tracking-wide transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed px-5 py-3 text-base sm:px-6 sm:py-3 sm:text-body":
             {},
         },
         ".btn-sm": {
           "@apply btn px-4 py-2 text-sm rounded-lg": {},
         },
         ".btn-md": {
-          "@apply btn px-6 py-3 text-body rounded-lg": {},
+          // Responsive: larger on mobile
+          "@apply btn px-6 py-6 text-3xl rounded-lg lg:px-6 lg:py-3 lg:text-body":
+            {},
         },
         ".btn-lg": {
-          "@apply btn px-8 py-4 text-body-lg rounded-xl": {},
+          "@apply btn px-12 py-10 text-body text-3xl rounded-xl": {},
         },
         ".btn-primary": {
-          "@apply btn-md bg-heritage-blue text-heritage-ivory hover:bg-opera-blue-800 focus:ring-heritage-blue/50 shadow-opera hover:shadow-opera-lg hover:-translate-y-0.5":
+          // Responsive: inherit btn-md changes
+          "@apply btn-lg bg-heritage-blue text-heritage-ivory hover:bg-opera-blue-800 focus:ring-heritage-blue/50 shadow-opera hover:shadow-opera-lg hover:-translate-y-0.5":
             {},
         },
         ".btn-secondary": {
-          "@apply btn-md bg-heritage-gold text-heritage-blue hover:bg-champagne-gold-500 focus:ring-heritage-gold/50 shadow-gold hover:shadow-gold-lg hover:-translate-y-0.5":
+          "@apply btn-lg bg-heritage-gold text-heritage-blue hover:bg-champagne-gold-500 focus:ring-heritage-gold/50 shadow-gold hover:shadow-gold-lg hover:-translate-y-0.5":
             {},
         },
         ".btn-outline": {
+          // Responsive: inherit btn-md changes
           "@apply btn-md bg-transparent text-heritage-blue border-2 border-heritage-blue hover:bg-heritage-blue hover:text-heritage-ivory focus:ring-heritage-blue/50":
             {},
         },
@@ -381,6 +386,13 @@ export default {
         },
         ".heritage-accent": {
           "@apply text-heritage-gold": {},
+        },
+      });
+
+      // Utility: stack buttons vertically on mobile
+      addUtilities({
+        ".btn-stack": {
+          "@apply flex flex-col gap-3 sm:flex-row sm:gap-4": {},
         },
       });
 

@@ -1,21 +1,25 @@
-// src/core/Components/Header/MobileHeader/MobileMenuOverlay/components/MenuLogo.tsx
-
+// src/components/Header/MobileHeader/MobileMenuOverlay/components/MenuLogo.tsx
 import React from "react";
 
 /**
  * Logo section component for the mobile menu overlay
- * Displays the Moon Lounge branding and tagline
+ * Displays the Cafe Opera branding and tagline
  */
 const MenuLogo: React.FC = () => {
   return (
-    <div className="flex justify-center pt-8 pb-6">
+    <div className="flex justify-center">
       <div className="text-center">
-        <h1 className="m-0 text-3xl tracking-widest sm:text-4xl md:text-5xl font-bebas text-electric-blue">
-          MOON LOUNGE
-        </h1>
-        <p className="m-0 mt-2 text-base font-light tracking-wide sm:text-lg md:text-xl text-moon-gold font-poppins">
-          Where Night Comes Alive
-        </p>
+        <div>
+          <img
+            src="/images/logo/cafe-opera-logo.svg"
+            alt="Cafe Opera Asian Cuisine"
+            className="mx-auto duration-500 h-52"
+          />
+        </div>
+
+        {/* <p className="m-0 mt-2 text-3xl font-light text-opera-blue font-lato">
+          Authentic • Delicious • Fresh
+        </p> */}
       </div>
     </div>
   );

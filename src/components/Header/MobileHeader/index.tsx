@@ -1,12 +1,11 @@
-// src/core/Components/Header/MobileHeader/index.tsx
-
+// src/components/Header/MobileHeader/index.tsx
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import MobileMenuOverlay from "./MobileMenuOverlay";
+import MobileMenuOverlay from "./MobileMenuOverlay/index";
 import MenuButton from "./MenuButton";
 
 /**
- * Main mobile header component
+ * Main mobile header component for Cafe Opera
  * Renders the mobile navigation bar with logo and menu button
  */
 const MobileHeader: React.FC = () => {
@@ -22,12 +21,14 @@ const MobileHeader: React.FC = () => {
 
   return (
     <header className="block lg:hidden">
-      <div className="my-3.5 rounded-full mx-4 py-2 px-4 flex items-center justify-between text-white relative">
-        {/* Moon Lounge Logo on left */}
+      <div className="flex items-center justify-between px-10 py-10 bg-warm-ivory-200 shadow-opera-sm">
+        {/* Cafe Opera Logo */}
         <Link to="/" className="flex items-center" onClick={closeMenu}>
-          <h1 className="text-3xl tracking-widest font-bebas text-electric-blue text-shadow-glow-blue">
-            MOON LOUNGE
-          </h1>
+          <img
+            src="/images/logo/cafe-opera-logo.svg"
+            alt="Cafe Opera"
+            className="w-auto h-20 "
+          />
         </Link>
 
         {/* Menu Button Component */}

@@ -1,3 +1,4 @@
+// src/components/Header/index.tsx
 import React from "react";
 import DesktopHeader from "./DesktopHeader";
 import MobileHeader from "./MobileHeader";

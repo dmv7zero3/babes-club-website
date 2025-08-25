@@ -1,4 +1,4 @@
-// src/core/Components/Header/MobileHeader/MobileMenuOverlay/styles/overlayStyles.ts
+// src/components/Header/MobileHeader/MobileMenuOverlay/styles/overlayStyles.ts
 
 export const overlayStyles = `
   .menu-overlay-fixed {
@@ -8,13 +8,13 @@ export const overlayStyles = `
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    background: radial-gradient(circle at 20% 20%, rgba(0,191,255,0.1) 0%, transparent 40%),
-                radial-gradient(circle at 80% 80%, rgba(138,43,226,0.1) 0%, transparent 40%),
-                #000;
+    background: #F7E7B4; /* champagne-gold */
     transform: translateZ(0);
     will-change: opacity, visibility;
     backface-visibility: hidden;
     contain: layout style paint;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
   
   .menu-overlay-fixed.is-animating {
@@ -30,13 +30,16 @@ export const overlayStyles = `
   
   .menu-content-wrapper {
     opacity: 0;
-    transform: translateY(40px) translateZ(0);
+    transform: translateY(60px) translateZ(0);
     will-change: opacity, transform;
+    background: rgba(250, 247, 240, 0.02);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
   }
   
   .menu-nav-item {
     opacity: 0;
-    transform: translateY(32px) translateZ(0);
+    transform: translateY(40px) translateZ(0);
     will-change: opacity, transform;
   }
   
@@ -44,6 +47,25 @@ export const overlayStyles = `
   .menu-overlay-fixed:not(.is-animating) .menu-content-wrapper,
   .menu-overlay-fixed:not(.is-animating) .menu-nav-item {
     will-change: auto;
+  }
+
+  /* Custom scrollbar for Asian theme */
+  .menu-content-wrapper::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .menu-content-wrapper::-webkit-scrollbar-track {
+    background: rgba(247, 231, 180, 0.1);
+    border-radius: 3px;
+  }
+
+  .menu-content-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(247, 231, 180, 0.3);
+    border-radius: 3px;
+  }
+
+  .menu-content-wrapper::-webkit-scrollbar-thumb:hover {
+    background: rgba(247, 231, 180, 0.5);
   }
 `;
 
@@ -53,10 +75,12 @@ let stylesInjected = false;
 export const injectStyles = (): void => {
   if (stylesInjected || typeof window === "undefined") return;
 
-  const existingStyle = document.getElementById("mobile-menu-styles");
+  const existingStyle = document.getElementById(
+    "cafe-opera-mobile-menu-styles"
+  );
   if (!existingStyle) {
     const styleEl = document.createElement("style");
-    styleEl.id = "mobile-menu-styles";
+    styleEl.id = "cafe-opera-mobile-menu-styles";
     styleEl.textContent = overlayStyles;
     document.head.appendChild(styleEl);
     stylesInjected = true;
