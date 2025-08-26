@@ -1,3 +1,13 @@
-"Update my changes to GitHub using the standard add, commit, and push command."
+## Push Your Changes to GitHub
 
-git add . && git commit -m "feat: update homepage to use new ParallaxSection and related parallax improvements" && git push origin main
+# 1. Stage all changes (new, modified, deleted files)
+
+git add .
+
+# 2. Commit with a descriptive message (replace YOUR_MESSAGE below)
+
+git commit -m "YOUR_MESSAGE"
+
+# 3. Push to the main branch on GitHub
+
+git push origin main

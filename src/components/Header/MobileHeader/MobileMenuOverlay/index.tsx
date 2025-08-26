@@ -86,7 +86,7 @@ const MobileMenuOverlayContent: React.FC<MobileMenuOverlayProps> = ({
       {/* Removed MenuBackground for no gradient/floating elements */}
       <div
         ref={contentRef}
-        className="relative flex flex-col items-center justify-center h-full overflow-y-auto menu-content-wrapper"
+        className="relative flex flex-col items-center justify-center min-h-full overflow-y-auto h-fit menu-content-wrapper"
       >
         <MenuCloseButton onClose={handleClose} isAnimating={isAnimating} />
         <div className="flex flex-col items-center w-full max-w-lg ">

@@ -313,7 +313,7 @@ export default {
         },
         ".btn-md": {
           // Responsive: larger on mobile
-          "@apply btn px-6 py-6 text-3xl rounded-lg lg:px-6 lg:py-3 lg:text-body":
+          "@apply btn px-12 py-6 text-3xl rounded-lg lg:px-6 lg:py-3 lg:text-body":
             {},
         },
         ".btn-lg": {

@@ -21,7 +21,7 @@ const FeaturedArticle: React.FC = () => {
         <div className="mb-8">
           <div className="inline-flex items-center px-6 py-3 space-x-3 rounded-full bg-heritage-gold/90 backdrop-blur-sm">
             <svg
-              className="w-6 h-6 text-opera-blue"
+              className="w-9 h-9 text-opera-blue"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -31,7 +31,7 @@ const FeaturedArticle: React.FC = () => {
                 clipRule="evenodd"
               />
             </svg>
-            <span className="font-semibold text-opera-blue">
+            <span className="font-semibold paragraph text-opera-blue">
               Featured Restaurant
             </span>
           </div>
@@ -39,11 +39,11 @@ const FeaturedArticle: React.FC = () => {
 
         {/* Main Content */}
         <div className="p-10 shadow-2xl rounded-3xl bg-heritage-ivory/95 backdrop-blur-sm">
-          <h2 className="mb-6 text-3xl font-normal font-heading text-opera-blue lg:text-4xl">
+          <h2 className="mb-6 heading-2-sub text-opera-blue ">
             Featured in Ashburn Magazine
           </h2>
 
-          <p className="mb-8 text-lg leading-relaxed text-rich-mahogany-700">
+          <p className="mb-8 paragraph text-rich-mahogany-700">
             CafeOpera was recently featured in Ashburn Magazine – Check out the
             article about our commitment to authentic Asian cuisine and
             exceptional dining experience.
@@ -53,7 +53,7 @@ const FeaturedArticle: React.FC = () => {
             href="https://www.ashburnmagazine.com/winedine/ashburn-restaurateurs-prove-they-have-staying-power/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center px-8 py-4 text-lg font-semibold transition-all duration-300 rounded-xl font-heading text-heritage-ivory bg-heritage-blue hover:bg-opera-blue-800 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-heritage-blue"
+            className="inline-flex items-center btn-md bg-opera-blue text-warm-ivory-50"
           >
             Read the Full Article
             <svg

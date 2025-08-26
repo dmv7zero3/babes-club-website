@@ -31,7 +31,7 @@ const MenuNavigation: React.FC<MenuNavigationProps> = ({
           <Link
             to={link.path}
             onClick={onNavClick}
-            className={`relative px-8 py-5 text-6xl font-bold tracking-wider text-center transition-all duration-300 rounded-xl font-heading group
+            className={`relative px-8 py-5 menu-overlay-link-size font-bold tracking-wider text-center transition-all duration-300 rounded-xl font-heading group
               ${
                 isActiveRoute(link.path)
                   ? "text-jade-green bg-warm-ivory-200/10"
@@ -53,7 +53,7 @@ const MenuNavigation: React.FC<MenuNavigationProps> = ({
       <div className="mt-6 menu-nav-item">
         <a
           href="tel:(703) 858-1441"
-          className="inline-flex items-center gap-3 px-12 py-10 text-4xl font-semibold tracking-wide transition-all duration-300 border-2 rounded-full font-heading bg-opera-blue text-champagne-gold border-opera-blue hover:bg-champagne-gold-500 hover:border-champagne-gold-500 hover:scale-105 hover:shadow-lg"
+          className="inline-flex items-center gap-3 px-10 py-8 text-4xl font-semibold tracking-wide transition-all duration-300 border-2 rounded-full md:10 md:py-8 md:text-xl font-heading bg-opera-blue text-champagne-gold border-opera-blue hover:bg-champagne-gold-500 hover:border-champagne-gold-500 hover:scale-105 hover:shadow-lg"
         >
           <svg
             className="w-8 h-8"

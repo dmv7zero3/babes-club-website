@@ -15,10 +15,10 @@ const MenuSocial: React.FC = () => {
             href={INSTAGRAM_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="menu-overlay-social-btn"
+            className="menu-overlay-social-btn "
             aria-label="Instagram"
           >
-            <Instagram className="w-14 h-14 text-opera-blue" />
+            <Instagram className="w-14 h-14 lg:w-10 lg:h-10 text-opera-blue" />
           </a>
         )}
         {FACEBOOK_URL && (
@@ -29,7 +29,7 @@ const MenuSocial: React.FC = () => {
             className="menu-overlay-social-btn"
             aria-label="Facebook"
           >
-            <Facebook className="w-14 h-14 text-opera-blue" />
+            <Facebook className="w-14 h-14 lg:w-10 lg:h-10 text-opera-blue" />
           </a>
         )}
         <a
@@ -37,7 +37,7 @@ const MenuSocial: React.FC = () => {
           className="menu-overlay-social-btn"
           aria-label="Call us"
         >
-          <Phone className="w-14 h-14 text-opera-blue" />
+          <Phone className="w-14 h-14 lg:w-10 lg:h-10 text-opera-blue" />
         </a>
       </div>
     </div>

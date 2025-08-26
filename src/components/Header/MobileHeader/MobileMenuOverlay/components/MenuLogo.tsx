@@ -13,7 +13,7 @@ const MenuLogo: React.FC = () => {
           <img
             src="/images/logo/cafe-opera-logo.svg"
             alt="Cafe Opera Asian Cuisine"
-            className="mx-auto duration-500 h-52"
+            className="mx-auto duration-500 menu-overlay-logo-size"
           />
         </div>
 

@@ -17,7 +17,7 @@ const FoodMenuSection: React.FC<FoodMenuSectionProps> = ({
   if (!title) {
     return (
       <section className="mb-12">
-        <h2 className="pb-2 mb-6 text-2xl font-bold tracking-widest text-center uppercase sm:text-3xl">
+        <h2 className="pb-2 text-2xl font-bold tracking-widest text-center uppercase mb-9 sm:text-3xl">
           {fallbackTitle || "Menu Section"}
         </h2>
         <div className="italic text-center text-gray-500">
@@ -34,11 +34,9 @@ const FoodMenuSection: React.FC<FoodMenuSectionProps> = ({
             {title}
           </h2>
           {note && (
-            <div className="mb-4 text-sm italic text-center text-gray-500">
-              {note}
-            </div>
+            <div className="mb-4 italic text-center text-gray-500">{note}</div>
           )}
-          <ul className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 ">
+          <ul className="grid grid-cols-1 gap-y-8 lg:grid-cols-2 gap-x-8 ">
             {items && items.length > 0 ? (
               items.map((item, idx) => {
                 if (!item.name && !item.description && item.price === undefined)
@@ -50,33 +48,33 @@ const FoodMenuSection: React.FC<FoodMenuSectionProps> = ({
                     className="flex flex-col py-4 md:px-4 sm:flex-row sm:items-start"
                   >
                     <div className="flex-1">
-                      <span className="flex items-center ">
-                        <span className="text-4xl font-semibold md:text-3xl lg:text-lg">
+                      <span className="flex items-center paragraph-md">
+                        <span className="text-4xl font-semibold md:text-4xl lg:text-lg">
                           {item.name || fallbackTitle || "Menu Item"}
                         </span>
                         {item.spicy && (
-                          <span className="mt-0.5 ml-2 text-xl font-bold text-red-500 lg:text-xs">
+                          <span className="mt-0.5 ml-2  font-bold text-red-500 ">
                             SPICY
                           </span>
                         )}
                         {item.signature && (
-                          <span className="mt-0.5 ml-2 text-xl font-bold text-green-600 lg:text-xs">
+                          <span className="mt-0.5 ml-2  font-bold text-green-600">
                             SIGNATURE
                           </span>
                         )}
                         {item.bestSeller && (
-                          <span className="mt-0.5 ml-2 text-xl font-bold text-yellow-600 lg:text-xs">
+                          <span className="mt-0.5 ml-2  font-bold text-yellow-600 ">
                             BEST SELLER
                           </span>
                         )}
                       </span>
                       {item.description && (
-                        <div className="mt-3.5 md:mt-2.5 text-3xl md:text-2xl text-gray-700 lg:text-base">
+                        <div className="mt-3.5 md:mt-3.5  text-gray-700 paragraph">
                           {item.description}
                         </div>
                       )}
                       {item.quantity && (
-                        <div className="mt-1 text-3xl text-gray-500 md:text-2xl lg:text-sm">
+                        <div className="mt-2.5 text-3xl text-gray-500 md:text-4xl lg:text-sm">
                           {item.quantity}
                         </div>
                       )}
@@ -87,7 +85,7 @@ const FoodMenuSection: React.FC<FoodMenuSectionProps> = ({
                       )}
                     </div>
                     {item.price !== undefined && (
-                      <div className="sm:ml-4 mt-2 text-right font-semibold text-3xl md:text-2xl lg:text-base min-w-[70px] text-gray-900">
+                      <div className="sm:ml-4 mt-2 text-right font-semibold paragraph min-w-[70px] text-gray-900">
                         ${item.price.toFixed(2)}
                       </div>
                     )}

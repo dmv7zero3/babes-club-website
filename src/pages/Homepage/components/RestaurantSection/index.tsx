@@ -1,4 +1,6 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import { ONLINE_ORDERING_URL } from "@/businessInfo/business";
 
 const RestaurantSection: React.FC = () => {
   return (
@@ -48,10 +50,21 @@ const RestaurantSection: React.FC = () => {
 
             {/* Call-to-Action Buttons */}
             <div className="flex flex-col gap-4 pt-6 sm:flex-row sm:gap-6">
-              <button className="btn-primary">Order Online</button>
-              <button className="btn-outline">View Full Menu</button>
+              <a
+                href={ONLINE_ORDERING_URL}
+                className="btn-md bg-opera-blue text-warm-ivory-100"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Order Online
+              </a>
+              <Link
+                to="/menu"
+                className="border border-opera-blue text-opera-blue btn-md"
+              >
+                View Full Menu
+              </Link>
             </div>
-
             {/* Additional Info */}
             <div className="pt-4">
               <p className="text-4xl italic leading-relaxed lg:text-base text-champagne-gold-950">

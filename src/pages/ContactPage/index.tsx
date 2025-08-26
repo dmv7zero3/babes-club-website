@@ -22,13 +22,13 @@ const ContactPage: React.FC = () => {
         <div className="w-11/12 py-16 mx-auto max-w-7xl">
           {/* Section Header */}
           <div className="mb-16 text-center">
-            <h2 className="mb-4 text-4xl font-normal font-kristi md:text-5xl text-champagne-gold-900">
+            <h2 className="mb-4 text-5xl font-normal font-kristi md:text-5xl text-champagne-gold-900">
               Get in
             </h2>
-            <h1 className="mb-6 text-5xl font-normal tracking-wide uppercase font-heading md:text-5xl lg:text-6xl text-heritage-blue">
+            <h1 className="mb-10 text-5xl font-normal tracking-wide text-center uppercase font-heading text-heritage-blue">
               TOUCH
             </h1>
-            <p className="max-w-2xl mx-auto text-lg text-rich-mahogany-700">
+            <p className="max-w-2xl mx-auto paragraph text-rich-mahogany-700">
               Visit us for authentic Hong Kong cuisine or get in touch for
               reservations, catering, and special events. We're here to serve
               you!

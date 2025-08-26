@@ -48,8 +48,20 @@
   @apply text-4xl leading-relaxed lg:text-lg text-rich-mahogany/70 font-body;
 }
 
+.paragraph-md {
+  @apply text-3xl leading-relaxed lg:text-base text-rich-mahogany/70 font-body;
+}
+
 /* Homepage Headers */
 
 .heading-1 {
   @apply text-5xl font-normal transition-colors duration-300 lg:text-3xl font-heading text-heritage-blue;
+}
+
+.heading-2 {
+  @apply text-5xl font-normal tracking-wide text-center uppercase lg:text-left  font-heading text-heritage-blue;
+}
+
+.heading-2-sub {
+  @apply text-4xl font-normal tracking-wide text-center uppercase font-heading text-heritage-blue;
 }

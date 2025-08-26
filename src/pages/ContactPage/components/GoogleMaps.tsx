@@ -32,30 +32,28 @@ const GoogleMaps: React.FC = () => {
         <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-jade-green/10">
           <MapPin className="w-8 h-8 text-jade-green" />
         </div>
-        <h3 className="text-2xl font-semibold font-heading text-heritage-blue">
-          Find Us
-        </h3>
-        <p className="mt-2 text-rich-mahogany-600">
+        <h3 className="heading-2-sub text-heritage-blue">Find Us</h3>
+        <p className="mt-2 paragraph text-rich-mahogany-600">
           Located in the heart of Sterling, VA
         </p>
       </div>
 
       {/* Address Info */}
       <div className="p-6 border rounded-xl bg-warm-ivory-100 border-warm-ivory-200">
-        <div className="flex items-start space-x-4">
+        <div className="flex items-center space-x-4 lg:items-start">
           <div className="flex-shrink-0">
-            <MapPin className="w-6 h-6 mt-1 text-heritage-gold" />
+            <MapPin className="mt-1 w-9 h-9 lg:w-6 lg:h-6 text-opera-blue-950" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-lg font-semibold text-heritage-blue">
+            <h1 className="text-4xl font-light tracking-wide lg:text-2xl text-heritage-blue">
               {BUSINESS_NAME}
-            </h4>
-            <p className="mt-1 text-rich-mahogany-700">
+            </h1>
+            <p className="mt-1 paragraph text-rich-mahogany-700">
               {getFormattedAddress()}
             </p>
-            <p className="mt-2 text-sm text-rich-mahogany-600">
+            {/* <p className="mt-2 paragraph text-jade-green-600">
               Community Plaza Shopping Center
-            </p>
+            </p> */}
           </div>
         </div>
       </div>

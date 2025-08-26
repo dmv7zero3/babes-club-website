@@ -6,10 +6,10 @@ const phone = "(703) 858-1441";
 const SocialMediaSection: React.FC = () => (
   <div className="p-8 text-center border-2 shadow-2xl rounded-2xl bg-gradient-to-br from-opera-blue-900 to-opera-blue-950 text-warm-ivory-50 border-champagne-gold-400">
     <div className="max-w-3xl mx-auto">
-      <h3 className="mb-4 text-3xl font-bold font-heading text-warm-ivory">
+      <h3 className="mb-4 leading-relaxed text-center heading-2-sub text-warm-ivory">
         Follow Our Culinary Journey
       </h3>
-      <p className="mb-8 text-lg font-medium text-warm-ivory-100">
+      <p className="mb-8 font-medium paragraph-md text-warm-ivory-100">
         Stay connected for daily specials, behind-the-scenes moments, and the
         latest from our kitchen to yours.
       </p>
@@ -20,7 +20,7 @@ const SocialMediaSection: React.FC = () => (
             href={SOCIAL_MEDIA.facebook}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center px-6 py-3 font-bold transition-all duration-200 rounded-lg bg-warm-ivory text-opera-blue-900 hover:bg-champagne-gold-300 hover:scale-105 shadow-gold"
+            className="flex items-center rounded-full btn-md bg-warm-ivory-100 text-opera-blue"
             aria-label="Follow us on Facebook"
           >
             <svg
@@ -38,7 +38,7 @@ const SocialMediaSection: React.FC = () => (
             href={SOCIAL_MEDIA.instagram}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center px-6 py-3 font-bold transition-all duration-200 rounded-lg shadow-lg bg-champagne-gold-300 text-heritage-blue hover:bg-jade-green-400 hover:scale-105"
+            className="flex items-center rounded-full btn-md bg-champagne-gold-300 text-heritage-blue hover:bg-jade-green-400 hover:scale-105"
             aria-label="Follow us on Instagram"
           >
             <svg

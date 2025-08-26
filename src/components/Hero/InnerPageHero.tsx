@@ -35,7 +35,7 @@ const InnerPageHero: React.FC<InnerPageHeroProps> = ({
       />
 
       {/* Hero Text - Centered at bottom */}
-      <div className="relative z-10 pb-4 text-center">
+      <div className="relative z-10 pb-2.5 text-center">
         <h1 className="text-white font-lato font-light tracking-[0.2em] text-4xl md:text-5xl  uppercase">
           {text}
         </h1>
