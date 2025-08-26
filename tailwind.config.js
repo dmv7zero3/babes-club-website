@@ -87,27 +87,9 @@ const designTokens = {
       heading: ["Playfair Display", "ui-serif", "Georgia", "Cambria", "serif"],
       body: ["Lato", "ui-sans-serif", "system-ui", "sans-serif"],
       lato: ["Lato", "ui-sans-serif", "system-ui", "sans-serif"],
+      playfair: ["Playfair Display", "ui-serif", "Georgia", "Cambria", "serif"],
     },
-    fontSize: {
-      hero: [
-        "clamp(2.5rem, 8vw, 4rem)",
-        { lineHeight: "1.1", letterSpacing: "-0.02em" },
-      ],
-      display: [
-        "clamp(2rem, 6vw, 3rem)",
-        { lineHeight: "1.2", letterSpacing: "-0.02em" },
-      ],
-      "heading-1": [
-        "clamp(1.75rem, 4vw, 2.5rem)",
-        { lineHeight: "1.2", letterSpacing: "-0.01em" },
-      ],
-      "heading-2": ["clamp(1.5rem, 3vw, 2rem)", { lineHeight: "1.3" }],
-      "heading-3": ["clamp(1.25rem, 2.5vw, 1.5rem)", { lineHeight: "1.4" }],
-      "body-lg": ["1.125rem", { lineHeight: "1.6" }],
-      body: ["1rem", { lineHeight: "1.6" }],
-      "body-sm": ["0.875rem", { lineHeight: "1.5" }],
-      caption: ["0.75rem", { lineHeight: "1.4" }],
-    },
+    fontSize: {},
   },
 };
 
@@ -135,50 +117,11 @@ export default {
       colors: {
         ...designTokens.colors,
 
-        // Semantic aliases for consistent usage
-        primary: {
-          ...designTokens.colors["opera-blue"],
-          foreground: designTokens.colors["warm-ivory"][200],
-        },
-        secondary: {
-          ...designTokens.colors["champagne-gold"],
-          foreground: designTokens.colors["opera-blue"][900],
-        },
-        accent: {
-          ...designTokens.colors["jade-green"],
-          foreground: designTokens.colors["warm-ivory"][200],
-        },
-
-        // Background system - Heritage Opera
-        background: {
-          DEFAULT: designTokens.colors["warm-ivory"][200],
-          dark: designTokens.colors["opera-blue"][900],
-          light: designTokens.colors["warm-ivory"][50],
-          muted: designTokens.colors["warm-ivory"][300],
-          card: designTokens.colors["warm-ivory"][100],
-        },
-
-        // Foreground system - Heritage Opera
-        foreground: {
-          DEFAULT: designTokens.colors["rich-mahogany"][900],
-          muted: designTokens.colors["rich-mahogany"][600],
-          light: designTokens.colors["warm-ivory"][200],
-          subtle: designTokens.colors["rich-mahogany"][400],
-          heading: designTokens.colors["opera-blue"][900],
-        },
-
         // Status colors (adapted to Heritage Opera palette)
         success: designTokens.colors["jade-green"][600],
         warning: designTokens.colors["champagne-gold"][600],
         error: designTokens.colors["rich-mahogany"][800],
         info: designTokens.colors["opera-blue"][700],
-
-        // Heritage Opera specific colors for direct use
-        "heritage-blue": designTokens.colors["opera-blue"][900],
-        "heritage-gold": designTokens.colors["champagne-gold"][400],
-        "heritage-ivory": designTokens.colors["warm-ivory"][200],
-        "heritage-mahogany": designTokens.colors["rich-mahogany"][900],
-        "heritage-jade": designTokens.colors["jade-green"][600],
       },
 
       // Typography system
@@ -187,16 +130,6 @@ export default {
         kristi: ["Kristi", "cursive"],
       },
       fontSize: designTokens.typography.fontSize,
-
-      // Consistent spacing system (8px grid)
-      spacing: {
-        18: "4.5rem", // 72px
-        22: "5.5rem", // 88px
-        26: "6.5rem", // 104px
-        30: "7.5rem", // 120px
-        34: "8.5rem", // 136px
-        38: "9.5rem", // 152px
-      },
 
       // Enhanced shadow system for Heritage Opera
       boxShadow: {
@@ -274,38 +207,18 @@ export default {
     // Cafe Opera Heritage Design System Plugin
     function ({ addBase, addComponents, addUtilities, theme }) {
       // Base layer - foundational styles
-      addBase({
-        // Reset and base typography
-        html: {
-          fontFamily: theme("fontFamily.body"),
-          fontSize: theme("fontSize.body"),
-          lineHeight: theme("fontSize.body[1].lineHeight"),
-          color: theme("colors.foreground.DEFAULT"),
-          backgroundColor: theme("colors.background.DEFAULT"),
-        },
-        "h1, h2, h3, h4, h5, h6": {
-          fontFamily: theme("fontFamily.heading"),
-          fontWeight: theme("fontWeight.semibold"),
-          lineHeight: "1.2",
-          color: theme("colors.foreground.heading"),
-        },
-        h1: { fontSize: theme("fontSize.heading-1") },
-        h2: { fontSize: theme("fontSize.heading-2") },
-        h3: { fontSize: theme("fontSize.heading-3") },
-
-        // Focus styles for accessibility
-        "*:focus-visible": {
-          outline: `2px solid ${theme("colors.primary.DEFAULT")}`,
-          outlineOffset: "2px",
-        },
-      });
+      addBase({});
 
       // Component layer - Heritage Opera specific components
       addComponents({
+        // Container utility
+        ".container": {
+          "@apply w-11/12 py-16 mx-auto lg:py-20 max-w-[1350px]": {},
+        },
         // Button system
         ".btn": {
           // Responsive: larger tap targets on mobile
-          "@apply inline-flex items-center justify-center font-heading font-semibold tracking-wide transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed px-5 py-3 text-base sm:px-6 sm:py-3 sm:text-body":
+          "@apply inline-flex items-center justify-center font-heading font-semibold tracking-wide transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed px-5 py-3 text-base sm:px-6 sm:py-3 sm:text-base":
             {},
         },
         ".btn-sm": {
@@ -313,86 +226,29 @@ export default {
         },
         ".btn-md": {
           // Responsive: larger on mobile
-          "@apply btn px-12 py-6 text-3xl rounded-lg lg:px-6 lg:py-3 lg:text-body":
+          "@apply btn px-12 py-6 text-xl rounded-lg lg:px-6 lg:py-3 lg:text-base":
             {},
         },
         ".btn-lg": {
-          "@apply btn px-12 py-10 text-body text-3xl rounded-xl": {},
+          "@apply btn px-12 py-10 text-base text-3xl rounded-xl": {},
         },
         ".btn-primary": {
           // Responsive: inherit btn-md changes
-          "@apply btn-lg bg-heritage-blue text-heritage-ivory hover:bg-opera-blue-800 focus:ring-heritage-blue/50 shadow-opera hover:shadow-opera-lg hover:-translate-y-0.5":
+          "@apply btn-lg bg-opera-blue-900 text-warm-ivory-200 hover:bg-opera-blue-800 focus:ring-opera-blue-900/50 shadow-opera hover:shadow-opera-lg hover:-translate-y-0.5":
             {},
         },
         ".btn-secondary": {
-          "@apply btn-lg bg-heritage-gold text-heritage-blue hover:bg-champagne-gold-500 focus:ring-heritage-gold/50 shadow-gold hover:shadow-gold-lg hover:-translate-y-0.5":
+          "@apply btn-lg bg-champagne-gold-400 text-opera-blue-900 hover:bg-champagne-gold-500 focus:ring-champagne-gold-400/50 shadow-gold hover:shadow-gold-lg hover:-translate-y-0.5":
             {},
         },
         ".btn-outline": {
           // Responsive: inherit btn-md changes
-          "@apply btn-md bg-transparent text-heritage-blue border-2 border-heritage-blue hover:bg-heritage-blue hover:text-heritage-ivory focus:ring-heritage-blue/50":
+          "@apply btn-md bg-transparent text-opera-blue-900 border-2 border-opera-blue-900 hover:bg-opera-blue-900 hover:text-warm-ivory-200 focus:ring-opera-blue-900/50":
             {},
         },
         ".btn-ghost": {
           "@apply btn-md bg-transparent text-foreground hover:bg-foreground/5 focus:ring-foreground/20":
             {},
-        },
-
-        // Card system
-        ".card": {
-          "@apply bg-background-card border border-warm-ivory-300/50 rounded-xl shadow-opera":
-            {},
-        },
-        ".card-interactive": {
-          "@apply card transition-all duration-300 hover:shadow-opera-lg hover:-translate-y-1 cursor-pointer":
-            {},
-        },
-        ".card-premium": {
-          "@apply card bg-gradient-to-br from-warm-ivory-50 to-warm-ivory-100 shadow-gold":
-            {},
-        },
-        ".card-heritage": {
-          "@apply card bg-gradient-to-br from-heritage-ivory to-warm-ivory-100 border-heritage-gold/20":
-            {},
-        },
-
-        // Layout helpers
-        ".container": {
-          "@apply w-10/12 max-w-[1400px] mx-auto  py-22  lg:px-8 lg:py-24": {},
-        },
-
-        ".layout-container": {
-          "@apply container mx-auto px-4 sm:px-6 lg:px-8": {},
-        },
-        ".section-padding": {
-          "@apply py-16 sm:py-20 lg:py-24": {},
-        },
-        ".section-light": {
-          "@apply section-padding bg-background": {},
-        },
-        ".section-dark": {
-          "@apply section-padding bg-heritage-blue text-heritage-ivory": {},
-        },
-        ".section-accent": {
-          "@apply section-padding bg-heritage-gold text-heritage-blue": {},
-        },
-
-        // Heritage Opera specific components
-        ".heritage-heading": {
-          "@apply font-heading text-heritage-blue font-semibold": {},
-        },
-        ".heritage-text": {
-          "@apply text-heritage-mahogany": {},
-        },
-        ".heritage-accent": {
-          "@apply text-heritage-gold": {},
-        },
-      });
-
-      // Utility: stack buttons vertically on mobile
-      addUtilities({
-        ".btn-stack": {
-          "@apply flex flex-col gap-3 sm:flex-row sm:gap-4": {},
         },
       });
 
@@ -400,7 +256,7 @@ export default {
       addUtilities({
         // Text utilities
         ".text-gradient-heritage": {
-          background: `linear-gradient(135deg, ${theme("colors.heritage-blue")} 0%, ${theme("colors.heritage-gold")} 100%)`,
+          background: `linear-gradient(135deg, ${theme("colors.opera-blue-900")} 0%, ${theme("colors.champagne-gold-400")} 100%)`,
           WebkitBackgroundClip: "text",
           backgroundClip: "text",
           WebkitTextFillColor: "transparent",
@@ -414,13 +270,13 @@ export default {
 
         // Background utilities
         ".bg-gradient-heritage": {
-          background: `linear-gradient(135deg, ${theme("colors.heritage-blue")} 0%, ${theme("colors.heritage-gold")} 100%)`,
+          background: `linear-gradient(135deg, ${theme("colors.opera-blue-900")} 0%, ${theme("colors.champagne-gold-400")} 100%)`,
         },
         ".bg-gradient-opera": {
           background: `linear-gradient(135deg, ${theme("colors.opera-blue.900")} 0%, ${theme("colors.champagne-gold.400")} 100%)`,
         },
         ".bg-gradient-elegant": {
-          background: `linear-gradient(135deg, ${theme("colors.heritage-ivory")} 0%, ${theme("colors.warm-ivory.100")} 100%)`,
+          background: `linear-gradient(135deg, ${theme("colors.warm-ivory-200")} 0%, ${theme("colors.warm-ivory.100")} 100%)`,
         },
 
         // Animation utilities

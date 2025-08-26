@@ -34,32 +34,32 @@ const DesktopHeader: React.FC = () => {
         <nav className="flex items-center gap-8 text-center xl:gap-10">
           <Link
             to="/"
-            className="relative px-3 py-2 text-lg font-semibold transition-all duration-300 font-heading text-heritage-blue hover:text-opera-blue-700 group"
+            className="relative px-3 py-2 text-lg font-semibold transition-all duration-300 font-heading text-opera-blue-900 hover:text-opera-blue-700 group"
           >
             HOME
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-heritage-gold transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-champagne-gold-400 transition-all duration-300 group-hover:w-full"></span>
           </Link>
           <Link
             to="/menu"
-            className="relative px-3 py-2 text-lg font-semibold transition-all duration-300 font-heading text-heritage-blue hover:text-opera-blue-700 group"
+            className="relative px-3 py-2 text-lg font-semibold transition-all duration-300 font-heading text-opera-blue-900 hover:text-opera-blue-700 group"
           >
             MENU
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-heritage-gold transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-champagne-gold-400 transition-all duration-300 group-hover:w-full"></span>
           </Link>
           <Link
             to="/about"
-            className="relative px-3 py-2 text-lg font-semibold transition-all duration-300 font-heading text-heritage-blue hover:text-opera-blue-700 group"
+            className="relative px-3 py-2 text-lg font-semibold transition-all duration-300 font-heading text-opera-blue-900 hover:text-opera-blue-700 group"
           >
             ABOUT
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-heritage-gold transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-champagne-gold-400 transition-all duration-300 group-hover:w-full"></span>
           </Link>
 
           <Link
             to="/contact"
-            className="relative px-3 py-2 text-lg font-semibold transition-all duration-300 font-heading text-heritage-blue hover:text-opera-blue-700 group"
+            className="relative px-3 py-2 text-lg font-semibold transition-all duration-300 font-heading text-opera-blue-900 hover:text-opera-blue-700 group"
           >
             CONTACT
-            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-heritage-gold transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-champagne-gold-400 transition-all duration-300 group-hover:w-full"></span>
           </Link>
         </nav>
 
@@ -68,7 +68,7 @@ const DesktopHeader: React.FC = () => {
           {/* Order Online Button */}
           <Link
             to="/menu"
-            className="px-6 py-2.5 text-sm font-semibold transition-all duration-300 border-2 rounded-full font-heading bg-heritage-gold text-heritage-blue border-heritage-gold hover:bg-champagne-gold-500 hover:border-champagne-gold-500 hover:shadow-lg hover:scale-105"
+            className="px-6 py-2.5 text-sm font-semibold transition-all duration-300 border-2 rounded-full font-heading bg-champagne-gold-400 text-opera-blue-900 border-champagne-gold-400 hover:bg-champagne-gold-500 hover:border-champagne-gold-500 hover:shadow-lg hover:scale-105"
           >
             ORDER ONLINE
           </Link>
@@ -85,7 +85,7 @@ const DesktopHeader: React.FC = () => {
       </div>
 
       {/* Decorative Border */}
-      <div className="w-full h-1 bg-gradient-to-r from-heritage-gold via-champagne-gold-400 to-heritage-gold opacity-60"></div>
+      <div className="w-full h-1 bg-gradient-to-r from-champagne-gold-400 via-champagne-gold-400 to-champagne-gold-400 opacity-60"></div>
     </header>
   );
 };

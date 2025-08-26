@@ -45,23 +45,31 @@
 }
 
 .paragraph {
-  @apply text-4xl leading-relaxed lg:text-lg text-rich-mahogany/70 font-body;
+  @apply text-2xl lg:text-xl leading-relaxed  text-rich-mahogany/70 font-lato;
 }
 
 .paragraph-md {
-  @apply text-3xl leading-relaxed lg:text-base text-rich-mahogany/70 font-body;
+  @apply text-xl leading-9 lg:text-base text-rich-mahogany/70 font-body;
+}
+
+.paragraph-sm {
+  @apply text-lg leading-9 lg:text-sm text-rich-mahogany/70 font-body;
 }
 
 /* Homepage Headers */
 
 .heading-1 {
-  @apply text-5xl font-normal transition-colors duration-300 lg:text-3xl font-heading text-heritage-blue;
+  @apply text-5xl font-normal transition-colors duration-300 lg:text-3xl font-heading text-opera-blue-900;
 }
 
 .heading-2 {
-  @apply text-5xl font-normal tracking-wide text-center uppercase lg:text-left  font-heading text-heritage-blue;
+  @apply text-5xl font-normal leading-normal lg:text-4xl tracking-wide text-center uppercase lg:text-left  font-heading text-opera-blue-900;
 }
 
 .heading-2-sub {
-  @apply text-4xl font-normal tracking-wide text-center uppercase font-heading text-heritage-blue;
+  @apply text-[34px] lg:text-3xl font-normal tracking-wide text-center uppercase font-heading text-opera-blue-900;
+}
+
+.heading-3 {
+  @apply text-3xl lg:text-2xl font-normal tracking-wide text-center uppercase font-heading text-opera-blue-900;
 }

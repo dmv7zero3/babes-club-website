@@ -32,7 +32,7 @@ const GoogleMaps: React.FC = () => {
         <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-jade-green/10">
           <MapPin className="w-8 h-8 text-jade-green" />
         </div>
-        <h3 className="heading-2-sub text-heritage-blue">Find Us</h3>
+        <h3 className="heading-2-sub text-opera-blue-900">Find Us</h3>
         <p className="mt-2 paragraph text-rich-mahogany-600">
           Located in the heart of Sterling, VA
         </p>
@@ -42,13 +42,13 @@ const GoogleMaps: React.FC = () => {
       <div className="p-6 border rounded-xl bg-warm-ivory-100 border-warm-ivory-200">
         <div className="flex items-center space-x-4 lg:items-start">
           <div className="flex-shrink-0">
-            <MapPin className="mt-1 w-9 h-9 lg:w-6 lg:h-6 text-opera-blue-950" />
+            <MapPin className="mt-1 w-9 h-9 lg:w-6 lg:h-6 text-opera-blue-900" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-4xl font-light tracking-wide lg:text-2xl text-heritage-blue">
+            <h1 className="font-semibold paragraph-md text-opera-blue-900">
               {BUSINESS_NAME}
             </h1>
-            <p className="mt-1 paragraph text-rich-mahogany-700">
+            <p className="mt-1 paragraph-md text-rich-mahogany-700">
               {getFormattedAddress()}
             </p>
             {/* <p className="mt-2 paragraph text-jade-green-600">

@@ -5,7 +5,7 @@ const phone = "(703) 858-1441";
 
 const SocialMediaSection: React.FC = () => (
   <div className="p-8 text-center border-2 shadow-2xl rounded-2xl bg-gradient-to-br from-opera-blue-900 to-opera-blue-950 text-warm-ivory-50 border-champagne-gold-400">
-    <div className="max-w-3xl mx-auto">
+    <div className="flex-col items-center max-w-3xl mx-auto">
       <h3 className="mb-4 leading-relaxed text-center heading-2-sub text-warm-ivory">
         Follow Our Culinary Journey
       </h3>
@@ -14,7 +14,7 @@ const SocialMediaSection: React.FC = () => (
         latest from our kitchen to yours.
       </p>
       {/* Social Links */}
-      <div className="flex justify-center gap-6 mb-8">
+      <div className="flex flex-wrap justify-center gap-6 mx-auto mb-8 w-fit ">
         {SOCIAL_MEDIA.facebook && (
           <a
             href={SOCIAL_MEDIA.facebook}
@@ -38,7 +38,7 @@ const SocialMediaSection: React.FC = () => (
             href={SOCIAL_MEDIA.instagram}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center rounded-full btn-md bg-champagne-gold-300 text-heritage-blue hover:bg-jade-green-400 hover:scale-105"
+            className="flex items-center rounded-full btn-md bg-champagne-gold-300 text-opera-blue-900 hover:bg-jade-green-400 hover:scale-105"
             aria-label="Follow us on Instagram"
           >
             <svg

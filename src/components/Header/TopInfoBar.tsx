@@ -17,7 +17,7 @@ const TopInfoBar: React.FC = () => {
   };
 
   return (
-    <div className="bg-heritage-blue">
+    <div className="bg-opera-blue-900">
       <div className="flex items-center justify-between w-11/12 py-2 mx-auto max-w-7xl">
         {/* Left: Contact Info */}
         <div className="flex items-center gap-6 text-sm text-warm-ivory-200">

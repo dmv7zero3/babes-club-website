@@ -24,7 +24,7 @@ const ContactCards: React.FC = () => {
           </p>
           <a
             href={`tel:${phone.replace(/\D/g, "")}`}
-            className="inline-flex items-center px-12 py-6 text-3xl font-bold transition-all duration-200 transform rounded-full lg:px-6 lg:py-3 lg:text-base bg-champagne-gold text-opera-blue-900 hover:bg-champagne-gold-500 hover:shadow-gold hover:scale-105"
+            className="leading-normal transition-all duration-200 transform rounded-full btn-md font-lato bg-champagne-gold text-opera-blue-900 hover:bg-champagne-gold-500 hover:shadow-gold "
           >
             <Phone className="w-5 h-5 mr-2" />
             {phone}
@@ -46,7 +46,7 @@ const ContactCards: React.FC = () => {
           </p>
           <a
             href={`mailto:${EMAIL}`}
-            className="inline-flex items-center px-12 py-6 text-3xl font-bold transition-all duration-200 transform rounded-full lg:px-6 lg:py-3 lg:text-base bg-opera-blue-900 text-champagne-gold-50 hover:bg-opera-blue-800 hover:shadow-opera-lg hover:scale-105"
+            className="leading-normal transition-all duration-200 transform rounded-full btn-md font-lato bg-opera-blue-900 text-champagne-gold-50 hover:bg-opera-blue-800 hover:shadow-opera-lg "
           >
             <Mail className="w-5 h-5 mr-2" />
             Email Us
@@ -67,7 +67,7 @@ const ContactCards: React.FC = () => {
             Experience our authentic atmosphere and fresh-made dishes
           </p>
           <div className="text-center">
-            <p className="px-12 py-6 text-3xl font-bold rounded-full lg:text-base lg:px-6 lg:py-3 text-jade-green-800 bg-jade-green-200">
+            <p className="leading-normal rounded-full btn-md font-lato text-jade-green-800 bg-jade-green-200">
               {getFormattedAddress()}
             </p>
           </div>

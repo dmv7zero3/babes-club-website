@@ -1,5 +1,5 @@
 .menu-overlay-logo-size {
-  height: clamp(6.5rem, 18vw, 10rem); /* ~h-26 to ~h-52 */
+  height: clamp(6.5rem, 12vw, 10rem); /* ~h-26 to ~h-52 */
   max-width: 100%;
 }
 .menu-overlay-link-size {

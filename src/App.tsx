@@ -1,7 +1,10 @@
 import React from "react";
 import { useRoutes } from "react-router-dom";
 import routes from "@/routes";
+import "@/styles/reset.css";
+import "@/styles/fonts.css";
 import "@/styles/index.css";
+
 import ScrollToTop from "@/utils/ScrollToTop";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";

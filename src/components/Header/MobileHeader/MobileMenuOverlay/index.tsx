@@ -80,7 +80,7 @@ const MobileMenuOverlayContent: React.FC<MobileMenuOverlayProps> = ({
   return (
     <div
       ref={overlayRef}
-      className="menu-overlay-fixed bg-heritage-blue"
+      className="menu-overlay-fixed bg-opera-blue-900"
       onClick={handleBackdropClick}
     >
       {/* Removed MenuBackground for no gradient/floating elements */}

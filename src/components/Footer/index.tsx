@@ -19,11 +19,11 @@ const Footer: React.FC = () => {
   const business = businessData["cafe-opera"];
 
   return (
-    <footer className="relative overflow-hidden bg-heritage-blue text-warm-ivory-200">
+    <footer className="relative overflow-hidden bg-opera-blue-900 text-warm-ivory-200">
       {/* Background Pattern */}
-      {/* <div className="absolute inset-0 bg-gradient-to-br from-heritage-blue to-opera-blue-900 opacity-90" /> */}
+      {/* <div className="absolute inset-0 bg-gradient-to-br from-opera-blue-900 to-opera-blue-900 opacity-90" /> */}
 
-      <div className="relative z-10 w-10/12 mx-auto">
+      <div className="container relative z-10 w-11/12 ">
         {/* Main Footer Content */}
         <div className="py-22 lg:py-16">
           <div className="mx-auto max-w-7xl">
@@ -69,7 +69,7 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Bottom Section */}
-        <div className="px-4 pb-14 lg:pb-8">
+        <div className="px-4">
           <div className="mx-auto max-w-7xl">
             <FooterBottom
               businessName={business.business_name}

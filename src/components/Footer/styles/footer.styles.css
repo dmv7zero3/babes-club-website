@@ -7,7 +7,7 @@
  */
 
 .footer-text {
-  @apply text-4xl leading-relaxed lg:text-sm;
+  @apply text-xl leading-relaxed lg:text-sm;
 }
 .footer-heading {
   @apply text-5xl leading-snug font-normal lg:text-lg;
@@ -32,5 +32,5 @@
 }
 
 .footer-social-icon {
-  @apply w-14 h-14 lg:w-5 lg:h-5;
+  @apply w-10 h-10 lg:w-5 lg:h-5;
 }

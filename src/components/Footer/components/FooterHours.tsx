@@ -30,9 +30,7 @@ const FooterHours: React.FC<FooterHoursProps> = ({ hours, diningNotice }) => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <h4 className="mb-3 footer-heading font-heading text-heritage-ivory">
-        Hours
-      </h4>
+      <h4 className="mb-3 heading-3 text-warm-ivory-200">Hours</h4>
 
       {/* Hours List - Mobile optimized with better spacing */}
       <div className="space-y-2">
@@ -42,25 +40,25 @@ const FooterHours: React.FC<FooterHoursProps> = ({ hours, diningNotice }) => {
             <div
               key={day}
               className={`footer-hours-row py-1 px-2 -mx-2 rounded ${
-                isToday ? "bg-heritage-gold/10 is-today" : ""
+                isToday ? "bg-champagne-gold-400/10 is-today" : ""
               }`}
             >
               <span
-                className={`capitalize footer-text ${
-                  isToday ? "text-heritage-gold" : "text-warm-ivory-200"
+                className={`capitalize paragraph-md ${
+                  isToday ? "text-champagne-gold-400" : "text-warm-ivory-200"
                 }`}
               >
                 {day}
                 {isToday && (
-                  <span className="ml-1 text-heritage-gold footer-text">
+                  <span className="ml-1 paragraph-md text-champagne-gold-400">
                     (Today)
                   </span>
                 )}
               </span>
               <span
-                className={`footer-text ${
+                className={`paragraph-md ${
                   isToday
-                    ? "font-medium text-heritage-gold"
+                    ? "font-medium text-champagne-gold-400"
                     : "text-warm-ivory-300"
                 }`}
               >
@@ -74,8 +72,7 @@ const FooterHours: React.FC<FooterHoursProps> = ({ hours, diningNotice }) => {
       {/* Dining Notice - Mobile optimized */}
       {diningNotice && (
         <div className="pt-3 mt-3 border-t border-warm-ivory-200/20">
-          <p className="flex items-center footer-small text-heritage-gold">
-            {/* Optionally replace with an icon from lucide-react if desired */}
+          <p className="flex items-center paragraph-md text-champagne-gold-400">
             {diningNotice}
           </p>
         </div>

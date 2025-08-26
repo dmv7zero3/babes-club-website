@@ -21,13 +21,13 @@ const MobileHeader: React.FC = () => {
 
   return (
     <header className="block lg:hidden">
-      <div className="flex items-center justify-between px-10 py-10 bg-warm-ivory-200 shadow-opera-sm">
+      <div className="flex items-center justify-between px-5 py-6 bg-warm-ivory-200 shadow-opera-sm">
         {/* Cafe Opera Logo */}
         <Link to="/" className="flex items-center" onClick={closeMenu}>
           <img
             src="/images/logo/cafe-opera-logo.svg"
             alt="Cafe Opera"
-            className="w-auto h-20 "
+            className="w-auto h-[3.25rem] lg:h-20 "
           />
         </Link>
 

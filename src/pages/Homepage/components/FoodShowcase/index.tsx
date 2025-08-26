@@ -48,7 +48,7 @@ const FoodShowcase: React.FC = () => {
       {/* Background Accent */}
       {/* <div className="absolute inset-0 opacity-50 bg-gradient-to-br from-warm-ivory-50 to-warm-ivory-200" /> */}
 
-      <div className="relative z-10 w-11/12 mx-auto max-w-7xl py-22 lg:py-24">
+      <div className="container relative">
         <SectionHeader title="delightful" subtitle="EXPERIENCE" />
 
         <FoodGrid items={foodItems} />

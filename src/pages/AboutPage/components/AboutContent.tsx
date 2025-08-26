@@ -4,16 +4,14 @@ import React from "react";
 
 const AboutContent: React.FC = () => {
   return (
-    <section className="relative overflow-hidden bg-warm-ivory-100 py-22 lg:py-24">
-      <div className="w-11/12 mx-auto max-w-7xl">
+    <section className="relative overflow-hidden bg-warm-ivory-100 ">
+      <div className="container">
         {/* Section Header */}
         <div className="mb-16 text-center">
-          <h1 className="mb-4 text-4xl font-normal font-kristi md:text-5xl text-champagne-gold-900">
+          <h1 className="mb-4 text-6xl font-normal font-kristi text-champagne-gold-900">
             our
           </h1>
-          <h1 className="text-5xl font-normal tracking-wide uppercase font-heading md:text-5xl lg:text-6xl text-heritage-blue">
-            PHILOSOPHY
-          </h1>
+          <h1 className="heading-1 text-opera-blue-900">PHILOSOPHY</h1>
         </div>
 
         {/* Content Grid */}
@@ -31,7 +29,7 @@ const AboutContent: React.FC = () => {
           {/* Philosophy Text */}
           <div className="space-y-8">
             <div className="space-y-8 paragraph">
-              <h1 className="heading-1">Welcome to Excellence</h1>
+              <h1 className="text-left heading-1">Welcome to Excellence</h1>
               <p>
                 Welcome to Cafe Opera and be prepared to enjoy delicious,
                 delicate and delightful Asian cuisines, in an environment
@@ -48,9 +46,7 @@ const AboutContent: React.FC = () => {
             </div>
 
             <div className="space-y-8 paragraph">
-              <h3 className="text-left heading-1 lg:text-left">
-                Our Environment
-              </h3>
+              <h3 className="text-left heading-1 ">Our Environment</h3>
               <p className="">
                 Our tasteful selection of music will blend in perfectly with the
                 good food and wine we serve. Our thorough understanding and
@@ -70,7 +66,7 @@ const AboutContent: React.FC = () => {
         </div>
 
         {/* Health Commitment */}
-        <div className="mx-auto text-center border rounded-2xl bg-heritage-ivory/50 border-champagne-gold-200/30">
+        <div className="mx-auto text-center border rounded-2xl bg-warm-ivory-200/50 border-champagne-gold-200/30">
           <h3 className="mb-8 text-left heading-1">
             Our Health-Conscious Promise
           </h3>

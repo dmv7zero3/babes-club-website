@@ -26,9 +26,7 @@ const FooterContact: React.FC<FooterContactProps> = ({
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <h4 className="mb-10 lg:mb-3 footer-heading font-heading text-heritage-ivory">
-        Visit Us
-      </h4>
+      <h4 className="mb-10 lg:mb-3 heading-3 text-warm-ivory-200">Visit Us</h4>
 
       {/* Address - Mobile optimized with better touch target */}
       <div className="space-y-6 lg:space-y-3">
@@ -42,7 +40,7 @@ const FooterContact: React.FC<FooterContactProps> = ({
         >
           <div className="flex items-center space-x-8">
             <svg
-              className="w-11 h-11 lg:w-5 lg:h-5 mt-0.5 text-heritage-gold flex-shrink-0"
+              className="w-6 h-6 lg:w-5 lg:h-5 mt-0.5 text-champagne-gold-400 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -60,7 +58,7 @@ const FooterContact: React.FC<FooterContactProps> = ({
                 d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
               />
             </svg>
-            <div className="transition-colors footer-text text-warm-ivory-200 group-hover:text-heritage-gold">
+            <div className="transition-colors paragraph-md text-warm-ivory-200 group-hover:text-champagne-gold-400">
               <p>{address.street}</p>
               <p>
                 {address.city}, {address.state} {address.zipCode}
@@ -75,7 +73,7 @@ const FooterContact: React.FC<FooterContactProps> = ({
           className="flex items-center p-2 -m-2 space-x-8 group"
         >
           <svg
-            className="flex-shrink-0 w-11 h-11 lg:w-5 lg:h-5 text-heritage-gold"
+            className="flex-shrink-0 w-6 h-6 lg:w-5 lg:h-5 text-champagne-gold-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -87,7 +85,7 @@ const FooterContact: React.FC<FooterContactProps> = ({
               d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
             />
           </svg>
-          <span className="transition-colors footer-link text-warm-ivory-200 group-hover:text-heritage-gold">
+          <span className="transition-colors paragraph-md text-warm-ivory-200 group-hover:text-champagne-gold-400">
             {formatPhoneForDisplay(phone)}
           </span>
         </a>
@@ -98,7 +96,7 @@ const FooterContact: React.FC<FooterContactProps> = ({
           className="flex items-center p-2 -m-2 space-x-8 group"
         >
           <svg
-            className="flex-shrink-0 w-11 h-11 lg:w-5 lg:h-5 text-heritage-gold"
+            className="flex-shrink-0 w-6 h-6 lg:w-5 lg:h-5 text-champagne-gold-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -110,7 +108,7 @@ const FooterContact: React.FC<FooterContactProps> = ({
               d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
             />
           </svg>
-          <p className="break-all transition-colors footer-link text-warm-ivory-200 group-hover:text-heritage-gold">
+          <p className="break-all transition-colors paragraph-md text-warm-ivory-200 group-hover:text-champagne-gold-400">
             {email}
           </p>
         </a>
@@ -119,7 +117,7 @@ const FooterContact: React.FC<FooterContactProps> = ({
         {parking && (
           <div className="flex items-center pt-2 space-x-8">
             <svg
-              className="w-11 h-11 lg:w-5 lg:h-5 mt-0.5 text-heritage-gold flex-shrink-0"
+              className="w-6 h-6 lg:w-5 lg:h-5 mt-0.5 text-champagne-gold-400 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -131,7 +129,7 @@ const FooterContact: React.FC<FooterContactProps> = ({
                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
               />
             </svg>
-            <p className="footer-text text-warm-ivory-300">
+            <p className="paragraph-md text-warm-ivory-300">
               <span className="font-medium">Parking:</span> {parking}
             </p>
           </div>

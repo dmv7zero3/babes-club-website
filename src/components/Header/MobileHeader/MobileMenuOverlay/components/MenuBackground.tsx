@@ -14,7 +14,7 @@ const MenuBackground: React.FC = () => {
           key={i}
           className={`absolute transition-all duration-1000 ${
             i % 3 === 0
-              ? "bg-heritage-gold"
+              ? "bg-champagne-gold-400"
               : i % 3 === 1
                 ? "bg-jade-green-400"
                 : "bg-opera-blue-400"

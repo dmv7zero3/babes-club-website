@@ -47,7 +47,7 @@ const AppetizersSection: React.FC = () => {
                 loading="lazy"
               />
               {/* Subtle overlay for better text contrast on hover */}
-              <div className="absolute inset-0 transition-opacity duration-500 opacity-0 bg-gradient-to-r from-heritage-blue/10 to-transparent hover:opacity-100" />
+              <div className="absolute inset-0 transition-opacity duration-500 opacity-0 bg-gradient-to-r from-opera-blue-900/10 to-transparent hover:opacity-100" />
             </div>
           </div>
 
@@ -55,23 +55,23 @@ const AppetizersSection: React.FC = () => {
           <div className="flex-col ">
             {/* Section Header */}
             <div>
-              <h1 className="text-5xl font-normal tracking-wide text-center uppercase lg:text-left mb-14 font-heading text-heritage-blue">
+              <h1 className="text-left heading-2 text-opera-blue-900">
                 Appetizers
               </h1>
             </div>
 
             {/* Appetizers List */}
-            <div className="space-y-7 lg:space-y-4">
+            <div className="mt-12 lg:mt-8 space-y-7 lg:space-y-4">
               {appetizers.map((item, index) => (
                 <div
                   key={item.id}
-                  className="pb-6 transition-all duration-300 border-b border-warm-ivory-300/50 last:border-b-0 hover:border-heritage-gold/30"
+                  className="pb-6 transition-all duration-300 border-b border-warm-ivory-300/50 last:border-b-0 hover:border-champagne-gold-400/30"
                   style={{
                     animationDelay: `${index * 100}ms`,
                   }}
                 >
                   <div className="space-y-5">
-                    <h2 className="heading-1 ">{item.name}</h2>
+                    <h2 className="text-left heading-2-sub ">{item.name}</h2>
                     <p className="paragraph">{item.description}</p>
                   </div>
                 </div>
@@ -80,7 +80,7 @@ const AppetizersSection: React.FC = () => {
 
             {/* Optional CTA or additional info */}
             {/* <div className="pt-4">
-              <p className="text-sm italic text-heritage-gold-700">
+              <p className="text-sm italic text-champagne-gold-400-700">
                 All appetizers are freshly prepared to order using authentic
                 recipes and premium ingredients.
               </p>

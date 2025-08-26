@@ -37,7 +37,7 @@ const ScrollIndicator = () => {
       style={{ zIndex: 20 }}
     >
       <svg
-        className="w-16 h-24 text-white lg:w-9 lg:h-12"
+        className="h-12 text-white w-9 "
         viewBox="0 0 32 56"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"

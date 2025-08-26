@@ -21,7 +21,7 @@ const MenuNavigation: React.FC<MenuNavigationProps> = ({
   return (
     <nav
       ref={navRef}
-      className="flex flex-col items-center justify-center flex-1 pb-8 gap-18"
+      className="flex flex-col items-center justify-center flex-1 pb-8 gap-9"
     >
       {links.map((link: MenuNavLink) => (
         <div
@@ -35,9 +35,9 @@ const MenuNavigation: React.FC<MenuNavigationProps> = ({
               ${
                 isActiveRoute(link.path)
                   ? "text-jade-green bg-warm-ivory-200/10"
-                  : "text-opera-blue hover:text-heritage-gold"
+                  : "text-opera-blue hover:text-champagne-gold-400"
               }
-              hover:bg-warm-ivory-200/20 focus:outline-none focus:ring-2 focus:ring-heritage-gold focus:ring-opacity-50`}
+              hover:bg-warm-ivory-200/20 focus:outline-none focus:ring-2 focus:ring-champagne-gold-400 focus:ring-opacity-50`}
           >
             {link.label}
             <span
@@ -53,10 +53,10 @@ const MenuNavigation: React.FC<MenuNavigationProps> = ({
       <div className="mt-6 menu-nav-item">
         <a
           href="tel:(703) 858-1441"
-          className="inline-flex items-center gap-3 px-10 py-8 text-4xl font-semibold tracking-wide transition-all duration-300 border-2 rounded-full md:10 md:py-8 md:text-xl font-heading bg-opera-blue text-champagne-gold border-opera-blue hover:bg-champagne-gold-500 hover:border-champagne-gold-500 hover:scale-105 hover:shadow-lg"
+          className="inline-flex items-center gap-3 px-8 py-4 rounded-full btn-sm bg-opera-blue text-warm-ivory-100"
         >
           <svg
-            className="w-8 h-8"
+            className="w-6 h-6"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

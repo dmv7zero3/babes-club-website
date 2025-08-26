@@ -8,20 +8,18 @@ const RestaurantSection: React.FC = () => {
       <div className="container">
         <div className="grid items-center grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
           {/* Content Container */}
-          <div className="space-y-8 lg:pr-8">
+          <div className="space-y-6 lg:pr-8">
             {/* Section Header */}
-            <div className="flex flex-col items-center lg:items-start">
-              <h2 className="mb-3 font-normal text-7xl font-kristi lg:text-5xl text-champagne-gold-900">
+            <div className="flex flex-col items-start lg:items-start">
+              <h2 className="mb-0.5 text-6xl font-normal  font-kristi lg:text-5xl text-champagne-gold-900">
                 Our
               </h2>
-              <h3 className="text-5xl font-normal tracking-wide text-center uppercase lg:text-left mb-14 font-heading text-heritage-blue">
-                Restaurant
-              </h3>
+              <h3 className="heading-2 text-opera-blue-900">Restaurant</h3>
             </div>
 
             {/* Subtitle */}
             <div className="space-y-2">
-              <p className="text-4xl font-medium tracking-wide uppercase text-heritage-blue lg:text-xl">
+              <p className="text-left text-opera-blue-900 heading-2-sub">
                 Checkout our restaurant and special dishes
               </p>
             </div>
@@ -38,7 +36,7 @@ const RestaurantSection: React.FC = () => {
               <div className="pt-4">
                 <a
                   href="tel:7038581441"
-                  className="inline-flex items-center text-5xl font-semibold transition-colors duration-300 lg:text-2xl paragraph font-heading"
+                  className="inline-flex items-center font-semibold heading-2-sub"
                   style={{ color: "#1e335c" }}
                   onMouseOver={(e) => (e.currentTarget.style.color = "#bfa14a")}
                   onMouseOut={(e) => (e.currentTarget.style.color = "#1e335c")}
@@ -67,7 +65,7 @@ const RestaurantSection: React.FC = () => {
             </div>
             {/* Additional Info */}
             <div className="pt-4">
-              <p className="text-4xl italic leading-relaxed lg:text-base text-champagne-gold-950">
+              <p className="paragraph-md text-champagne-gold-950">
                 Experience authentic Hong Kong cuisine in the heart of
                 Broadlands, Va.
               </p>
@@ -84,12 +82,12 @@ const RestaurantSection: React.FC = () => {
                 loading="lazy"
               />
               {/* Subtle overlay for better visual depth */}
-              <div className="absolute inset-0 transition-opacity duration-500 opacity-0 bg-gradient-to-l from-heritage-blue/10 to-transparent hover:opacity-100" />
+              <div className="absolute inset-0 transition-opacity duration-500 opacity-0 bg-gradient-to-l from-opera-blue-900/10 to-transparent hover:opacity-100" />
 
               {/* Decorative Element */}
               <div className="absolute top-4 right-4">
-                <div className="flex items-center justify-center w-16 h-16 border rounded-full bg-heritage-gold/20 backdrop-blur-sm border-heritage-gold/30">
-                  <div className="w-8 h-8 rounded-full bg-heritage-gold/40"></div>
+                <div className="flex items-center justify-center w-16 h-16 border rounded-full bg-champagne-gold-400/20 backdrop-blur-sm border-champagne-gold-400/30">
+                  <div className="w-8 h-8 rounded-full bg-champagne-gold-400/40"></div>
                 </div>
               </div>
             </div>

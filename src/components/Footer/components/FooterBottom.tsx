@@ -11,11 +11,11 @@ const FooterBottom: React.FC<FooterBottomProps> = ({
   const currentYear = new Date().getFullYear();
 
   return (
-    <div className="pt-6 mt-6 border-t sm:mt-8 border-warm-ivory-200/20">
+    <div className="pt-10 mt-8 border-t border-warm-ivory-200/20">
       <div className="flex flex-col items-center justify-between gap-8 text-center lg:flex-row lg:gap-0 lg:text-left">
         {/* Copyright - Mobile optimized */}
-        <div className="footer-small text-warm-ivory-300">
-          <p>
+        <div>
+          <p className="paragraph-md text-warm-ivory-300">
             © {currentYear} {businessName}. All rights reserved.
           </p>
           {/* <p className="hidden mt-1 lg:block">

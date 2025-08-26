@@ -1,5 +1,6 @@
 // src/components/Header/MobileHeader/MobileMenuOverlay/components/MenuLogo.tsx
 import React from "react";
+import "../styles/mobilemenu.styles.css";
 
 /**
  * Logo section component for the mobile menu overlay
@@ -13,7 +14,7 @@ const MenuLogo: React.FC = () => {
           <img
             src="/images/logo/cafe-opera-logo.svg"
             alt="Cafe Opera Asian Cuisine"
-            className="mx-auto duration-500 menu-overlay-logo-size"
+            className="mx-auto duration-500 "
           />
         </div>
 

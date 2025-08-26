@@ -16,12 +16,12 @@ const FeaturedArticle: React.FC = () => {
       {/* Overlay */}
       <div className="absolute inset-0 bg-rich-mahogany-900/80" />
 
-      <div className="relative z-10 w-11/12 max-w-4xl mx-auto text-center">
+      <div className="relative z-10 w-11/12 max-w-4xl py-16 mx-auto text-center lg:py-0">
         {/* Featured Badge */}
         <div className="mb-8">
-          <div className="inline-flex items-center px-6 py-3 space-x-3 rounded-full bg-heritage-gold/90 backdrop-blur-sm">
+          <div className="inline-flex items-center px-6 py-3 space-x-3 rounded-full bg-champagne-gold-400/90 backdrop-blur-sm">
             <svg
-              className="w-9 h-9 text-opera-blue"
+              className="w-6 h-6 text-opera-blue"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -31,14 +31,14 @@ const FeaturedArticle: React.FC = () => {
                 clipRule="evenodd"
               />
             </svg>
-            <span className="font-semibold paragraph text-opera-blue">
+            <span className="font-semibold paragraph-md text-opera-blue">
               Featured Restaurant
             </span>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="p-10 shadow-2xl rounded-3xl bg-heritage-ivory/95 backdrop-blur-sm">
+        <div className="p-10 shadow-2xl rounded-3xl bg-warm-ivory-200/95 backdrop-blur-sm">
           <h2 className="mb-6 heading-2-sub text-opera-blue ">
             Featured in Ashburn Magazine
           </h2>
@@ -53,7 +53,7 @@ const FeaturedArticle: React.FC = () => {
             href="https://www.ashburnmagazine.com/winedine/ashburn-restaurateurs-prove-they-have-staying-power/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center btn-md bg-opera-blue text-warm-ivory-50"
+            className="inline-flex items-center text-base btn-md bg-opera-blue text-warm-ivory-50"
           >
             Read the Full Article
             <svg

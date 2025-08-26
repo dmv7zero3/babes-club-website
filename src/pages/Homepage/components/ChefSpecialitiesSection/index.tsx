@@ -36,7 +36,7 @@ const chefSpecialties = [
 const ChefSpecialitiesSection: React.FC = () => {
   return (
     <section className="relative flex items-center overflow-hidden bg-warm-ivory">
-      <div className="container ">
+      <div className="container py-8">
         <div className="grid items-center grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
           {/* Image Container */}
           <div className="relative">
@@ -48,7 +48,7 @@ const ChefSpecialitiesSection: React.FC = () => {
                 loading="lazy"
               />
               {/* Subtle overlay for better text contrast on hover */}
-              <div className="absolute inset-0 transition-opacity duration-500 opacity-0 bg-gradient-to-r from-heritage-blue/10 to-transparent hover:opacity-100" />
+              <div className="absolute inset-0 transition-opacity duration-500 opacity-0 bg-gradient-to-r from-opera-blue-900/10 to-transparent hover:opacity-100" />
             </div>
           </div>
 
@@ -56,23 +56,23 @@ const ChefSpecialitiesSection: React.FC = () => {
           <div className="space-y-8 lg:pl-8">
             {/* Section Header */}
             <div className="space-y-4">
-              <h1 className="text-5xl font-normal tracking-wide text-center uppercase lg:text-left mb-14 font-heading text-heritage-blue">
+              <h1 className="text-left heading-2 mb-14 text-opera-blue-900">
                 Chef Specialties
               </h1>
             </div>
 
             {/* Chef Specialties List */}
-            <div className="space-y-7 lg:space-y-4">
+            <div className="mt-12 lg:mt-8 space-y-7 lg:space-y-4">
               {chefSpecialties.map((item, index) => (
                 <div
                   key={item.id}
-                  className="pb-6 transition-all duration-300 border-b border-warm-ivory-300/50 last:border-b-0 hover:border-heritage-gold/30"
+                  className="pb-6 transition-all duration-300 border-b border-warm-ivory-300/50 last:border-b-0 hover:border-champagne-gold-400/30"
                   style={{
                     animationDelay: `${index * 100}ms`,
                   }}
                 >
-                  <div className="space-y-5">
-                    <h2 className="heading-1">{item.name}</h2>
+                  <div className="space-y-5 text-left ">
+                    <h2 className="text-left heading-2-sub ">{item.name}</h2>
                     {item.description && (
                       <p className="paragraph">{item.description}</p>
                     )}
@@ -83,7 +83,7 @@ const ChefSpecialitiesSection: React.FC = () => {
 
             {/* Optional CTA or additional info */}
             {/* <div className="pt-4">
-              <p className="text-sm italic text-heritage-gold-700">
+              <p className="text-sm italic text-champagne-gold-400-700">
                 All chef specialties are freshly prepared to order using
                 authentic recipes and premium ingredients.
               </p>

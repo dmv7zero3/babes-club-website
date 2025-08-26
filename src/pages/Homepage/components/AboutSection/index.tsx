@@ -18,7 +18,7 @@ const AboutSection: React.FC = () => {
       ref={sectionRef}
       className="relative flex items-center overflow-hidden bg-warm-ivory"
     >
-      <div className="container">
+      <div className="w-11/12 py-16 mx-auto lg:py-20 max-w-[1350px]">
         <div className="grid items-center grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-16">
           <ImageContainer scrollYProgress={scrollYProgress} />
           <ContentContainer />

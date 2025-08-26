@@ -25,7 +25,7 @@ const ContactPage: React.FC = () => {
             <h2 className="mb-4 text-5xl font-normal font-kristi md:text-5xl text-champagne-gold-900">
               Get in
             </h2>
-            <h1 className="mb-10 text-5xl font-normal tracking-wide text-center uppercase font-heading text-heritage-blue">
+            <h1 className="mb-10 text-5xl font-normal tracking-wide text-center uppercase font-heading text-opera-blue-900">
               TOUCH
             </h1>
             <p className="max-w-2xl mx-auto paragraph text-rich-mahogany-700">

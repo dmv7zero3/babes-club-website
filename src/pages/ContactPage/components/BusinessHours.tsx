@@ -41,22 +41,22 @@ const BusinessHours: React.FC = () => {
           return (
             <div
               key={day}
-              className={`flex justify-between paragraph items-center py-3 px-4 rounded-lg transition-all duration-200 ${
+              className={`flex justify-between paragraph-md items-center py-3 px-4 rounded-lg transition-all duration-200 ${
                 isToday
-                  ? "bg-heritage-gold/20 border border-heritage-gold/30"
+                  ? "bg-champagne-gold-400/20 border border-champagne-gold-400/30"
                   : "bg-warm-ivory-100 hover:bg-warm-ivory-200"
               }`}
             >
               <span
                 className={`font-medium ${
                   isToday
-                    ? "text-heritage-blue font-semibold"
+                    ? "text-opera-blue-900 font-semibold"
                     : "text-rich-mahogany-700"
                 }`}
               >
                 {getDayLabel(day)}
                 {isToday && (
-                  <span className="px-2 py-1 ml-2 rounded-full paragraph bg-heritage-gold text-heritage-blue">
+                  <span className="px-2 py-1 ml-2 rounded-full bg-champagne-gold-400 text-opera-blue-900">
                     Today
                   </span>
                 )}
@@ -66,7 +66,7 @@ const BusinessHours: React.FC = () => {
                   hours.toLowerCase() === "closed"
                     ? "text-rich-mahogany-400"
                     : isToday
-                      ? "text-heritage-blue font-semibold"
+                      ? "text-opera-blue-900 font-semibold"
                       : "text-rich-mahogany-700"
                 }`}
               >
@@ -78,16 +78,16 @@ const BusinessHours: React.FC = () => {
       </div>
 
       {/* Call to Action */}
-      <div className="py-12 text-center rounded-xl bg-gradient-to-br from-heritage-blue to-opera-blue-800 text-heritage-ivory">
+      <div className="py-12 text-center rounded-xl bg-gradient-to-br from-opera-blue-900 to-opera-blue-800 text-warm-ivory-200">
         <h4 className="mb-6 text-center heading-2-sub text-warm-ivory-50">
           Ready to Order?
         </h4>
-        <p className="mb-6 font-normal paragraph-md text-warm-ivory-50">
+        <p className="w-11/12 mx-auto mb-6 font-normal paragraph-md text-warm-ivory-50">
           Call ahead for faster pickup or dine in for the full experience
         </p>
         <a
           href="tel:7038581441"
-          className="inline-flex items-center tracking-wide rounded-full bg-champagne-gold text-opera-blue-900 hover:bg-champagne-gold-500 btn-md"
+          className="rounded-full btn-md bg-champagne-gold text-opera-blue-900 hover:bg-champagne-gold-500"
         >
           <Clock className="w-6 h-6 mr-2" />
           Call: (703) 858-1441

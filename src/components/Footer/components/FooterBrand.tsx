@@ -12,14 +12,14 @@ const FooterBrand: React.FC<FooterBrandProps> = ({
   established,
 }) => {
   return (
-    <div className="space-y-9 ">
+    <div className="space-y-8 ">
       {/* Logo - Keep as is */}
       <Link to="/" className="block ">
-        <div className="flex justify-center">
+        <div className="flex justify-center lg:justify-start">
           <img
             src="/images/logo/cafe-opera-white.svg"
             alt={`${businessName} Logo`}
-            className="object-contain h-auto w-[28rem] lg:w-40"
+            className="object-contain w-10/12 h-auto max-w-[26rem] lg:w-40"
             loading="lazy"
           />
         </div>
@@ -31,7 +31,7 @@ const FooterBrand: React.FC<FooterBrandProps> = ({
       </p>
 
       {/* Established - Use only footer-small for font size */}
-      <div className="footer-text text-heritage-gold">
+      <div className="footer-text text-champagne-gold-400">
         <span className="font-medium">
           Serving authentic cuisine since {established}
         </span>

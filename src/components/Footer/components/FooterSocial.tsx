@@ -22,22 +22,20 @@ const FooterSocial: React.FC<FooterSocialProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      <h4 className="mb-8 lg:mb-4 footer-heading font-heading text-heritage-ivory">
-        Connect With Us
-      </h4>
+    <div className="flex-col items-center space-y-6">
+      <h4 className="mb-10 heading-3 text-warm-ivory-200">Connect With Us</h4>
 
-      {/* Online Ordering CTA - Mobile optimized */}
-      <div className="mb-10 lg:mb-6">
+      {/* Online Ordering CTA - Always horizontal row */}
+      <div className="items-center mb-10 lg:mb-6">
         <a
           href={onlineOrderingUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center w-full px-4 py-6 lg:py-3 footer-cta bg-heritage-gold text-heritage-blue font-heading font-semibold rounded-lg hover:bg-champagne-gold-500 transition-all duration-300 hover:shadow-gold hover:-translate-y-0.5"
+          className="flex items-center font-semibold transition-all duration-300 rounded-lg btn-md bg-champagne-gold-400 text-opera-blue-900 font-heading hover:bg-champagne-gold-500 hover:shadow-gold"
         >
-          Order Online
+          <span>Order Online</span>
           <svg
-            className="w-10 h-10 ml-2 lg:w-4 lg:h-4"
+            className="w-6 h-6 ml-2"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -54,17 +52,17 @@ const FooterSocial: React.FC<FooterSocialProps> = ({
 
       {/* Social Media Links - Mobile optimized spacing */}
       <div>
-        <h5 className="mt-10 mb-10 tracking-wide lg:mb-3 lg:mt-0 footer-heading text-heritage-gold">
+        <h5 className="mt-10 mb-12 lg:mb-3 lg:mt-0 heading-3 text-champagne-gold-400">
           Follow Us
         </h5>
-        <div className="flex flex-wrap gap-8 lg:gap-4">
+        <div className="flex flex-wrap items-center justify-center gap-12 lg:gap-4">
           {socialLinks.map((social) => (
             <a
               key={social.platform}
               href={social.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center w-20 h-20 transition-all duration-300 rounded-lg lg:w-11 lg:h-11 bg-warm-ivory-200/10 text-warm-ivory-200 hover:bg-heritage-gold hover:text-heritage-blue hover:scale-110 touch-manipulation"
+              className="flex items-center justify-center w-20 h-20 transition-all duration-300 rounded-lg lg:w-11 lg:h-11 bg-warm-ivory-200/10 text-warm-ivory-200 hover:bg-champagne-gold-400 hover:text-opera-blue-900 hover:scale-110 touch-manipulation"
               aria-label={`Follow us on ${social.platform}`}
             >
               {renderIcon(social.icon)}
