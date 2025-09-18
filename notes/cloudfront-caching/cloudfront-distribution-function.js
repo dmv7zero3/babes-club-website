@@ -1,11 +1,10 @@
 /**
- * CloudFront Function for Nash & Smashed fully static website
+ * CloudFront Function for Cafe Opera fully static website
  *
  * Handles:
  * 1. Static file pass-through (including XML, fonts, etc.)
  * 2. Static routes to their respective HTML files
- * 3. Known valid blog post patterns based on sitemap data
- * 4. Fallback to /index.html for React Router to handle unknown routes
+ * 3. Fallback to /index.html for React Router to handle unknown routes
  */
 function handler(event) {
   var request = event.request;
@@ -48,14 +47,7 @@ function handler(event) {
     ".webmanifest",
   ];
 
-  var staticRoutes = [
-    "/",
-    "/catering",
-    "/contact",
-    "/events",
-    "/menu",
-    "/order-online",
-  ];
+  var staticRoutes = ["/", "/about", "/menu", "/contact"];
   // 1. Pass through static assets
   for (var i = 0; i < staticExtensions.length; i++) {
     if (uri.endsWith(staticExtensions[i])) {

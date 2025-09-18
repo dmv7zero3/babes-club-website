@@ -141,6 +141,11 @@ const commonConfig = {
         use: [MiniCssExtractPlugin.loader, "css-loader", "postcss-loader"],
         exclude: /node_modules/,
       },
+      {
+        test: /\.(woff2?|eot|ttf|otf)$/i,
+        type: "asset/resource",
+        generator: { filename: "fonts/[name][ext]" },
+      },
       // Add other loaders (e.g., for images) as needed
     ],
   },

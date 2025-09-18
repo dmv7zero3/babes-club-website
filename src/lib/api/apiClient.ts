@@ -1,11 +1,12 @@
+// src/lib/api/apiClient.ts
 import axios, { AxiosInstance, AxiosResponse } from "axios";
+import { API_BASE_URL as ENV_API_BASE_URL } from "../../env/env";
 
 const DEFAULT_TIMEOUT = 30000;
 const MAX_RETRIES = 1;
 
-// API Gateway base URL
-const API_BASE_URL =
-  "https://drtj5ewvdc.execute-api.us-east-1.amazonaws.com/PROD";
+// API Gateway base URL (use .env / build-time value — no fallback)
+const API_BASE_URL = ENV_API_BASE_URL;
 
 // Define all available endpoints
 export const ENDPOINTS = {
@@ -13,14 +14,6 @@ export const ENDPOINTS = {
   FORMS: {
     SUBSCRIBER: "/forms/subscriber",
     CONTACT: "/forms/contact",
-    CAREER: "/forms/career",
-  },
-  // Dashboard endpoints
-  DASHBOARD: {
-    ROOT: "/dashboard",
-    LOGIN: "/dashboard/login",
-    FORGOT_PASSWORD: "/dashboard/forgot-password",
-    SET_PASSWORD: "/dashboard/set-password",
   },
 } as const;
 

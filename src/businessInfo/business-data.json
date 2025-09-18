@@ -1,111 +1,104 @@
 {
-  "cafe-opera": {
-    "business_id": "cafe-opera",
-    "business_name": "Cafe Opera",
-    "description": "Casual Chinese eatery serving authentic dishes with health-minded items (no trans fats), including vegetarian plates. Experience the finest Chinese and Pan-Asian cuisine with fresh ingredients and meticulous cooking.",
-    "tagline": "Authentic Chinese & Pan-Asian Cuisine",
-    "established": "2003",
-    "business_type": ["Chinese Restaurant", "Asian Cuisine", "Casual Dining"],
-    "address": {
-      "street": "42882 Truro Parish Dr STE 104",
-      "city": "Ashburn",
-      "state": "VA",
-      "zipCode": "20148",
-      "formatted": "42882 Truro Parish Dr STE 104, Ashburn, VA 20148"
-    },
-    "contact": {
-      "phone": "(703) 858-1441",
-      "email": "info@cafeopera.net",
-      "website": "https://cafeopera.net"
-    },
-    "hours": {
-      "monday": "11:00 AM - 9:00 PM",
-      "tuesday": "11:00 AM - 9:00 PM",
-      "wednesday": "11:00 AM - 9:00 PM",
-      "thursday": "11:00 AM - 9:00 PM",
-      "friday": "11:00 AM - 9:30 PM",
-      "saturday": "12:00 PM - 9:30 PM",
-      "sunday": "12:00 PM - 9:00 PM"
-    },
-    "features": {
-      "dining_options": ["Dine-in", "Takeout", "Delivery"],
-      "service_options": [
-        "Vegan Options",
-        "Vegetarian Plates",
-        "Kids Menu",
-        "Wi-Fi",
-        "Health-Minded Items (No Trans Fats)"
-      ],
-      "atmosphere": ["Casual", "Family-Friendly", "Authentic"],
-      "payment": ["Cash", "Credit Cards", "Debit Cards"]
-    },
-    "specialties": [
-      "Sweet & Sour Chicken",
-      "Kung Pao Chicken",
-      "General Tso's Chicken",
-      "Orange Chicken",
-      "Shrimp with Walnuts",
-      "Pineapple Fried Rice",
-      "Crispy Beef",
-      "Panang Chicken"
+  "business_id": "babes-club",
+  "business_name": "The Babes Club",
+  "description": "Handcrafted accessories made in Washington, DC. Women owned and operated business specializing in unique jewelry, necklaces, and earrings with custom designs and bulk options available.",
+  "tagline": "Handcrafted Accessories • Made in Washington, DC",
+  "established": "2024",
+  "business_type": [
+    "E-commerce",
+    "Handcrafted Accessories",
+    "Jewelry",
+    "Women-Owned Business"
+  ],
+  "address": {
+    "street": "",
+    "city": "Washington",
+    "state": "DC",
+    "zipCode": "",
+    "formatted": "Washington, DC"
+  },
+  "contact": {
+    "phone": "",
+    "email": "contact@babesclub.com",
+    "website": "https://babesclub.com"
+  },
+  "features": {
+    "service_options": [
+      "Online Shopping",
+      "Custom Designs",
+      "Bulk Orders Available",
+      "Baltimore City Pickup",
+      "Handcrafted",
+      "Women Owned & Operated"
     ],
-    "popular_items": [
-      "Sweet & Sour Chicken",
-      "Kung Pao Chicken",
-      "General Tso's Chicken",
-      "Orange Chicken",
-      "Pineapple Fried Rice",
-      "Spring Rolls",
-      "Crab Rangoon",
-      "Chicken Satay"
-    ],
-    "cuisine_types": [
-      "Chinese",
-      "Pan-Asian",
-      "Thai",
-      "Vegetarian",
-      "Vegan Options"
-    ],
-    "dietary_accommodations": [
-      "Vegetarian",
-      "Vegan Options",
-      "No Trans Fats",
-      "Health-Conscious Options",
-      "Kids Menu"
-    ],
-    "events": {
-      "family_dining": "Daily",
-      "lunch_specials": "Monday - Friday"
-    },
-    "social_media": {
-      "website": "https://cafeopera.net",
-      "google_maps": "https://share.google/cMRsHRKPgvhErakdh",
-      "facebook": "https://www.facebook.com/CafeOpera.VA",
-      "instagram": "https://www.instagram.com/cafe_opera_asian_cuisine/"
-    },
-    "target_audience": [
-      "Families",
-      "Chinese Food Enthusiasts",
-      "Health-Conscious Diners",
-      "Local Ashburn Community",
-      "Vegetarians & Vegans",
-      "Lunch & Dinner Customers"
-    ],
-    "competitive_advantages": [
-      "Authentic Chinese & Pan-Asian Cuisine",
-      "Health-Minded Cooking (No Trans Fats)",
-      "Extensive Vegetarian & Vegan Options",
-      "Family-Friendly Atmosphere",
-      "Fresh Ingredients & Meticulous Cooking",
-      "Convenient Ashburn Location",
-      "Kids Menu Available"
-    ],
-    "logo": "/images/logo/cafe-opera-logo.png",
-    "dine_in_notice": "No Dine-in Service From 2:30pm – 4:30pm Daily",
-    "location_details": {
-      "parking": "Available",
-      "accessibility": "Wheelchair Accessible"
-    },
-    "online_ordering": "https://www.mealage.com/2foodmenu8.jsp?sessionid=1423263736473A2601:a:401:3674:259d:4e38:cddb:1847dgmicgflvwztemsjxgrswgdvlumg&restaurantId=9503"
-  }
+    "products": ["Necklaces", "Earrings", "Accessories", "Custom Jewelry"],
+    "materials": ["Gold Chains", "Silver Chains", "Various Colors"],
+    "payment": ["Online Payment", "Credit Cards", "Debit Cards"]
+  },
+  "specialties": [
+    "Handcrafted Necklaces",
+    "Custom Earrings",
+    "Gold Chain Jewelry",
+    "Silver Chain Jewelry",
+    "Colorful Accessories",
+    "Original Style Designs",
+    "Bulk Jewelry Orders"
+  ],
+  "popular_items": [
+    "2024 Original Style Necklaces",
+    "Custom Earrings",
+    "Gold Chain Necklaces",
+    "Silver Chain Necklaces",
+    "Colorful Accessories"
+  ],
+  "cuisine_types": [
+    "Handcrafted Jewelry",
+    "Accessories",
+    "Custom Designs",
+    "Fashion Jewelry"
+  ],
+  "dietary_accommodations": [],
+  "events": {
+    "sales": "Ongoing discounts - Necklaces $15, Earrings $10",
+    "pickup": "Baltimore City pickup available"
+  },
+  "social_media": {
+    "website": "https://babesclub.com",
+    "instagram_main": "https://www.instagram.com/thebabesclub/",
+    "instagram_shop": "https://www.instagram.com/shopthebabesclub/",
+    "instagram_chronic": "https://www.instagram.com/the.chronicclothingco/",
+    "instagram_baby": "https://www.instagram.com/baby.chronic/"
+  },
+  "target_audience": [
+    "Fashion-Forward Women",
+    "Jewelry Enthusiasts",
+    "Supporting Women-Owned Businesses",
+    "Washington DC Community",
+    "Baltimore Community",
+    "Custom Jewelry Seekers",
+    "Bulk Buyers"
+  ],
+  "competitive_advantages": [
+    "Handcrafted in Washington DC",
+    "Women Owned & Operated",
+    "Custom Design Services",
+    "Bulk Orders Available",
+    "Affordable Pricing ($10-15)",
+    "Original 2024 Style Designs",
+    "Multiple Instagram Presences",
+    "Local Pickup Available"
+  ],
+  "logo": "/images/logo/babes-club-logo.png",
+  "og_image": "/images/og-image/babes-club-og-image.jpg",
+  "special_notices": [
+    "All necklaces now $15",
+    "All earrings now $10",
+    "Baltimore City pickup available",
+    "Bulk orders available"
+  ],
+  "location_details": {
+    "shipping": "Online orders available",
+    "pickup": "DMV pickup available"
+  },
+  "online_ordering": "https://babesclub.com/shop"
 }

@@ -6,18 +6,14 @@ import "@/styles/fonts.css";
 import "@/styles/index.css";
 
 import ScrollToTop from "@/utils/ScrollToTop";
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
 
 const App = () => {
   const routing = useRoutes(routes);
 
   return (
-    <div className="relative flex flex-col min-h-screen bg-black">
-      <Header />
+    <div className="relative flex flex-col min-h-screen bg-babe-pink">
       <ScrollToTop />
       <main className="flex-grow">{routing}</main>
-      <Footer />
     </div>
   );
 };

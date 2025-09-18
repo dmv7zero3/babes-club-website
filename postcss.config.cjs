@@ -249,7 +249,8 @@ module.exports = {
         // Additional PurgeCSS options for better optimization
         variables: true, // Keep CSS custom properties
         keyframes: true, // Keep @keyframes (essential for GSAP)
-        fontFace: true, // Keep @font-face declarations
+        // Do NOT remove @font-face (we serve local fonts)
+        fontFace: false,
 
         // Skip certain content patterns
         skippedContentGlobs: [

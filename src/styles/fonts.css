@@ -1,75 +1,74 @@
 /* ==============================================
-   KRISTI - Regular
+   Google Fonts: Inter (imported from CDN)
+   Note: For best performance you could move this to <head> links instead of @import.
    ============================================== */
 
 @font-face {
-  font-family: "Kristi";
+  font-family: "Inter";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src:
-    url("../fonts/Kristi/Kristi-Regular.woff2") format("woff2"),
-    url("../fonts/Kristi/Kristi-Regular.woff") format("woff"),
-    url("../fonts/Kristi/Kristi-Regular.ttf") format("truetype");
+  src: url("../fonts/Inter/static/Inter_18pt-Regular.ttf") format("truetype");
 }
-/* ==============================================
-   LATO - Regular 
-   ============================================== */
 
-@font-face {
-  font-family: "Lato";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src:
-    url("../fonts/Lato/Lato-Regular.woff2") format("woff2"),
-    url("../fonts/Lato/Lato-Regular.woff") format("woff"),
-    url("../fonts/Lato/Lato-Regular.ttf") format("truetype");
+/* Utility class to apply Inter */
+.font-inter {
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
 }
 
 /* ==============================================
-   PLAYFAIR DISPLAY - Regular
+   GRAND HOTEL - Regular
    ============================================== */
 
 @font-face {
-  font-family: "Playfair Display";
+  font-family: "Grand Hotel";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
   src:
-    url("../fonts/Playfair_Display/PlayfairDisplay-Regular.woff2")
-      format("woff2"),
-    url("../fonts/Playfair_Display/PlayfairDisplay-Regular.woff") format("woff"),
-    url("../fonts/Playfair_Display/PlayfairDisplay-Regular.ttf")
-      format("truetype");
+    url("../fonts/Grand-Hotel/GrandHotel-Regular.woff2") format("woff2"),
+    url("../fonts/Grand-Hotel/GrandHotel-Regular.woff") format("woff"),
+    url("../fonts/Grand-Hotel/GrandHotel-Regular.ttf") format("truetype");
 }
+/* ==============================================
+   Inter - Regular 
+   ============================================== */
 
 .paragraph {
-  @apply text-2xl lg:text-xl leading-relaxed  text-rich-mahogany/70 font-lato;
+  @apply text-[1.35rem] lg:text-xl leading-relaxed;
 }
 
 .paragraph-md {
-  @apply text-xl leading-9 lg:text-base text-rich-mahogany/70 font-body;
+  @apply text-xl leading-9 lg:text-base;
 }
 
 .paragraph-sm {
-  @apply text-lg leading-9 lg:text-sm text-rich-mahogany/70 font-body;
+  @apply text-lg leading-9 lg:text-sm;
 }
 
 /* Homepage Headers */
 
 .heading-1 {
-  @apply text-5xl font-normal transition-colors duration-300 lg:text-3xl font-heading text-opera-blue-900;
+  @apply text-5xl font-normal transition-colors duration-300;
 }
 
 .heading-2 {
-  @apply text-5xl font-normal leading-normal lg:text-4xl tracking-wide text-center uppercase lg:text-left  font-heading text-opera-blue-900;
+  @apply text-5xl font-normal leading-normal lg:text-4xl tracking-wide text-center uppercase lg:text-left;
 }
 
 .heading-2-sub {
-  @apply text-[34px] lg:text-3xl font-normal tracking-wide text-center uppercase font-heading text-opera-blue-900;
+  @apply text-[34px] lg:text-3xl font-normal tracking-wide text-center uppercase;
 }
 
 .heading-3 {
-  @apply text-3xl lg:text-2xl font-normal tracking-wide text-center uppercase font-heading text-opera-blue-900;
+  @apply text-[1.8rem] lg:text-2xl font-normal tracking-wide text-center uppercase;
 }

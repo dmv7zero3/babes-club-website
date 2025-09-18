@@ -2,6 +2,7 @@
 import CompressionPlugin from "compression-webpack-plugin";
 import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
 import S3UploadPlugin from "./s3-upload-plugin.js";
+import { loadDeployConfig } from "../../../scripts/load-config.mjs";
 
 export function prodPlugins() {
   const plugins = [
@@ -22,7 +23,14 @@ export function prodPlugins() {
 
   // Add S3 upload plugin if deploying
   if (process.env.DEPLOY_TO_S3) {
-    plugins.push(new S3UploadPlugin());
+    const cfg = loadDeployConfig();
+    plugins.push(
+      new S3UploadPlugin({
+        bucket: cfg.s3Bucket,
+        region: cfg.awsRegion,
+        distributionId: cfg.cloudFrontDistributionId,
+      })
+    );
   }
 
   if (process.env.ANALYZE) {

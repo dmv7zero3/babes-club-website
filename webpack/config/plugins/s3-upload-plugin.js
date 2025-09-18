@@ -10,17 +10,49 @@ import mime from "mime-types";
 
 class S3UploadPlugin {
   constructor(options = {}) {
+    // Resolve configuration from explicit options first, then environment.
+    // No hardcoded defaults here — fail fast if required values are missing.
     this.options = {
-      bucket: process.env.S3_BUCKET_NAME || "cafe-opera-website",
-      region: process.env.AWS_REGION || "us-east-1",
-      distributionId:
-        process.env.CLOUDFRONT_DISTRIBUTION_ID || "E34BHBYCWQMYEU",
-      deleteRemoved: true,
       ...options,
+      bucket:
+        options.bucket ||
+        process.env.S3_BUCKET_NAME ||
+        process.env.S3_BUCKET_PATH,
+      region: options.region || process.env.AWS_REGION,
+      distributionId:
+        options.distributionId || process.env.CLOUDFRONT_DISTRIBUTION_ID,
+      deleteRemoved:
+        options.deleteRemoved !== undefined ? options.deleteRemoved : true,
     };
 
+    // Normalize S3_BUCKET_PATH (s3://bucket/) -> bucket name if needed
+    if (this.options.bucket && this.options.bucket.startsWith("s3://")) {
+      // strip s3:// and any trailing slashes
+      this.options.bucket = this.options.bucket
+        .replace(/^s3:\/\//, "")
+        .replace(/\/+$/, "");
+    }
+
+    // Validate required config
+    const missing = [];
+    if (!this.options.bucket)
+      missing.push("S3 bucket (bucket or S3_BUCKET_NAME/S3_BUCKET_PATH)");
+    if (!this.options.region) missing.push("AWS region (region or AWS_REGION)");
+    if (!this.options.distributionId)
+      missing.push(
+        "CloudFront distribution id (distributionId or CLOUDFRONT_DISTRIBUTION_ID)"
+      );
+
+    if (missing.length) {
+      throw new Error(
+        `S3UploadPlugin missing required configuration: ${missing.join(", ")}`
+      );
+    }
+
     this.s3Client = new S3Client({ region: this.options.region });
-    this.cloudFrontClient = new CloudFrontClient({ region: "us-east-1" });
+    this.cloudFrontClient = new CloudFrontClient({
+      region: this.options.region,
+    });
   }
 
   apply(compiler) {
