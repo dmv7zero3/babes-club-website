@@ -11,6 +11,7 @@ const businessDataPath = path.resolve(
   "src/businessInfo/business-data.json"
 );
 const business = JSON.parse(fs.readFileSync(businessDataPath, "utf-8"));
+const social = business.social_media || {};
 
 const ORIGIN =
   process.env.SITE_ORIGIN || business.contact.website || "https://example.com";
@@ -28,11 +29,9 @@ const ORG_ENTITY = {
       ? `${ORIGIN}${business.logo}`
       : `${ORIGIN}/images/logo.png`,
   },
-  sameAs: [
-    business.social_media.instagram,
-    business.social_media.facebook,
-    business.social_media.google_maps,
-  ].filter(Boolean),
+  sameAs: [social.instagram, social.facebook, social.google_maps].filter(
+    Boolean
+  ),
 };
 
 const WEBSITE_ENTITY = {
@@ -52,7 +51,6 @@ export const ROUTE_META = [
     ogImage: business.og_image ? `${ORIGIN}${business.og_image}` : undefined,
     jsonLd: [ORG_ENTITY, WEBSITE_ENTITY],
   },
-  // Add more routes as needed for SLS DC
 ];
 
 export function getRouteMetaByPath(path) {

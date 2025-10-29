@@ -66,3 +66,22 @@ declare module "*.module.css" {
   const classes: { [key: string]: string };
   export default classes;
 }
+
+// Minimal stubs for curtainsjs since it ships without TypeScript types
+declare module "curtainsjs" {
+  export class Curtains {
+    constructor(options?: any);
+    dispose(): void;
+    updateScrollValues(x: number, y: number): void;
+  }
+  export class Plane {
+    constructor(curtains: any, el: HTMLElement, params: any);
+    onReady(cb: () => void): this;
+    onError(cb: (e?: any) => void): this;
+    onRender(cb: () => void): this;
+    remove(): void;
+    getBoundingRect(): { width: number; height: number };
+    uniforms: Record<string, { name?: string; type?: string; value: any }>;
+  }
+  export class ShaderPass {}
+}

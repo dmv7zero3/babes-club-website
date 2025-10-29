@@ -1,0 +1,29 @@
+[
+    {
+        "CertificateArn": "arn:aws:acm:us-east-1:752567131183:certificate/ce1c2b1a-9842-4a13-9b8e-bd3ff5667e4f",
+        "DomainName": "lifemissionsinternational.com",
+        "SubjectAlternativeNameSummaries": [
+            "lifemissionsinternational.com",
+            "www.lifemissionsinternational.com"
+        ],
+        "HasAdditionalSubjectAlternativeNames": false,
+        "Status": "ISSUED",
+        "Type": "AMAZON_ISSUED",
+        "KeyAlgorithm": "RSA-2048",
+        "KeyUsages": [
+            "DIGITAL_SIGNATURE",
+            "KEY_ENCIPHERMENT"
+        ],
+        "ExtendedKeyUsages": [
+            "TLS_WEB_SERVER_AUTHENTICATION"
+        ],
+        "ExportOption": "DISABLED",
+        "InUse": false,
+        "Exported": false,
+        "RenewalEligibility": "INELIGIBLE",
+        "NotBefore": "2025-10-23T20:00:00-04:00",
+        "NotAfter": "2026-11-22T18:59:59-05:00",
+        "CreatedAt": "2025-10-23T21:20:03.947000-04:00",
+        "IssuedAt": "2025-10-23T21:25:23.271000-04:00"
+    }
+]

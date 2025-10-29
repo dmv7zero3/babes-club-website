@@ -22,11 +22,20 @@
 // If you want to add more plugins, follow the same pattern: load via <script>, then register from window.
 
 import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-// Register TextPlugin from the global window object
-// @ts-ignore: TextPlugin is loaded globally via <script> tag
-gsap.registerPlugin((window as any).TextPlugin);
+// Register npm plugins (module-based)
+gsap.registerPlugin(ScrollTrigger);
 
-// Register MorphSVGPlugin from the global window object
-// @ts-ignore: MorphSVGPlugin is loaded globally via <script> tag
-gsap.registerPlugin((window as any).MorphSVGPlugin);
+// Register UMD/global plugins if present (loaded via <script> in public/index.html)
+if (typeof window !== "undefined") {
+  // Register TextPlugin from the global window object
+  // @ts-ignore: TextPlugin is loaded globally via <script> tag
+  if ((window as any).TextPlugin)
+    gsap.registerPlugin((window as any).TextPlugin);
+
+  // Register MorphSVGPlugin from the global window object
+  // @ts-ignore: MorphSVGPlugin is loaded globally via <script> tag
+  if ((window as any).MorphSVGPlugin)
+    gsap.registerPlugin((window as any).MorphSVGPlugin);
+}

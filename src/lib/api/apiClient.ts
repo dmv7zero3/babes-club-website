@@ -1,5 +1,5 @@
 // src/lib/api/apiClient.ts
-import axios, { AxiosInstance, AxiosResponse } from "axios";
+import axios, { AxiosInstance, AxiosResponse, AxiosRequestConfig } from "axios";
 import { API_BASE_URL as ENV_API_BASE_URL } from "../../env/env";
 
 const DEFAULT_TIMEOUT = 30000;
@@ -59,9 +59,10 @@ export const api = {
    */
   post: async <TResponse = any, TData = any>(
     endpoint: string,
-    data: TData
+    data: TData,
+    config?: AxiosRequestConfig<TData>
   ): Promise<AxiosResponse<TResponse>> => {
-    return apiClient.post<TResponse>(endpoint, data);
+    return apiClient.post<TResponse>(endpoint, data, config);
   },
 
   /**
@@ -72,9 +73,10 @@ export const api = {
    */
   get: async <TResponse = any>(
     endpoint: string,
-    params?: any
+    params?: any,
+    config?: AxiosRequestConfig
   ): Promise<AxiosResponse<TResponse>> => {
-    return apiClient.get<TResponse>(endpoint, { params });
+    return apiClient.get<TResponse>(endpoint, { ...(config ?? {}), params });
   },
 };
 

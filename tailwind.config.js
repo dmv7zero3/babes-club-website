@@ -4,26 +4,50 @@ import tailwindcssForms from "@tailwindcss/forms";
 import tailwindcssTypography from "@tailwindcss/typography";
 import colors from "tailwindcss/colors";
 
-// Cafe Opera Heritage Opera Design Tokens
+// Life Missions International design tokens
 const designTokens = {
   colors: {
-    // Project brand color
-    "babe-pink": {
-      50: "#fff1f8",
-      100: "#ffe4f1",
-      200: "#ffc6e3",
-      300: "#ffa1cf",
-      400: "#ff75bb",
-      500: "#fe3ba1",
-      600: "#e02684",
-      700: "#bb1b6c",
-      800: "#991758",
-      900: "#7d1449",
-      DEFAULT: "#fe3ba1",
+    primary: {
+      50: "#F0F4F8",
+      100: "#D9E2EC",
+      200: "#BCCCDC",
+      300: "#9FB3C8",
+      400: "#829AB1",
+      500: "#627D98",
+      600: "#486581",
+      700: "#334E68",
+      800: "#243B53",
+      900: "#102A43",
+      DEFAULT: "#334E68",
     },
+    secondary: {
+      100: "#E3F6F5",
+      300: "#A6E3E9",
+      500: "#62BEC9",
+      600: "#2C7A7B",
+      700: "#1F5F61",
+      DEFAULT: "#2C7A7B",
+    },
+    highlight: {
+      100: "#FFF5DC",
+      300: "#F4D999",
+      500: "#D9B24C",
+      DEFAULT: "#D9B24C",
+    },
+    neutral: {
+      900: "#0B1D2E",
+      700: "#2E3A47",
+      500: "#667085",
+      200: "#D0D5DD",
+    },
+    surface: "#FFFFFF",
+    background: "#F4F6F8",
   },
   typography: {
-    fontFamily: {},
+    fontFamily: {
+      heading: ["Poppins", "Inter", "system-ui", "sans-serif"],
+      body: ["Inter", "system-ui", "sans-serif"],
+    },
   },
 };
 
@@ -47,26 +71,22 @@ export default {
 
   theme: {
     extend: {
-      // Centralized Heritage Opera design tokens
+      // Centralized Life Missions design tokens
       colors: {
         ...designTokens.colors,
 
         // Status colors (Tailwind defaults)
-        success: colors.green[600],
-        warning: colors.yellow[600],
-        error: colors.red[800],
-        info: colors.blue[700],
-
-        // brand-pink is provided via designTokens.colors
+        success: designTokens.colors.secondary.DEFAULT,
+        warning: designTokens.colors.highlight.DEFAULT,
+        error: colors.red[600],
+        info: designTokens.colors.primary.DEFAULT,
       },
 
       // Typography system
       fontFamily: {
-        "grand-hotel": ["Grand Hotel", "cursive"], // use class: font-grand-hotel
+        // Expose tokenized font families as Tailwind utilities
+        ...designTokens.typography.fontFamily,
       },
-
-      // Enhanced shadow system for Heritage Opera
-      boxShadow: {},
 
       // Performance-optimized animations
       animation: {
@@ -208,7 +228,6 @@ export default {
         },
       },
 
-      // Responsive breakpoints
       screens: {
         xs: "475px",
         "3xl": "1600px",
@@ -221,12 +240,12 @@ export default {
     tailwindcssForms,
     tailwindcssTypography,
 
-    // Cafe Opera Heritage Design System Plugin
+    // Lightweight component utilities for Life Missions International
     function ({ addBase, addComponents, addUtilities, theme }) {
       // Base layer - foundational styles
       addBase({});
 
-      // Component layer - Heritage Opera specific components
+      // Component layer
       addComponents({
         // Container utility
         ".container": {
@@ -235,65 +254,42 @@ export default {
         // Button system
         ".btn": {
           // Responsive: larger tap targets on mobile
-          "@apply inline-flex items-center justify-center font-heading font-semibold tracking-wide transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed px-5 py-3 text-base sm:px-6 sm:py-3 sm:text-base":
+          "@apply inline-flex items-center justify-center font-semibold tracking-wide transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed px-5 py-3 text-base sm:px-6 sm:py-3 sm:text-base":
             {},
         },
         ".btn-sm": {
           "@apply btn px-4 py-2 text-sm rounded-lg": {},
         },
         ".btn-md": {
-          // Responsive: larger on mobile
-          "@apply btn px-12 py-6 text-xl rounded-lg lg:px-6 lg:py-3 lg:text-base":
-            {},
+          "@apply btn px-5 py-3 text-base rounded-lg": {},
         },
         ".btn-lg": {
-          "@apply btn px-12 py-10 text-base text-3xl rounded-xl": {},
+          "@apply btn px-6 py-4 text-lg rounded-xl": {},
         },
         ".btn-primary": {
-          // Responsive: inherit btn-md changes
-          "@apply btn-lg bg-blue-900 text-zinc-200 hover:bg-blue-800 focus:ring-blue-900/50 shadow-md hover:shadow-lg hover:-translate-y-0.5":
+          "@apply btn-md bg-primary-700 text-white hover:bg-primary-600 focus:ring-primary-400/40":
             {},
         },
         ".btn-secondary": {
-          "@apply btn-lg bg-amber-400 text-blue-900 hover:bg-amber-500 focus:ring-amber-400/50 shadow-sm hover:shadow-md hover:-translate-y-0.5":
+          "@apply btn-md bg-secondary-600 text-white hover:bg-secondary-500 focus:ring-secondary-400/40":
             {},
         },
         ".btn-outline": {
-          // Responsive: inherit btn-md changes
-          "@apply btn-md bg-transparent text-blue-900 border-2 border-blue-900 hover:bg-blue-900 hover:text-zinc-200 focus:ring-blue-900/50":
-            {},
-        },
-        ".btn-ghost": {
-          "@apply btn-md bg-transparent text-slate-900 hover:bg-black/5 focus:ring-black/20":
+          "@apply btn-md bg-transparent text-primary-700 border border-primary-600 hover:border-primary-500 hover:bg-primary-50 focus:ring-primary-300/40":
             {},
         },
       });
 
-      // Utility layer - Heritage Opera specific utilities
+      // Utility layer
       addUtilities({
-        // Text utilities
-        ".text-gradient-heritage": {
-          background: `linear-gradient(135deg, ${theme("colors.blue.900")} 0%, ${theme("colors.amber.400")} 100%)`,
+        ".text-gradient-primary": {
+          background: `linear-gradient(135deg, ${theme("colors.primary.700")} 0%, ${theme("colors.highlight.500")} 100%)`,
           WebkitBackgroundClip: "text",
           backgroundClip: "text",
           WebkitTextFillColor: "transparent",
         },
-        ".text-gradient-opera": {
-          background: `linear-gradient(135deg, ${theme("colors.blue.900")} 0%, ${theme("colors.amber.400")} 100%)`,
-          WebkitBackgroundClip: "text",
-          backgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-        },
-
-        // Background utilities
-        ".bg-gradient-heritage": {
-          background: `linear-gradient(135deg, ${theme("colors.blue.900")} 0%, ${theme("colors.amber.400")} 100%)`,
-        },
-        ".bg-gradient-opera": {
-          background: `linear-gradient(135deg, ${theme("colors.blue.900")} 0%, ${theme("colors.amber.400")} 100%)`,
-        },
-        ".bg-gradient-elegant": {
-          background: `linear-gradient(135deg, ${theme("colors.zinc.100")} 0%, ${theme("colors.zinc.50")} 100%)`,
+        ".bg-gradient-primary": {
+          background: `linear-gradient(135deg, ${theme("colors.primary.700")} 0%, ${theme("colors.primary.500")} 100%)`,
         },
 
         // Animation utilities
@@ -303,14 +299,6 @@ export default {
         },
         ".animate-on-scroll.is-visible": {
           "@apply opacity-100 translate-y-0": {},
-        },
-
-        // Heritage Opera specific utilities
-        ".heritage-shadow": {
-          boxShadow: `0 10px 30px rgba(27, 54, 93, 0.1), 0 0 0 1px rgba(247, 231, 180, 0.1)`,
-        },
-        ".opera-glow": {
-          boxShadow: `0 0 30px rgba(247, 231, 180, 0.3)`,
         },
       });
     },

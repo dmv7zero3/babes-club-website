@@ -15,14 +15,9 @@ export const BUSINESS_ADDRESS = BUSINESS.address.street;
 export const BUSINESS_CITY = BUSINESS.address.city;
 export const BUSINESS_STATE = BUSINESS.address.state;
 export const BUSINESS_ZIP = BUSINESS.address.zipCode;
-export const EMAIL = BUSINESS.contact.email;
+export const EMAIL =
+  BUSINESS.contact.email || "contact@lifemissionsinternational.org";
 export const PHONE_NUMBER = BUSINESS.contact.phone;
-
-// Social Media
-export const SOCIAL_MEDIA = BUSINESS.social_media;
-
-// Online Ordering
-export const ONLINE_ORDERING_URL = BUSINESS.online_ordering || "";
 
 // Logo (provide a generic fallback)
 export const LOGO_URL = BUSINESS.logo;
