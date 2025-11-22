@@ -1,0 +1,112 @@
+.hero-wrapper {
+  position: relative;
+  height: 100vh;
+}
+
+.hero {
+  @apply mx-auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  position: relative;
+  overflow: hidden;
+  z-index: 2;
+  height: 100vh;
+  width: 100%;
+  /* Prevent any user interaction */
+  pointer-events: none;
+  user-select: none;
+  max-width: 1920px;
+}
+
+.hero__headings {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  pointer-events: none;
+  user-select: none;
+}
+
+.hero__headingimage {
+  width: 40vw;
+  transform: translate(-50%, -50%);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  aspect-ratio: 16 / 9;
+}
+
+.hero__headingimage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  -webkit-user-drag: none;
+}
+
+.hero__subtitle {
+  font-size: clamp(1.55rem, 2.2vw, 1.7rem);
+}
+
+.hero__image {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.hero__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+/* Ensure <picture> behaves like a block and fills containers */
+.hero__image picture,
+.hero__headingimage picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hero__originalimage {
+  /* initial collapsed clip-path like the demo */
+  clip-path: polygon(100% 77%, 0 77%, 0 77%, 100% 77%);
+  height: 100%;
+  position: relative;
+  filter: grayscale(100%);
+}
+
+/* Indicator wrapper sits above hero visuals */
+.hero__indicator {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 2rem; /* tailwind bottom-8 */
+  z-index: 100; /* above .hero__image (3) and .hero (2) */
+  pointer-events: auto;
+}
+
+@media (max-width: 1024px) {
+  .hero__headingimage {
+    width: 60vw;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero__headingimage {
+    width: 84vw;
+  }
+
+  .hero__subtitle {
+    font-size: clamp(1.45rem, 2vw, 1.6rem);
+  }
+}

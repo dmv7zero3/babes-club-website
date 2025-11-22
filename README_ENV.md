@@ -1,4 +1,4 @@
-# Environment Variable Setup (.env) for Cafe Opera Website
+# Environment Variable Setup (.env) for The Babes Club Website
 
 This project uses environment variables for configuration (API keys, endpoints, AWS info, etc). These variables are injected at build time using Webpack's DefinePlugin and a `.env` file at the project root.
 
@@ -18,7 +18,7 @@ This project uses environment variables for configuration (API keys, endpoints, 
 NODE_ENV=development
 GOOGLE_MAPS_API_KEY=your_actual_google_maps_api_key_here
 API_BASE_URL=https://your-api-domain.com
-S3_BUCKET_ARN=arn:aws:s3:::cafe-opera-assets
+S3_BUCKET_ARN=arn:aws:s3:::the-babes-club-assets
 CLOUDFRONT_DOMAIN=dpw5m6g065bgh.cloudfront.net
 CLOUDFRONT_DISTRIBUTION_ARN=arn:aws:cloudfront::752567131183:distribution/ECA039PPTXLKM
 CLOUDFRONT_DISTRIBUTION_ID=ECA039PPTXLKM

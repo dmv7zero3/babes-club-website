@@ -12,10 +12,10 @@ const Hero: React.FC = () => {
       <div className="relative z-10 flex flex-col-reverse items-center justify-center gap-10 px-6 pb-16 md:flex-row pt-28 md:pt-10 md:pb-0">
         {/* Copy */}
         <div className="max-w-xl text-center md:text-left">
-          <h1 className="text-[clamp(3.25rem,8vw,4.6rem)] leading-none tracking-wider font-grand-hotel animate-glow-pulse-soft text-[#f5dcee]">
+          <h1 className="text-[clamp(3.25rem,8vw,4.6rem)] leading-none tracking-wider font-grand-hotel animate-glow-pulse-soft text-cotton-candy">
             The Babes Club
           </h1>
-          <p className="mt-5 text-[22px] font-light font-inter text-[#f5dcee]/90">
+          <p className="mt-5 text-[22px] font-light font-inter text-cotton-candy/90">
             Handcrafted treasures coming soon.
           </p>
         </div>

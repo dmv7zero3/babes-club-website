@@ -10,3 +10,11 @@ body {
   text-rendering: optimizeLegibility;
   font-smooth: always;
 }
+
+/* Custom utilities required by our Tailwind plugin (@apply font-heading) */
+@layer utilities {
+  /* Heading display font used by buttons and headers */
+  .font-heading {
+    font-family: "Grand Hotel", cursive;
+  }
+}

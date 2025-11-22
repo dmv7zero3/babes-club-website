@@ -8,7 +8,10 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("../fonts/Inter/static/Inter_18pt-Regular.ttf") format("truetype");
+  src:
+    local("Inter Regular"),
+    local("Inter-Regular"),
+    url("../fonts/Inter/static/Inter_18pt-Regular.ttf") format("truetype");
 }
 
 /* Utility class to apply Inter */
@@ -57,18 +60,48 @@
 
 /* Homepage Headers */
 
-.heading-1 {
-  @apply text-5xl font-normal transition-colors duration-300;
+/* Reusable header style used across sections (e.g., AboutHolly) */
+.header {
+  @apply w-11/12 mx-auto  font-semibold tracking-tight text-center text-white;
+  /* Soft text glow from Tailwind plugin utilities */
+  @apply text-glow-soft;
+  /* Neon cyan glow that contrasts with bg-babe-pink */
+  --glow-color: #66f7ff;
+  /* Tube color (core stroke uses currentColor); tuned to blend with cyan glow */
+  color: #66f7ff;
+  /* Colorful gradient fill for the glyphs (stroke + glow remain cyan) */
+  background-image: linear-gradient(
+    135deg,
+    #66f7ff 0%,
+    /* neon cyan */ #8ec5ff 35%,
+    /* sky blue */ #c6a9ff 65%,
+    /* soft violet */ #f5dcee 100% /* cotton-candy pink token */
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent; /* keep color for stroke/currentColor */
 }
 
-.heading-2 {
-  @apply text-5xl font-normal leading-normal lg:text-4xl tracking-wide text-center uppercase lg:text-left;
+/* Fluid heading sizing and wrapping utility (matches AboutHolly behavior) */
+.header-fluid {
+  /* Precomputed: clamp(1.29, 1.2vw, 1.35) * 1.8 */
+  font-size: clamp(2.322rem, 2.16vw, 2.43rem);
+  line-height: 1.2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
-.heading-2-sub {
-  @apply text-[34px] lg:text-3xl font-normal tracking-wide text-center uppercase;
+@media (min-width: 640px) {
+  .header-fluid {
+    font-size: clamp(2.838rem, 2.64vw, 2.97rem);
+  }
 }
 
-.heading-3 {
-  @apply text-[1.8rem] lg:text-2xl font-normal tracking-wide text-center uppercase;
+.header-grand-hotel {
+  font-size: clamp(2.322rem, 3.16vw, 4.43rem);
+  line-height: 1.2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }

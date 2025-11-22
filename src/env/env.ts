@@ -70,7 +70,7 @@ export const validateEnvironment = (): {
 if (NODE_ENV === "development") {
   const validation = validateEnvironment();
 
-  console.log("🌍 Cafe Opera Environment Variables:", {
+  console.log("🌍 The Babes Club Environment Variables:", {
     NODE_ENV,
     GOOGLE_MAPS_API_KEY: GOOGLE_MAPS_API_KEY ? "✅ SET" : "❌ NOT SET",
     API_BASE_URL: API_BASE_URL ? "✅ SET" : "⚠️ NOT SET",

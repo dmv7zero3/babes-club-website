@@ -1,0 +1,110 @@
+{
+  "N-RED": {
+    "productId": "prod_TBMJ4DtUWw1BtC",
+    "priceId": "price_1SEzbLE2izAILc8xFMdUwAlm",
+    "amount": 3000,
+    "currency": "USD"
+  },
+  "N-ORG": {
+    "productId": "prod_TBMKqHCMbxilxG",
+    "priceId": "price_1SEzbME2izAILc8x7C8jHaXG",
+    "amount": 3000,
+    "currency": "USD"
+  },
+  "N-YEL": {
+    "productId": "prod_TBMKwZypKhuPL7",
+    "priceId": "price_1SEzbNE2izAILc8x1E0IczkR",
+    "amount": 3000,
+    "currency": "USD"
+  },
+  "N-GRN": {
+    "productId": "prod_TBMKwx3JtMQC8q",
+    "priceId": "price_1SEzbOE2izAILc8xmGvl3bZd",
+    "amount": 3000,
+    "currency": "USD"
+  },
+  "N-BBL": {
+    "productId": "prod_TBMKClhWt1ES7A",
+    "priceId": "price_1SEzbOE2izAILc8xHpKpYjUj",
+    "amount": 3000,
+    "currency": "USD"
+  },
+  "N-LAV": {
+    "productId": "prod_TBMKfJSe1mBJzP",
+    "priceId": "price_1SEzbPE2izAILc8xbALg2itN",
+    "amount": 3000,
+    "currency": "USD"
+  },
+  "N-BPK": {
+    "productId": "prod_TBMKGlVpehwr8Z",
+    "priceId": "price_1SEzbQE2izAILc8xEy6X3Jqo",
+    "amount": 3000,
+    "currency": "USD"
+  },
+  "N-MAG": {
+    "productId": "prod_TBMKhaqIVhuC4O",
+    "priceId": "price_1SEzbRE2izAILc8xkUdLe4UG",
+    "amount": 3000,
+    "currency": "USD"
+  },
+  "N-MLT-CC": {
+    "productId": "prod_TBMKs8VbuKdCYy",
+    "priceId": "price_1SEzbSE2izAILc8xMtJuxq4F",
+    "amount": 3400,
+    "currency": "USD"
+  },
+  "N-MLT-7UP": {
+    "productId": "prod_TBMKkKPhu9InBI",
+    "priceId": "price_1SEzbSE2izAILc8xRHbPlcAF",
+    "amount": 3400,
+    "currency": "USD"
+  },
+  "E-RED-SIL": {
+    "productId": "prod_TBMK2FGi2SmpSi",
+    "priceId": "price_1SEzbTE2izAILc8x0ExUmRPe",
+    "amount": 2500,
+    "currency": "USD"
+  },
+  "E-ORG-SIL": {
+    "productId": "prod_TBMKd9Ll76MhvD",
+    "priceId": "price_1SEzbUE2izAILc8x4pjw7TTt",
+    "amount": 2500,
+    "currency": "USD"
+  },
+  "E-YEL-SIL": {
+    "productId": "prod_TBMK6rMrhMQMbl",
+    "priceId": "price_1SEzbUE2izAILc8xQmR244gs",
+    "amount": 2500,
+    "currency": "USD"
+  },
+  "E-GRN-SIL": {
+    "productId": "prod_TBMKNlYG4yF3mw",
+    "priceId": "price_1SEzbVE2izAILc8xTctllaXZ",
+    "amount": 2500,
+    "currency": "USD"
+  },
+  "E-BBL-SIL": {
+    "productId": "prod_TBMKPTUQPzXNAW",
+    "priceId": "price_1SEzbWE2izAILc8xqL5wMpZa",
+    "amount": 2500,
+    "currency": "USD"
+  },
+  "E-LAV-SIL": {
+    "productId": "prod_TBMKDSE2Fp6oZ6",
+    "priceId": "price_1SEzbWE2izAILc8x0nfnTRYS",
+    "amount": 2500,
+    "currency": "USD"
+  },
+  "E-BPK-SIL": {
+    "productId": "prod_TBMKxyOOrcwz7W",
+    "priceId": "price_1SEzbXE2izAILc8xe8nIHBAH",
+    "amount": 2500,
+    "currency": "USD"
+  },
+  "E-MAG-SIL": {
+    "productId": "prod_TBMKMbQBlO2Ah8",
+    "priceId": "price_1SEzbYE2izAILc8xUyTnvIcd",
+    "amount": 2500,
+    "currency": "USD"
+  }
+}

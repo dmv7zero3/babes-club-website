@@ -1,0 +1,70 @@
+/* Pure CSS horizontal marquee for HorizontalBanner */
+.hb-container {
+  overflow: hidden;
+  width: 100%;
+}
+
+.hb-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  /* Use explicit properties so we can adjust duration via a multiplier */
+  animation-name: hb-scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-duration: calc(var(--hb-speed, 30s) * var(--hb-speed-mult, 1));
+}
+
+.hb-seq {
+  display: flex;
+  align-items: center;
+  gap: var(--hb-gap, 24px);
+}
+
+/* Ensure same spacing between the two halves */
+.hb-seq + .hb-seq {
+  margin-left: var(--hb-gap, 24px);
+}
+
+.hb-item {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+}
+
+.hb-icon {
+  display: block;
+  width: var(--hb-height, 32px);
+  height: var(--hb-height, 32px);
+  color: var(--hb-color, #fff);
+}
+
+/* Optional soft white glow */
+.hb-icon--glow {
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.6))
+    drop-shadow(0 0 6px rgba(255, 255, 255, 0.45))
+    drop-shadow(0 0 14px rgba(255, 255, 255, 0.35));
+}
+
+@keyframes hb-scroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  --hb-speed-mult .hb-track {
+    animation-play-state: paused;
+  }
+}
+
+/* Make it faster on mobile by reducing the duration with a multiplier */
+@media (max-width: 640px) {
+  .hb-container {
+    --hb-speed-mult: 0.325; /* 40% faster on small screens */
+  }
+}

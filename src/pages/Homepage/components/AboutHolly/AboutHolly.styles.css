@@ -1,0 +1,55 @@
+/* AboutHolly: single text scale knob */
+.about-holly {
+  /* One knob to rule them all */
+  --ah-fs: clamp(1.29rem, 1.2vw, 1.35rem);
+}
+
+/* Paragraphs inside the prose wrapper */
+.about-holly .prose p {
+  @apply tracking-wide;
+  font-size: var(--ah-fs);
+  line-height: 1.7;
+  /* Reset default typography margins to control spacing precisely */
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Add space only between consecutive paragraphs */
+.about-holly .prose p + p {
+  margin-top: 0.9rem; /* ~14-15px for clear separation */
+}
+
+/* Heading uses global .header + .header-fluid now */
+
+/* Quote and footer */
+.about-holly [data-ah-quote] p {
+  font-size: calc(var(--ah-fs) * 1.05);
+}
+.about-holly [data-ah-quote] footer {
+  font-size: calc(var(--ah-fs) * 0.95);
+}
+
+/* CTA buttons */
+.about-holly [data-ah-cta] a {
+  font-size: calc(var(--ah-fs) * 0.95);
+}
+
+/* Pure white glow for heading: remove blue tint, ultra-thin stroke */
+.about-holly [data-ah-heading] {
+  color: #ffffff;
+  -webkit-text-stroke: 0.15px rgba(255, 255, 255, 0.95);
+  text-shadow:
+    0 0 0.25px rgba(255, 255, 255, 0.95),
+    0 0 1px rgba(255, 255, 255, 0.75),
+    0 0 2px rgba(255, 255, 255, 0.18);
+}
+
+@media (min-width: 1024px) {
+  .about-holly [data-ah-heading] {
+    -webkit-text-stroke: 0.2px rgba(255, 255, 255, 0.95);
+    text-shadow:
+      0 0 0.5px rgba(255, 255, 255, 0.95),
+      0 0 2px rgba(255, 255, 255, 0.75),
+      0 0 6px rgba(255, 255, 255, 0.22);
+  }
+}

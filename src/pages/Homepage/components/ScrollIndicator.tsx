@@ -32,12 +32,9 @@ const ScrollIndicator = () => {
   }, []);
 
   return (
-    <div
-      className="absolute flex items-center justify-center transform -translate-x-1/2 left-1/2 bottom-8"
-      style={{ zIndex: 20 }}
-    >
+    <div className="flex items-center justify-center pointer-events-none select-none relative z-[1]">
       <svg
-        className="h-12 text-white w-9 "
+        className="h-12 text-cotton-candy-200 w-9 "
         viewBox="0 0 32 56"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"

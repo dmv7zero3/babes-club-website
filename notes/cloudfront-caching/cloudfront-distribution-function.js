@@ -1,5 +1,5 @@
 /**
- * CloudFront Function for Cafe Opera fully static website
+ * CloudFront Function for The Babes Club fully static website
  *
  * Handles:
  * 1. Static file pass-through (including XML, fonts, etc.)

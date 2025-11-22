@@ -43,6 +43,76 @@ const WEBSITE_ENTITY = {
   name: business.business_name,
 };
 
+const ABOUT_PAGE_ENTITY = {
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  "@id": `${ORIGIN}/about/#about-page`,
+  url: `${ORIGIN}/about/`,
+  name: `${business.business_name} About`,
+  description:
+    business.description ||
+    "Handcrafted accessories, custom jewelry, and women-owned business in Washington, DC.",
+  breadcrumb: {
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: `${ORIGIN}/`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "About",
+        item: `${ORIGIN}/about/`,
+      },
+    ],
+  },
+  isPartOf: {
+    "@id": `${ORIGIN}/#website`,
+  },
+};
+
+const CONTACT_PAGE_ENTITY = {
+  "@context": "https://schema.org",
+  "@type": "ContactPage",
+  "@id": `${ORIGIN}/contact/#contact-page`,
+  url: `${ORIGIN}/contact/`,
+  name: `${business.business_name} Contact`,
+  description:
+    "Reach out to plan custom jewelry, wholesale orders, or Babes Club events in the Washington, DC area.",
+  isPartOf: {
+    "@id": `${ORIGIN}/#website`,
+  },
+};
+
+const SHOP_PAGE_ENTITY = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "@id": `${ORIGIN}/shop/#shop-page`,
+  url: `${ORIGIN}/shop/`,
+  name: `${business.business_name} Shop`,
+  description:
+    "Handcrafted jewelry bundles, earrings, and necklaces designed by The Babes Club.",
+  isPartOf: {
+    "@id": `${ORIGIN}/#website`,
+  },
+};
+
+const GALLERY_PAGE_ENTITY = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "@id": `${ORIGIN}/gallery/#gallery-page`,
+  url: `${ORIGIN}/gallery/`,
+  name: `${business.business_name} Gallery`,
+  description:
+    "Explore editorial shoots, behind-the-scenes moments, and everyday stacks featuring The Babes Club jewelry.",
+  isPartOf: {
+    "@id": `${ORIGIN}/#website`,
+  },
+};
+
 // Base meta registry
 export const ROUTE_META = [
   {
@@ -52,7 +122,38 @@ export const ROUTE_META = [
     ogImage: business.og_image ? `${ORIGIN}${business.og_image}` : undefined,
     jsonLd: [ORG_ENTITY, WEBSITE_ENTITY],
   },
-  // Add more routes as needed for SLS DC
+  {
+    path: "/about",
+    title: `${business.business_name} | About`,
+    description:
+      "Meet the women-owned team crafting vibrant jewelry in Washington, DC, offering custom designs, bulk orders, and DMV pickup.",
+    ogImage: business.og_image ? `${ORIGIN}${business.og_image}` : undefined,
+    jsonLd: [ORG_ENTITY, WEBSITE_ENTITY, ABOUT_PAGE_ENTITY],
+  },
+  {
+    path: "/contact",
+    title: `${business.business_name} | Contact`,
+    description:
+      "Contact The Babes Club for custom jewelry, boutique partnerships, pop-ups, or DMV pickup coordination.",
+    ogImage: business.og_image ? `${ORIGIN}${business.og_image}` : undefined,
+    jsonLd: [ORG_ENTITY, WEBSITE_ENTITY, CONTACT_PAGE_ENTITY],
+  },
+  {
+    path: "/shop",
+    title: `${business.business_name} | Shop`,
+    description:
+      "Browse handcrafted earrings and necklaces with bundle pricing from The Babes Club in Washington, DC.",
+    ogImage: business.og_image ? `${ORIGIN}${business.og_image}` : undefined,
+    jsonLd: [ORG_ENTITY, WEBSITE_ENTITY, SHOP_PAGE_ENTITY],
+  },
+  {
+    path: "/gallery",
+    title: `${business.business_name} | Gallery`,
+    description:
+      "A mosaic of editorial shoots, behind-the-scenes looks, and everyday stacks celebrating The Babes Club community.",
+    ogImage: business.og_image ? `${ORIGIN}${business.og_image}` : undefined,
+    jsonLd: [ORG_ENTITY, WEBSITE_ENTITY, GALLERY_PAGE_ENTITY],
+  },
 ];
 
 export function getRouteMetaByPath(path) {
@@ -60,7 +161,13 @@ export function getRouteMetaByPath(path) {
 }
 
 // Sourced from src/routes.tsx (excluding catch-all 404 route)
-export const STATIC_ROUTE_PATHS = ["/"];
+export const STATIC_ROUTE_PATHS = [
+  "/",
+  "/about",
+  "/contact",
+  "/shop",
+  "/gallery",
+];
 
 export function buildRouteMetaList() {
   return STATIC_ROUTE_PATHS.map((p) => {

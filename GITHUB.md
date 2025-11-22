@@ -1,13 +1,9 @@
 ## Push Your Changes to GitHub
 
-# 1. Stage all changes (new, modified, deleted files)
+# Automated Commit
 
-git add .
+npm run git:commit
 
-# 2. Commit with a descriptive message (replace YOUR_MESSAGE below)
-
-git commit -m "YOUR_MESSAGE"
-
-# 3. Push to the main branch on GitHub
+# Then push:
 
 git push origin main

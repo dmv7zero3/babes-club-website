@@ -47,12 +47,16 @@
     "s3:fix-cache": "npm run s3:fix-js && npm run s3:fix-css && npm run s3:fix-fonts",
     "// CLOUDFRONT": "",
     "cloudfront:invalidate": "node scripts/cloudfront-invalidate.js",
+    "// STRIPE": "",
+    "stripe:import": "ts-node --esm scripts/Stripe/import-catalog.ts",
+    "stripe:import:dry": "ts-node --esm scripts/Stripe/import-catalog.ts --dry-run",
     "// DEPLOY": "",
     "deploy": "node scripts/deploy.mjs",
     "deploy:dry": "DRY_RUN=1 node scripts/deploy.mjs",
     "deploy:confirm": "read -p 'Deploy to production? (y/N): ' REPLY && [[ $REPLY =~ ^[Yy]$ ]] && node scripts/deploy.mjs",
     "deploy:with-assets": "ASSETS=1 node scripts/deploy.mjs",
     "// GITHUB ACTIONS": "",
+    "git:commit": "read -p 'Commit message: ' msg && git add . && git commit -m \"$msg\" && echo '✅ Commit done. Now run: git push origin main'",
     "ci:lint": "npm run lint",
     "ci:type-check": "npm run type-check",
     "ci:test": "echo \"No tests yet\"",
@@ -65,6 +69,7 @@
     "@react-google-maps/api": "^2.20.6",
     "axios": "^1.6.7",
     "clsx": "^2.1.0",
+    "curtainsjs": "github:martinlaxenaire/curtainsjs",
     "framer-motion": "^12.0.6",
     "gsap": "^3.12.7",
     "lodash": "^4.17.21",
@@ -72,9 +77,11 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-helmet": "^6.1.0",
+    "react-icons": "^5.5.0",
     "react-router-dom": "^6.22.0",
     "tailwind-merge": "^2.5.5",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "stripe": "^16.6.0"
   },
   "devDependencies": {
     "@aws-sdk/client-cloudfront": "^3.864.0",
@@ -118,12 +125,14 @@
     "tailwindcss": "^3.4.1",
     "terser-webpack-plugin": "^5.3.14",
     "ts-loader": "^9.5.4",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.2",
     "webpack": "^5.90.1",
     "webpack-bundle-analyzer": "^4.10.2",
     "webpack-cli": "^5.1.4",
     "webpack-dev-middleware": "^7.4.2",
     "webpack-dev-server": "^5.2.2",
-    "webpack-merge": "^5.10.0"
+    "webpack-merge": "^5.10.0",
+    "youtube-transcript": "^1.2.1"
   }
 }

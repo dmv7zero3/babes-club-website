@@ -1,0 +1,218 @@
+{
+  "currency": "USD",
+  "lastUpdated": "2025-10-05",
+  "_adminNotes": {
+    "purpose": "Internal reference only — ignored by import scripts.",
+    "pricingSources": "Uses the newer pricing sheet (earrings $25 or 5/$100; necklaces $30 or 4/$100).",
+    "multicolorOverrides": "Cotton Candy and 7UP necklaces are $34 each.",
+    "bundleLogic": "Bundles apply per collection (necklaces or earrings). Mix & match within collection.",
+    "skuConvention": "N-* = necklaces, E-* = earrings"
+  },
+  "collections": [
+    {
+      "id": "necklaces",
+      "title": "Necklaces",
+      "slug": "necklaces",
+      "basePriceCents": 3000,
+      "taxCode": "auto",
+      "tieredPricing": [
+        {
+          "minQty": 4,
+          "totalPriceCents": 10000,
+          "mixAndMatch": true,
+          "note": "Any 4 necklaces for $100"
+        }
+      ],
+      "options": [
+        {
+          "id": "chain",
+          "name": "Chain",
+          "type": "select",
+          "values": ["Gold", "Silver"],
+          "default": "Gold",
+          "note": "All necklaces available in gold or silver chain."
+        }
+      ],
+      "variants": [
+        {
+          "id": "necklace-bright-red",
+          "sku": "N-RED",
+          "name": "Bright Red",
+          "color": "Bright Red",
+          "imageUrl": "https://cdn.thebabesclub.com/products/necklace-bright-red.jpg",
+          "active": true
+        },
+        {
+          "id": "necklace-orange",
+          "sku": "N-ORG",
+          "name": "Orange",
+          "color": "Orange",
+          "imageUrl": "https://cdn.thebabesclub.com/products/necklace-orange.jpg",
+          "active": true
+        },
+        {
+          "id": "necklace-yellow",
+          "sku": "N-YEL",
+          "name": "Yellow",
+          "color": "Yellow",
+          "imageUrl": "https://cdn.thebabesclub.com/products/necklace-yellow.jpg",
+          "active": true
+        },
+        {
+          "id": "necklace-green",
+          "sku": "N-GRN",
+          "name": "Green",
+          "color": "Green",
+          "imageUrl": "https://cdn.thebabesclub.com/products/necklace-green.jpg",
+          "active": true
+        },
+        {
+          "id": "necklace-baby-blue",
+          "sku": "N-BBL",
+          "name": "Baby Blue",
+          "color": "Baby Blue",
+          "imageUrl": "https://cdn.thebabesclub.com/products/necklace-baby-blue.jpg",
+          "active": true
+        },
+        {
+          "id": "necklace-lavender",
+          "sku": "N-LAV",
+          "name": "Lavender",
+          "color": "Lavender",
+          "imageUrl": "https://cdn.thebabesclub.com/products/necklace-lavender.jpg",
+          "active": true
+        },
+        {
+          "id": "necklace-baby-pink",
+          "sku": "N-BPK",
+          "name": "Baby Pink",
+          "color": "Baby Pink",
+          "imageUrl": "https://cdn.thebabesclub.com/products/necklace-baby-pink.jpg",
+          "active": true
+        },
+        {
+          "id": "necklace-magenta",
+          "sku": "N-MAG",
+          "name": "Magenta",
+          "color": "Magenta",
+          "imageUrl": "https://cdn.thebabesclub.com/products/necklace-magenta.jpg",
+          "active": true
+        },
+        {
+          "id": "necklace-multicolor-cotton-candy",
+          "sku": "N-MLT-CC",
+          "name": "Cotton Candy",
+          "color": "Multicolor",
+          "priceOverrideCents": 3400,
+          "group": "multicolor",
+          "notes": "Multicolored style",
+          "imageUrl": "https://cdn.thebabesclub.com/products/necklace-cotton-candy.jpg",
+          "active": true
+        },
+        {
+          "id": "necklace-multicolor-7up",
+          "sku": "N-MLT-7UP",
+          "name": "7UP",
+          "color": "Multicolor",
+          "priceOverrideCents": 3400,
+          "group": "multicolor",
+          "notes": "Multicolored style",
+          "imageUrl": "https://cdn.thebabesclub.com/products/necklace-7up.jpg",
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": "earrings",
+      "title": "Earrings",
+      "slug": "earrings",
+      "basePriceCents": 2500,
+      "taxCode": "auto",
+      "tieredPricing": [
+        {
+          "minQty": 5,
+          "totalPriceCents": 10000,
+          "mixAndMatch": true,
+          "note": "Any 5 earrings for $100"
+        }
+      ],
+      "options": [
+        {
+          "id": "pearl",
+          "name": "Pearl",
+          "type": "fixed",
+          "values": ["Silver Pearl"],
+          "default": "Silver Pearl",
+          "note": "Earrings are silver pearl only (per latest sheet)."
+        }
+      ],
+      "variants": [
+        {
+          "id": "earring-bright-red",
+          "sku": "E-RED-SIL",
+          "name": "Bright Red",
+          "color": "Bright Red",
+          "imageUrl": "https://cdn.thebabesclub.com/products/earring-bright-red.jpg",
+          "active": true
+        },
+        {
+          "id": "earring-orange",
+          "sku": "E-ORG-SIL",
+          "name": "Orange",
+          "color": "Orange",
+          "imageUrl": "https://cdn.thebabesclub.com/products/earring-orange.jpg",
+          "active": true
+        },
+        {
+          "id": "earring-yellow",
+          "sku": "E-YEL-SIL",
+          "name": "Yellow",
+          "color": "Yellow",
+          "imageUrl": "https://cdn.thebabesclub.com/products/earring-yellow.jpg",
+          "active": true
+        },
+        {
+          "id": "earring-green",
+          "sku": "E-GRN-SIL",
+          "name": "Green",
+          "color": "Green",
+          "imageUrl": "https://cdn.thebabesclub.com/products/earring-green.jpg",
+          "active": true
+        },
+        {
+          "id": "earring-baby-blue",
+          "sku": "E-BBL-SIL",
+          "name": "Baby Blue",
+          "color": "Baby Blue",
+          "imageUrl": "https://cdn.thebabesclub.com/products/earring-baby-blue.jpg",
+          "active": true
+        },
+        {
+          "id": "earring-lavender",
+          "sku": "E-LAV-SIL",
+          "name": "Lavender",
+          "color": "Lavender",
+          "imageUrl": "https://cdn.thebabesclub.com/products/earring-lavender.jpg",
+          "active": true
+        },
+        {
+          "id": "earring-baby-pink",
+          "sku": "E-BPK-SIL",
+          "name": "Baby Pink",
+          "color": "Baby Pink",
+          "imageUrl": "https://cdn.thebabesclub.com/products/earring-baby-pink.jpg",
+          "active": true
+        },
+        {
+          "id": "earring-magenta",
+          "sku": "E-MAG-SIL",
+          "name": "Magenta",
+          "color": "Magenta",
+          "imageUrl": "https://cdn.thebabesclub.com/products/earring-magenta.jpg",
+          "active": true
+        }
+      ],
+      "notes": "Current official pricing: $25 each or any 5 for $100 (silver pearl)."
+    }
+  ]
+}

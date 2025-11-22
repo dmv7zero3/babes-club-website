@@ -1,0 +1,35 @@
+/* Footer: unified text scaling via a single clamp */
+.footer {
+  /* Base font size knob for the footer */
+  --ft-fs: clamp(1.29rem, 1.2vw, 1.35rem);
+}
+
+/* By default, paragraphs in the footer use the base clamp */
+.footer p {
+  font-size: var(--ft-fs);
+  line-height: 1.6;
+}
+
+/* Heading (brand name) scales up a bit from the base */
+.footer [data-ft-heading] {
+  font-size: calc(var(--ft-fs) * 1.2);
+  line-height: 1.2;
+}
+
+/* Subtle secondary text (e.g., tagline) */
+.footer [data-ft-subtle] {
+  font-size: calc(var(--ft-fs) * 0.9);
+  line-height: 1.5;
+}
+
+/* Small labels like "Follow us" or "We accept" */
+.footer [data-ft-label] {
+  font-size: calc(var(--ft-fs) * 0.75);
+  line-height: 1.2;
+}
+
+/* Meta row (copyright / powered-by) uses a slightly smaller clamp */
+.footer [data-ft-meta] p {
+  font-size: calc(var(--ft-fs) * 0.85);
+  line-height: 1.5;
+}

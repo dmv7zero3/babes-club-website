@@ -15,7 +15,7 @@ export const BUSINESS_ADDRESS = BUSINESS.address.street;
 export const BUSINESS_CITY = BUSINESS.address.city;
 export const BUSINESS_STATE = BUSINESS.address.state;
 export const BUSINESS_ZIP = BUSINESS.address.zipCode;
-export const EMAIL = BUSINESS.contact.email;
+export const EMAIL = BUSINESS.contact.email || "hello@babesclub.co";
 export const PHONE_NUMBER = BUSINESS.contact.phone;
 
 // Social Media

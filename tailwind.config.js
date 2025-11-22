@@ -4,7 +4,7 @@ import tailwindcssForms from "@tailwindcss/forms";
 import tailwindcssTypography from "@tailwindcss/typography";
 import colors from "tailwindcss/colors";
 
-// Cafe Opera Heritage Opera Design Tokens
+// The Babes Club Heritage Design Tokens
 const designTokens = {
   colors: {
     // Project brand color
@@ -21,9 +21,37 @@ const designTokens = {
       900: "#7d1449",
       DEFAULT: "#fe3ba1",
     },
+    "cotton-candy": {
+      50: "#fefbfe",
+      100: "#fdf6fb",
+      200: "#faecf5",
+      300: "#f8e3f0",
+      400: "#f6ddee",
+      500: "#f5dcee",
+      600: "#e7c1dc",
+      700: "#d5a3c6",
+      800: "#b881a7",
+      900: "#906583",
+      DEFAULT: "#f5dcee",
+    },
   },
   typography: {
-    fontFamily: {},
+    fontFamily: {
+      // Utility: font-inter
+      inter: [
+        "Inter",
+        "system-ui",
+        "-apple-system",
+        "BlinkMacSystemFont",
+        "Segoe UI",
+        "Roboto",
+        "Helvetica Neue",
+        "Arial",
+        "sans-serif",
+      ],
+      // Utility: font-grand-hotel
+      "grand-hotel": ["Grand Hotel", "cursive"],
+    },
   },
 };
 
@@ -62,10 +90,11 @@ export default {
 
       // Typography system
       fontFamily: {
-        "grand-hotel": ["Grand Hotel", "cursive"], // use class: font-grand-hotel
+        // Expose tokenized font families as Tailwind utilities
+        ...designTokens.typography.fontFamily,
       },
 
-      // Enhanced shadow system for Heritage Opera
+      // Enhanced shadow system for Babes Club
       boxShadow: {},
 
       // Performance-optimized animations
@@ -221,7 +250,7 @@ export default {
     tailwindcssForms,
     tailwindcssTypography,
 
-    // Cafe Opera Heritage Design System Plugin
+    // The Babes Club Design System Plugin
     function ({ addBase, addComponents, addUtilities, theme }) {
       // Base layer - foundational styles
       addBase({});
@@ -284,6 +313,71 @@ export default {
           backgroundClip: "text",
           WebkitTextFillColor: "transparent",
         },
+        // Subtle text glow that follows the current text color
+        // Pair with text-cotton-candy to get a cotton-candy colored glow
+        ".text-glow-soft": {
+          // Neon-style: crisp inner core + subtle tinted outer bloom (mobile-first)
+          // CSS vars let us tweak the glow hue without changing text color
+          "--glow-core": "currentColor",
+          "--glow-color": `color-mix(in srgb, currentColor 80%, ${theme("colors.babe-pink.DEFAULT")} 20%)`,
+          // WebkitTextStroke: "0.35px var(--glow-core)",
+          textShadow:
+            "0 0 0.5px var(--glow-core), 0 0 2px var(--glow-color, currentColor), 0 0 5px var(--glow-color, currentColor)",
+        },
+        // Soft pink header glow with gradient fill
+        ".header--pink": {
+          "--glow-core": "#ffffff",
+          "--glow-color": "#66f7ff",
+          color: "#ffffff",
+          WebkitTextStroke: "0px transparent", // No outline at all
+          textShadow:
+            "0 0 2px rgba(255, 255, 255, 0.8), 0 0 8px rgba(102, 247, 255, 0.3), 0 0 16px rgba(102, 247, 255, 0.2), 0 0 24px rgba(102, 247, 255, 0.1)",
+          backgroundImage: `linear-gradient(135deg, #ffffff 0%, #f0f8ff 25%, #e6f3ff 50%, #ddeeff 75%, ${theme("colors.cotton-candy.DEFAULT")} 100%)`,
+          WebkitBackgroundClip: "text",
+          backgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          filter: "brightness(1.1) contrast(1.05)",
+        },
+        // Crisp neon glow with white-hot core and tinted halo
+        // Mobile-first: small, readable halos; md/lg progressively stronger
+        ".text-glow-neon": {
+          "--glow-core": "currentColor",
+          "--glow-color": theme("colors.babe-pink.DEFAULT"),
+          WebkitTextStroke: "0.32px var(--glow-core)",
+          textShadow:
+            "0 0 0.25px var(--glow-core), 0 0 1px var(--glow-color), 0 0 2px var(--glow-color)",
+        },
+        "@screen md": {
+          ".text-glow-neon": {
+            WebkitTextStroke: "0.38px var(--glow-core)",
+            textShadow:
+              "0 0 0.3px var(--glow-core), 0 0 1.4px var(--glow-color), 0 0 3.2px var(--glow-color)",
+          },
+        },
+        "@screen lg": {
+          ".text-glow-neon": {
+            WebkitTextStroke: "0.45px var(--glow-core)",
+            textShadow:
+              "0 0 0.4px var(--glow-core), 0 0 2px var(--glow-color), 0 0 4.5px var(--glow-color)",
+          },
+        },
+        // Progressive enhancement at breakpoints without changing markup
+        "@screen md": {
+          ".text-glow-soft": {
+            // Tablets / small laptops: increase bloom while keeping a sharp core
+            WebkitTextStroke: "0.4px var(--glow-core)",
+            textShadow:
+              "0 0 1px var(--glow-core), 0 0 3px var(--glow-color, currentColor), 0 0 8px var(--glow-color, currentColor), 0 0 12px var(--glow-color, currentColor)",
+          },
+        },
+        "@screen lg": {
+          ".text-glow-soft": {
+            // Desktops: fuller neon halo but still refined
+            WebkitTextStroke: "0.5px var(--glow-core)",
+            textShadow:
+              "0 0 1px var(--glow-core), 0 0 4px var(--glow-color, currentColor), 0 0 10px var(--glow-color, currentColor), 0 0 16px var(--glow-color, currentColor)",
+          },
+        },
 
         // Background utilities
         ".bg-gradient-heritage": {
@@ -311,6 +405,18 @@ export default {
         },
         ".opera-glow": {
           boxShadow: `0 0 30px rgba(247, 231, 180, 0.3)`,
+        },
+
+        // Image glow utilities (drop-shadow based for transparent PNGs/SVGs)
+        ".glow-white-soft": {
+          filter: "drop-shadow(0 12px 28px rgba(255,255,255,0.45))",
+        },
+        ".glow-white-strong": {
+          filter: "drop-shadow(0 20px 60px rgba(255,255,255,0.6))",
+        },
+        ".glow-white-dual": {
+          filter:
+            "drop-shadow(0 6px 18px rgba(255,255,255,0.35)) drop-shadow(0 20px 60px rgba(255,255,255,0.45))",
         },
       });
     },
