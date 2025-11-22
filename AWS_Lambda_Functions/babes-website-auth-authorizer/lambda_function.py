@@ -111,6 +111,20 @@ def lambda_handler(event: Dict[str, Any], _context) -> Dict[str, Any]:
         # Explicit Deny -> API Gateway will return 403 Forbidden
         return _generate_policy(principal_id=(token or "unknown"), effect="Deny", method_arn=event["methodArn"], context={"reason": "session_not_found"})
 
+    # Fix 1.3: Token expiry check
+    expires_at = session.get("expiresAt", 0)
+    if expires_at > 0:
+        import time
+        current_time = int(time.time())
+        if expires_at <= current_time:
+            LOGGER.info("Session expired for token (expiresAt: %d, now: %d)", expires_at, current_time)
+            return _generate_policy(
+                principal_id=(token or "unknown"),
+                effect="Deny",
+                method_arn=event["methodArn"],
+                context={"reason": "session_expired", "expiresAt": str(expires_at)}
+            )
+
     # Expect session to include a `status` and `userId` (or userPk)
     status = session.get("status") or session.get("state") or ""
     if status != "active":

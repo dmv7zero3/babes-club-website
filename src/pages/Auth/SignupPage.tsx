@@ -8,9 +8,14 @@ const SignupPage = () => {
 
   useEffect(() => {
     const stored = readStoredSession();
-
     if (stored?.token) {
-      navigate("/dashboard", { replace: true });
+      // Fix 1.2: Validate token expiry before redirect
+      const nowSeconds = Math.floor(Date.now() / 1000);
+      if (stored.expiresAt && stored.expiresAt > nowSeconds) {
+        navigate("/dashboard", { replace: true });
+      } else {
+        clearSession();
+      }
     }
   }, [navigate]);
 
