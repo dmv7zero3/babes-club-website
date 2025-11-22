@@ -59,11 +59,14 @@ const DashboardLoginScreen = () => {
           userId: response.user?.userId ?? email.trim().toLowerCase(),
           email: response.user?.email ?? email.trim(),
           displayName:
-            response.user?.displayName ?? email.trim().split("@")[0] ?? "Member",
+            response.user?.displayName ??
+            email.trim().split("@")[0] ??
+            "Member",
         },
       });
 
-      reload();
+      // Fix 1.1: Remove race condition - direct navigation
+      navigate("/dashboard", { replace: true });
     } catch (error) {
       setSubmitError(getErrorMessage(error));
     } finally {

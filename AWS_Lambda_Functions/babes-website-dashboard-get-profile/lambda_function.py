@@ -83,6 +83,29 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
     # Remove storage internals before returning
     item.pop("PK", None)
     item.pop("SK", None)
-    logger.info("Returning profile: %s", json.dumps(item))
 
-    return _json_response(200, {"profile": item}, cors_origin=cors_origin)
+    def normalize_profile_response(item: dict) -> dict:
+        """Ensure all expected profile fields exist with proper defaults."""
+        return {
+            "userId": item.get("userId", ""),
+            "email": item.get("email", ""),
+            "displayName": item.get("displayName", "Member"),
+            "shippingAddress": item.get("shippingAddress", {
+                "line1": "",
+                "city": "",
+                "state": "",
+                "postalCode": "",
+                "country": "US"
+            }),
+            "preferredWallet": item.get("preferredWallet"),
+            "avatarUrl": item.get("avatarUrl"),
+            "stripeCustomerId": item.get("stripeCustomerId"),
+            "dashboardSettings": item.get("dashboardSettings", {}),
+            "updatedAt": item.get("updatedAt", ""),
+            "category": item.get("category", "Member")
+        }
+
+    normalized_profile = normalize_profile_response(item)
+    logger.info("Returning normalized profile for userId: %s", normalized_profile.get("userId"))
+
+    return _json_response(200, {"profile": normalized_profile}, cors_origin=cors_origin)

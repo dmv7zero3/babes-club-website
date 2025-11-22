@@ -1,3 +1,23 @@
+// Fix 1.4: Retry logic helpers
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const LOGGER = {
+  info: (...args: any[]) => console.info("[DashboardRouteGuard]", ...args),
+  warn: (...args: any[]) => console.warn("[DashboardRouteGuard]", ...args),
+  error: (...args: any[]) => console.error("[DashboardRouteGuard]", ...args),
+};
+
+const isRetryableError = (error: unknown): boolean => {
+  if (!error) return false;
+  const maybeAxios = error as any;
+  const status = maybeAxios?.response?.status;
+  return (
+    !maybeAxios?.response || // Network error
+    status === 408 || // Timeout
+    status === 429 || // Rate limit
+    (status >= 500 && status < 600) // Server errors
+  );
+};
 import {
   createContext,
   useCallback,
@@ -92,7 +112,8 @@ const DashboardRouteGuard = ({
   useEffect(() => {
     let isMounted = true;
 
-    const loadUser = async () => {
+    const loadUser = async (attempt = 1): Promise<void> => {
+      const MAX_RETRIES = 3;
       try {
         setStatus("loading");
         setError(undefined);
@@ -100,49 +121,51 @@ const DashboardRouteGuard = ({
         const activeSession = readStoredSession();
 
         if (!activeSession || !activeSession.token) {
-          if (!isMounted) {
-            return;
-          }
-
+          if (!isMounted) return;
           setSession(null);
           setUser(undefined);
           setStatus("unauthenticated");
           return;
         }
 
-        if (!isMounted) {
-          return;
-        }
-
+        if (!isMounted) return;
         setSession(activeSession);
+        // Fetch dashboard snapshot with retry logic
         const snapshot = await fetchDashboardSnapshot(activeSession.token);
-
-        if (!isMounted) {
-          return;
-        }
-
+        if (!isMounted) return;
         setUser(snapshot);
         setStatus("authenticated");
       } catch (err) {
-        if (!isMounted) {
+        if (!isMounted) return;
+        // Auth errors (401/403) - logout immediately
+        if (isAuthError(err)) {
+          LOGGER.warn("Authentication error during profile fetch", err);
+          logout();
           return;
         }
-
-        if (isAuthError(err)) {
-          logout();
-        } else {
-          setStatus("unauthenticated");
+        // Retryable errors - try again with exponential backoff
+        if (isRetryableError(err) && attempt < MAX_RETRIES) {
+          const backoffMs = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+          LOGGER.info(
+            `Profile fetch failed (attempt ${attempt}/${MAX_RETRIES}), retrying in ${backoffMs}ms...`
+          );
+          await delay(backoffMs);
+          return loadUser(attempt + 1);
         }
-
+        // Other errors or max retries exceeded
+        setStatus("unauthenticated");
         setUser(undefined);
         setError(
           err instanceof Error
             ? err
-            : new Error("Unable to load dashboard user.")
+            : new Error("Unable to load dashboard. Please refresh the page.")
         );
       }
     };
-
+    void loadUser();
+    return () => {
+      isMounted = false;
+    };
     void loadUser();
 
     return () => {

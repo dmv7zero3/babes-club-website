@@ -7,3 +7,7 @@ npm run git:commit
 # Then push:
 
 git push origin main
+
+or
+
+git push origin main --force
