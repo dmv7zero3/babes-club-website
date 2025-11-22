@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import SignupScreen from "./SignupScreen";
-import { readStoredSession } from "@/lib/dashboard/session";
+import { readStoredSession, clearSession } from "@/lib/dashboard/session";
 
 const SignupPage = () => {
   const navigate = useNavigate();

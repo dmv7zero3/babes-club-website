@@ -1,23 +1,19 @@
-"""Placeholder handler for the dashboard profile GET endpoint."""
+"""
+Dashboard Get Profile Lambda - Returns user profile by UUID
+Removes sensitive fields (password hash/salt)
+"""
 
 from __future__ import annotations
 
-
 import json
 import os
-import uuid
-import logging
 from typing import Any, Dict
 
-from shared_commerce import resolve_origin, get_commerce_table  # type: ignore
-
-logger = logging.getLogger(__name__)
-if not logger.handlers:
-    logging.basicConfig(level=logging.INFO)
-logger.setLevel(logging.INFO)
+from shared_commerce import get_commerce_table, resolve_origin  # type: ignore
 
 
 def _json_response(status_code: int, payload: Dict[str, Any], cors_origin: str | None = None) -> Dict[str, Any]:
+    """Build JSON response with CORS headers"""
     origin = cors_origin or (os.environ.get("CORS_ALLOW_ORIGIN") or "*")
     return {
         "statusCode": status_code,
@@ -32,80 +28,75 @@ def _json_response(status_code: int, payload: Dict[str, Any], cors_origin: str |
 
 
 def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
-    """Return a stubbed profile payload until the DynamoDB integration is finished.
-
-    This handler also responds to preflight OPTIONS requests with the proper CORS headers.
     """
+    Get user profile by userId
+    
+    Authorization: userId comes from authorizer context
+    
+    Response:
+        {
+            "profile": {
+                "userId": "uuid",
+                "email": "user@example.com",
+                "displayName": "John Doe",
+                "shippingAddress": {...},
+                "dashboardSettings": {...},
+                // ... (no passwordHash/passwordSalt)
+            }
+        }
+    """
+    import logging
 
-    # Respond to preflight using centralized resolver
+    logger = logging.getLogger(__name__)
+    if not logger.handlers:
+        logging.basicConfig(level=logging.INFO)
+    logger.setLevel(logging.INFO)
 
+    # Handle CORS preflight
     method = (event.get("httpMethod") or "GET").upper()
     cors_origin = resolve_origin(event)
-    logger.info("Lambda handler invoked. Method: %s, Origin: %s", method, cors_origin)
+    
     if method == "OPTIONS":
-        logger.info("OPTIONS preflight received")
         return _json_response(200, {"ok": True}, cors_origin=cors_origin)
 
-    try:
-        logger.info("Profile GET event: %s", json.dumps(event))
-    except Exception as exc:
-        logger.error("Failed to serialize event for logging: %s", exc)
-
+    # Get userId from authorizer context
     user_id = (event.get("requestContext") or {}).get("authorizer", {}).get("userId")
-    logger.info("Extracted userId from authorizer: %s", user_id)
+    
     if not user_id:
-        logger.warning("No userId found in requestContext.authorizer. Event: %s", json.dumps(event))
+        logger.warning("No userId in authorizer context")
         return _json_response(401, {"error": "Unauthorized"}, cors_origin=cors_origin)
 
-    # Require UUID-formatted userId (canonical identity: USER#<uuid>)
-    try:
-        uuid_obj = uuid.UUID(str(user_id))
-    except Exception as exc:
-        logger.warning("Invalid userId format: %s, error: %s", user_id, exc)
-        return _json_response(400, {"error": "Invalid userId format; expected UUID"}, cors_origin=cors_origin)
+    logger.info(f"Fetching profile for user: {user_id}")
 
-    user_pk = f"USER#{str(uuid_obj)}"
-    logger.info("Looking up profile with PK: %s, SK: PROFILE", user_pk)
-
+    # Fetch profile from DynamoDB
     table = get_commerce_table()
+    
     try:
-        resp = table.get_item(Key={"PK": user_pk, "SK": "PROFILE"}, ConsistentRead=True)
-        logger.info("DynamoDB get_item response: %s", json.dumps(resp))
-    except Exception as exc:  # pragma: no cover - runtime/permissions issues
-        logger.error("Failed to read profile for PK: %s, error: %s", user_pk, exc)
-        return _json_response(500, {"error": f"Failed to read profile: {exc}"}, cors_origin=cors_origin)
+        response = table.get_item(
+            Key={"PK": f"USER#{user_id}", "SK": "PROFILE"},
+            ConsistentRead=True
+        )
+        
+        logger.debug(f"DynamoDB response: {json.dumps(response.get('ResponseMetadata', {}))}")
+        
+    except Exception as exc:
+        logger.exception(f"Failed to read profile for {user_id}: {exc}")
+        return _json_response(500, {"error": "Database error"}, cors_origin=cors_origin)
 
-    item = (resp or {}).get("Item")
+    item = response.get("Item")
+    
     if not item:
-        logger.warning("Profile not found for PK: %s. DynamoDB response: %s", user_pk, json.dumps(resp))
+        logger.warning(f"Profile not found for user: {user_id}")
         return _json_response(404, {"error": "Profile not found"}, cors_origin=cors_origin)
 
-    # Remove storage internals before returning
+    # Remove internal/sensitive fields
     item.pop("PK", None)
     item.pop("SK", None)
-
-    def normalize_profile_response(item: dict) -> dict:
-        """Ensure all expected profile fields exist with proper defaults."""
-        return {
-            "userId": item.get("userId", ""),
-            "email": item.get("email", ""),
-            "displayName": item.get("displayName", "Member"),
-            "shippingAddress": item.get("shippingAddress", {
-                "line1": "",
-                "city": "",
-                "state": "",
-                "postalCode": "",
-                "country": "US"
-            }),
-            "preferredWallet": item.get("preferredWallet"),
-            "avatarUrl": item.get("avatarUrl"),
-            "stripeCustomerId": item.get("stripeCustomerId"),
-            "dashboardSettings": item.get("dashboardSettings", {}),
-            "updatedAt": item.get("updatedAt", ""),
-            "category": item.get("category", "Member")
-        }
-
-    normalized_profile = normalize_profile_response(item)
-    logger.info("Returning normalized profile for userId: %s", normalized_profile.get("userId"))
-
-    return _json_response(200, {"profile": normalized_profile}, cors_origin=cors_origin)
+    item.pop("passwordHash", None)
+    item.pop("passwordSalt", None)
+    item.pop("hashAlgorithm", None)
+    item.pop("hashIterations", None)
+    
+    logger.info(f"Returning profile for user: {user_id}")
+    
+    return _json_response(200, {"profile": item}, cors_origin=cors_origin)

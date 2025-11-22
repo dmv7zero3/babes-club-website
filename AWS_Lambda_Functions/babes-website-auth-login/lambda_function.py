@@ -1,149 +1,269 @@
-"""Babes Club auth login Lambda -- modular handler."""
+"""
+Authorizer Lambda - Validates session tokens and resets inactivity timer
+Returns IAM policy with userId in context
+"""
 
 from __future__ import annotations
 
 import json
 import logging
+import os
 import time
-import uuid
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
-from shared_commerce import (  # type: ignore  # pylint: disable=import-error
-    SESSION_TTL_ENV,
-    get_env_int,
-    json_response,
-    now_utc_iso,
-    parse_json_body,
-)
+import boto3
 
-from cors import resolve_origin  # type: ignore
-from event_utils import redact_event, extract_ip_and_agent  # type: ignore
-from security import verify_password, sanitize_user_payload  # type: ignore
-from storage import fetch_user_profile, write_session_and_pointer, update_last_login  # type: ignore
-from rate_limiting import check_rate_limit  # type: ignore
-from validation import is_honeypot_triggered, detect_spam  # type: ignore
+# DynamoDB setup (direct - no shared layer dependency for authorizer)
+COMMERCE_TABLE = os.getenv("COMMERCE_TABLE") or "babesclub-commerce"
+_dynamodb = boto3.resource("dynamodb")
 
-logger = logging.getLogger(__name__)
-if not logger.handlers:
-    logging.basicConfig(level=logging.INFO)
-logger.setLevel(logging.INFO)
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel(logging.INFO)
 
 
-def _build_response(status_code: int, payload: Dict[str, Any], cors_origin: str) -> Dict[str, Any]:
-    response = json_response(status_code, payload, cors_origin=cors_origin)
-    response.setdefault("headers", {})["Vary"] = "Origin"
-    return response
-
-
-def _error(status_code: int, message: str, cors_origin: str) -> Dict[str, Any]:
-    return _build_response(status_code, {"error": message}, cors_origin)
-
-
-def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
+def get_session_metadata(session_id: str) -> dict | None:
+    """Fetch session metadata with consistent read"""
+    table = _dynamodb.Table(COMMERCE_TABLE)
+    
     try:
-        logger.debug("auth-login event (redacted): %s", redact_event(event))
-    except Exception:  # pragma: no cover - defensive logging
-        logger.debug("auth-login event redaction failed")
+        response = table.get_item(
+            Key={"PK": f"SESSION#{session_id}", "SK": "METADATA"},
+            ConsistentRead=True  # Strong consistency for auth
+        )
+        return response.get("Item")
+    except Exception as exc:
+        LOGGER.exception(f"Failed to read session {session_id}: {exc}")
+        return None
 
-    cors_origin = resolve_origin(event)
-    method = (event.get("httpMethod") or "POST").upper()
-    if method == "OPTIONS":
-        return _build_response(200, {"ok": True}, cors_origin)
-    if method != "POST":
-        return _error(405, "Method not allowed", cors_origin)
 
-    payload, parse_error = parse_json_body(event)
-    if parse_error:
-        status_code = parse_error.get("statusCode", 400)
-        body_raw = parse_error.get("body", "{}")
-        try:
-            body_payload = json.loads(body_raw)
-        except json.JSONDecodeError:
-            body_payload = {"error": "Invalid request"}
-        return _build_response(status_code, body_payload, cors_origin)
-
-    # Honeypot + spam checks
+def update_session_expiry(session_id: str, user_id: str, new_expiry: int) -> None:
+    """
+    Reset session expiry timer (async - doesn't block auth)
+    Updates both SESSION# and session index
+    """
+    table = _dynamodb.Table(COMMERCE_TABLE)
+    now_iso = time.strftime("%Y-%m-%dT%H:%M:%S.%fZ", time.gmtime())
+    
     try:
-        if is_honeypot_triggered(payload):
-            return _error(400, "Invalid submission detected", cors_origin)
-        spam = detect_spam(payload)
-        if spam:
-            logger.info("Spam indicators detected: %s", spam)
-    except Exception:
-        logger.debug("Validation checks failed; continuing")
+        # Update both session and index in parallel
+        table.transact_write_items(
+            TransactItems=[
+                {
+                    "Update": {
+                        "TableName": COMMERCE_TABLE,
+                        "Key": {"PK": f"SESSION#{session_id}", "SK": "METADATA"},
+                        "UpdateExpression": "SET expiresAt = :expiry, lastAccessedAt = :now, #ttl = :expiry",
+                        "ExpressionAttributeNames": {"#ttl": "ttl"},
+                        "ExpressionAttributeValues": {
+                            ":expiry": new_expiry,
+                            ":now": now_iso
+                        }
+                    }
+                },
+                {
+                    "Update": {
+                        "TableName": COMMERCE_TABLE,
+                        "Key": {"PK": f"USER#{user_id}", "SK": f"SESSION#{session_id}"},
+                        "UpdateExpression": "SET expiresAt = :expiry, lastAccessedAt = :now, #ttl = :expiry",
+                        "ExpressionAttributeNames": {"#ttl": "ttl"},
+                        "ExpressionAttributeValues": {
+                            ":expiry": new_expiry,
+                            ":now": now_iso
+                        }
+                    }
+                }
+            ]
+        )
+        LOGGER.debug(f"Updated session expiry for {session_id} to {new_expiry}")
+    except Exception as exc:
+        # Non-blocking - log but don't fail auth
+        LOGGER.warning(f"Failed to update session expiry for {session_id}: {exc}")
 
-    email_raw = payload.get("email")
-    password_raw = payload.get("password")
 
-    if not isinstance(email_raw, str) or not isinstance(password_raw, str):
-        return _error(400, "Email and password are required", cors_origin)
+def _extract_token(event: Dict[str, Any]) -> Optional[str]:
+    """Extract bearer token from various event formats"""
+    
+    # TOKEN authorizer format
+    token = event.get("authorizationToken")
+    if token:
+        token = token.strip()
+        parts = token.split(None, 1)
+        if len(parts) == 2 and parts[0].lower() == "bearer":
+            return parts[1]
+        return token
 
-    email = email_raw.strip()
-    password = password_raw.strip()
-    if not email or not password:
-        return _error(400, "Email and password are required", cors_origin)
-    email_lower = email.lower()
-    if "@" not in email_lower:
-        return _error(400, "Email format is invalid", cors_origin)
+    # REQUEST authorizer format - check headers
+    headers = event.get("headers") or {}
+    for key in ("authorization", "Authorization"):
+        value = headers.get(key)
+        if value:
+            token = value.strip()
+            parts = token.split(None, 1)
+            if len(parts) == 2 and parts[0].lower() == "bearer":
+                return parts[1]
+            return token
 
-    # Rate limiting early (by IP)
-    ip, agent = extract_ip_and_agent(event)
-    allowed, rl_payload = check_rate_limit(ip)
-    if not allowed:
-        return _error(429, "Too many requests", cors_origin)
+    # Fallback to multiValueHeaders
+    mvh = event.get("multiValueHeaders") or {}
+    for key in ("authorization", "Authorization"):
+        vals = mvh.get(key)
+        if vals and len(vals) > 0:
+            token = vals[0].strip()
+            parts = token.split(None, 1)
+            if len(parts) == 2 and parts[0].lower() == "bearer":
+                return parts[1]
+            return token
 
-    # Fetch user and validate
-    user_item = fetch_user_profile(email_lower)
-    if not user_item:
-        logger.info("Login attempt for unknown user '%s'", email_lower)
-        return _error(401, "Invalid email or password", cors_origin)
+    return None
 
-    if str(user_item.get("status", "active")).lower() not in {"active", "pending"}:
-        return _error(423, "Account is not active", cors_origin)
 
-    if not verify_password(user_item, password):
-        logger.info("Invalid password for '%s'", email_lower)
-        return _error(401, "Invalid email or password", cors_origin)
-
-    # Issue session
-    issued_at = now_utc_iso()
-    ttl_minutes = get_env_int(SESSION_TTL_ENV, 12 * 60)
-    expires_at = int(time.time()) + max(ttl_minutes, 1) * 60
-    session_id = uuid.uuid4().hex
-
-    session_item = {
-        "PK": f"SESSION#{session_id}",
-        "SK": "METADATA",
-        "sessionId": session_id,
-        "status": "active",
-        "userPk": f"USER#{email_lower}",
-        "userId": user_item.get("userId"),
-        "email": user_item.get("email", email),
-        "emailLower": email_lower,
-        "roles": user_item.get("roles") or [],
-        "issuedAt": issued_at,
-        "expiresAt": expires_at,
-        "ip": ip,
-        "userAgent": agent,
+def _generate_policy(
+    principal_id: str,
+    effect: str,
+    method_arn: str,
+    context: Dict[str, str]
+) -> Dict[str, Any]:
+    """Generate IAM policy for API Gateway"""
+    
+    policy_document = {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Action": "execute-api:Invoke",
+                "Effect": effect,
+                "Resource": method_arn
+            }
+        ]
+    }
+    
+    return {
+        "principalId": principal_id,
+        "policyDocument": policy_document,
+        "context": context  # Available in downstream lambdas
     }
 
-    pointer_item = {
-        "PK": f"USER#{email_lower}",
-        "SK": f"SESSION#{session_id}",
-        "sessionId": session_id,
-        "status": "active",
-        "issuedAt": issued_at,
-        "expiresAt": expires_at,
-    }
 
-    # Persist session and update lastLogin
-    write_session_and_pointer(session_item, pointer_item)
-    update_last_login(f"USER#{email_lower}", issued_at)
+def lambda_handler(event: Dict[str, Any], _context) -> Dict[str, Any]:
+    """
+    Authorize API Gateway requests via session validation
+    
+    Flow:
+    1. Extract session token from Authorization header
+    2. Fetch session metadata from DynamoDB
+    3. Validate session (status, expiry)
+    4. Reset inactivity timer (async)
+    5. Return Allow/Deny policy with userId in context
+    
+    Event:
+        {
+            "authorizationToken": "Bearer {sessionId}",
+            "methodArn": "arn:aws:execute-api:..."
+        }
+    
+    Response:
+        {
+            "principalId": "{sessionId}",
+            "policyDocument": {...},
+            "context": {
+                "userId": "{uuid}",
+                "sessionId": "{sessionId}"
+            }
+        }
+    """
+    
+    LOGGER.debug(f"Authorizer invoked: {json.dumps({'methodArn': event.get('methodArn')})}")
+    
+    # Extract token
+    token = _extract_token(event)
+    if not token:
+        LOGGER.info("No authorization token provided")
+        raise Exception("Unauthorized")  # Returns 401
 
-    response_payload = {
-        "token": session_id,
-        "expiresAt": expires_at,
-        "user": sanitize_user_payload(user_item, issued_at),
-    }
+    # Fetch session
+    try:
+        session = get_session_metadata(token)
+    except Exception as exc:
+        LOGGER.exception(f"Failed to read session: {exc}")
+        raise Exception("Unauthorized")
 
-    return _build_response(200, response_payload, cors_origin)
+    if not session:
+        LOGGER.info(f"Session not found: {token[:8]}...")
+        return _generate_policy(
+            principal_id=token,
+            effect="Deny",
+            method_arn=event["methodArn"],
+            context={"reason": "session_not_found"}
+        )
+
+    # Validate expiry
+    expires_at = session.get("expiresAt", 0)
+    current_time = int(time.time())
+    
+    if expires_at > 0 and expires_at <= current_time:
+        LOGGER.info(f"Session expired: {token[:8]}... (expiresAt: {expires_at}, now: {current_time})")
+        return _generate_policy(
+            principal_id=token,
+            effect="Deny",
+            method_arn=event["methodArn"],
+            context={"reason": "session_expired"}
+        )
+
+    # Validate status
+    status = session.get("status", "")
+    if status != "active":
+        LOGGER.info(f"Session not active: {token[:8]}... (status: {status})")
+        return _generate_policy(
+            principal_id=token,
+            effect="Deny",
+            method_arn=event["methodArn"],
+            context={"reason": "session_inactive", "status": str(status)}
+        )
+
+    # Get userId
+    user_id = session.get("userId")
+    if not user_id:
+        LOGGER.error(f"Session missing userId: {token[:8]}...")
+        return _generate_policy(
+            principal_id=token,
+            effect="Deny",
+            method_arn=event["methodArn"],
+            context={"reason": "missing_userId"}
+        )
+
+    # Reset inactivity timer (12 hours from now, up to 30-day absolute max)
+    issued_at = session.get("issuedAt", "")
+    try:
+        # Parse issuedAt to get absolute expiry
+        import datetime
+        issued_dt = datetime.datetime.fromisoformat(issued_at.replace("Z", "+00:00"))
+        issued_timestamp = int(issued_dt.timestamp())
+        
+        # Calculate new expiry
+        inactivity_timeout_hours = int(os.getenv("SESSION_INACTIVITY_HOURS", "12"))
+        max_session_days = int(os.getenv("SESSION_MAX_DAYS", "30"))
+        
+        inactivity_expire = current_time + (inactivity_timeout_hours * 3600)
+        absolute_expire = issued_timestamp + (max_session_days * 24 * 3600)
+        
+        new_expiry = min(inactivity_expire, absolute_expire)
+        
+        # Update expiry (async - doesn't block response)
+        if new_expiry != expires_at:
+            update_session_expiry(token, user_id, new_expiry)
+        
+    except Exception as exc:
+        # Non-critical - log but don't fail auth
+        LOGGER.warning(f"Failed to reset session timer: {exc}")
+
+    # Allow request with userId in context
+    LOGGER.debug(f"Authorized user {user_id} via session {token[:8]}...")
+    
+    return _generate_policy(
+        principal_id=token,
+        effect="Allow",
+        method_arn=event["methodArn"],
+        context={
+            "userId": str(user_id),
+            "sessionId": str(token)
+        }
+    )

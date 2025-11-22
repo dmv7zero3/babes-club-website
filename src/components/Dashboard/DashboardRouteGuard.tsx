@@ -1,3 +1,12 @@
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  ReactNode,
+} from "react";
 // Fix 1.4: Retry logic helpers
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -18,16 +27,7 @@ const isRetryableError = (error: unknown): boolean => {
     (status >= 500 && status < 600) // Server errors
   );
 };
-import {
-  import DashboardErrorFallback from './DashboardErrorFallback';
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import DashboardErrorFallback from "./DashboardErrorFallback";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import type { AxiosError } from "axios";
 import { fetchDashboardSnapshot } from "@/lib/dashboard/api";
@@ -176,11 +176,6 @@ const DashboardRouteGuard = ({
     return () => {
       isMounted = false;
     };
-    void loadUser();
-
-    return () => {
-      isMounted = false;
-    };
   }, [reloadFlag, logout]);
 
   const contextValue = useMemo<DashboardAuthContextValue>(
@@ -269,9 +264,9 @@ const DashboardRouteGuard = ({
 
   if (status === "loading") {
     const loadingContent = loading ?? (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="space-y-4 text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-cotton-candy border-r-transparent"></div>
+          <div className="inline-block w-8 h-8 border-4 border-solid rounded-full animate-spin border-cotton-candy border-r-transparent"></div>
           <p className="text-sm text-neutral-400">
             {loadingPhase === "session" && "Checking authentication..."}
             {loadingPhase === "profile" && "Loading your profile..."}
@@ -295,10 +290,7 @@ const DashboardRouteGuard = ({
   if (status === "unauthenticated" && error) {
     return (
       <DashboardAuthContext.Provider value={contextValue}>
-        <DashboardErrorFallback 
-          error={error} 
-          onRetry={reload}
-        />
+        <DashboardErrorFallback error={error} onRetry={reload} />
       </DashboardAuthContext.Provider>
     );
   }

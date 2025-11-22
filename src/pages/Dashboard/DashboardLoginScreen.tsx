@@ -1,4 +1,5 @@
 import { FormEvent, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { AxiosError } from "axios";
 import { useDashboardAuth } from "@/components/Dashboard/DashboardRouteGuard";
 import { login } from "@/lib/dashboard/api";
@@ -42,6 +43,7 @@ const getErrorMessage = (error: unknown): string => {
 
 const DashboardLoginScreen = () => {
   const { reload, error: guardError } = useDashboardAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { readStoredSession } from "@/lib/dashboard/session";
+import { readStoredSession, clearSession } from "@/lib/dashboard/session";
 import DashboardRouteGuard, {
   useDashboardAuth,
 } from "@/components/Dashboard/DashboardRouteGuard";

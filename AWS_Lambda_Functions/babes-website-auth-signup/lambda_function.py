@@ -1,254 +1,320 @@
-"""Babes Club auth signup Lambda -- scaffold implementation.
-
-This handler validates signup payloads, applies spam/honeypot checks and
-rate-limiting, creates a new user record in the commerce table, and issues
-an active session (auto-login). It reuses shared layer helpers where
-available.
+"""
+Signup Lambda - Creates user with UUID-based identity
+Creates: USER#{uuid} profile + EMAIL#{email} lookup + SESSION#{sessionId}
 """
 
 from __future__ import annotations
 
 import base64
 import json
-import logging
 import os
 import time
 import uuid
 from typing import Any, Dict
 
 from shared_commerce import (
-    SESSION_TTL_ENV,
-    get_env_int,
-    json_response,
-    now_utc_iso,
-    parse_json_body,
     get_commerce_table,
-)
-
-from shared_commerce.cors import resolve_origin  # type: ignore
-try:
-    from event_utils import redact_event, extract_ip_and_agent  # type: ignore
-except Exception:
-    # Fallbacks for environments where the shared `event_utils` helper
-    # module isn't present (e.g., minimal deployment without the layer).
-    def redact_event(ev: Dict[str, Any]) -> Any:  # type: ignore
-        try:
-            ev_copy = dict(ev or {})
-            if "body" in ev_copy:
-                ev_copy["body"] = "<redacted>"
-            return ev_copy
-        except Exception:
-            return "<redacted>"
-
-    def extract_ip_and_agent(ev: Dict[str, Any]) -> tuple:
-        # Try common header names, then fall back to requestContext identity
-        headers = (ev or {}).get("headers") or {}
-        xff = headers.get("x-forwarded-for") or headers.get("X-Forwarded-For") or headers.get("X-Real-IP")
-        ip = ""
-        if xff:
-            ip = xff.split(",")[0].strip()
-        else:
-            ip = (ev or {}).get("requestContext", {}).get("identity", {}).get("sourceIp") or ""
-        ua = headers.get("user-agent") or headers.get("User-Agent") or ""
-        return ip or "0.0.0.0", ua or ""
-from security import derive_hash, get_password_pepper  # type: ignore
-from shared_commerce.rate_limiting import check_rate_limit  # type: ignore
+    get_env_int,
+    get_password_pepper,
+    now_utc_iso,
+    resolve_origin,
+)  # type: ignore
 
 
-def is_honeypot_triggered(body: Dict[str, Any]) -> bool:
-    # Simple honeypot: reject if `website` field is present
-    val = body.get("website")
-    return bool(val)
+def derive_hash(password: str, salt: bytes, iterations: int, pepper: str) -> bytes:
+    """PBKDF2-SHA256 password hashing"""
+    import hashlib
+    
+    password_bytes = (password + pepper).encode("utf-8")
+    return hashlib.pbkdf2_hmac("sha256", password_bytes, salt, iterations)
 
 
-def detect_spam(body: Dict[str, Any]) -> list:
-    # Lightweight spam detection used only for logging here
-    indicators: list = []
-    text = " ".join([str(v) for v in body.values() if isinstance(v, str)])
-    lower = text.lower()
-    for kw in ("bitcoin", "crypto", "forex", "viagra"):
-        if kw in lower:
-            indicators.append(kw)
-    email = body.get("email", "")
-    if isinstance(email, str) and any(dom in email.lower() for dom in ("10minutemail.com", "mailinator.com", "tempmail.org")):
-        indicators.append("suspicious_domain")
-    return indicators
-
-logger = logging.getLogger(__name__)
-if not logger.handlers:
-    logging.basicConfig(level=logging.INFO)
-logger.setLevel(logging.INFO)
+def _error(status_code: int, message: str, cors_origin: str | None) -> Dict[str, Any]:
+    """Build error response"""
+    origin = cors_origin or "*"
+    return {
+        "statusCode": status_code,
+        "headers": {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Headers": "Content-Type,Authorization",
+            "Access-Control-Allow-Methods": "POST,OPTIONS",
+        },
+        "body": json.dumps({"error": message}),
+    }
 
 
-def _build_response(status_code: int, payload: Dict[str, Any], cors_origin: str) -> Dict[str, Any]:
-    response = json_response(status_code, payload, cors_origin=cors_origin)
-    response.setdefault("headers", {})["Vary"] = "Origin"
-    return response
-
-
-def _error(status_code: int, message: str, cors_origin: str) -> Dict[str, Any]:
-    return _build_response(status_code, {"error": message}, cors_origin)
+def _build_response(status_code: int, payload: Dict[str, Any], cors_origin: str | None) -> Dict[str, Any]:
+    """Build success response"""
+    origin = cors_origin or "*"
+    return {
+        "statusCode": status_code,
+        "headers": {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Headers": "Content-Type,Authorization",
+            "Access-Control-Allow-Methods": "POST,OPTIONS",
+        },
+        "body": json.dumps(payload),
+    }
 
 
 def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
-    try:
-        logger.debug("auth-signup event (redacted): %s", redact_event(event))
-    except Exception:
-        logger.debug("auth-signup event redaction failed")
+    """
+    Signup handler - Creates new user account
+    
+    Request body:
+        {
+            "email": "user@example.com",
+            "password": "securepass123",
+            "displayName": "John Doe"  // optional
+        }
+    
+    Response:
+        {
+            "token": "session-id",
+            "expiresAt": 1234567890,
+            "user": {
+                "userId": "uuid",
+                "email": "user@example.com",
+                "displayName": "John Doe"
+            }
+        }
+    """
+    import logging
 
-    cors_origin = resolve_origin(event)
+    logger = logging.getLogger(__name__)
+    if not logger.handlers:
+        logging.basicConfig(level=logging.INFO)
+    logger.setLevel(logging.INFO)
+
+    # Handle CORS preflight
     method = (event.get("httpMethod") or "POST").upper()
+    cors_origin = resolve_origin(event)
+    
     if method == "OPTIONS":
         return _build_response(200, {"ok": True}, cors_origin)
-    if method != "POST":
-        return _error(405, "Method not allowed", cors_origin)
 
-    payload, parse_error = parse_json_body(event)
-    if parse_error:
-        status_code = parse_error.get("statusCode", 400)
-        body_raw = parse_error.get("body", "{}")
-        try:
-            body_payload = json.loads(body_raw)
-        except json.JSONDecodeError:
-            body_payload = {"error": "Invalid request"}
-        return _build_response(status_code, body_payload, cors_origin)
-
-    # Honeypot + spam checks
+    # Parse request body
     try:
-        if is_honeypot_triggered(payload):
-            return _error(400, "Invalid submission detected", cors_origin)
-        spam = detect_spam(payload)
-        if spam:
-            logger.info("Spam indicators detected on signup: %s", spam)
-    except Exception:
-        logger.debug("Validation checks failed; continuing")
+        raw_body = event.get("body", "{}")
+        body = json.loads(raw_body) if isinstance(raw_body, str) else raw_body
+    except (json.JSONDecodeError, TypeError):
+        return _error(400, "Invalid request body", cors_origin)
 
-    email_raw = payload.get("email")
-    password_raw = payload.get("password")
-    display_name = payload.get("displayName") or payload.get("display_name")
+    email = (body.get("email") or "").strip()
+    password = body.get("password") or ""
+    display_name = (body.get("displayName") or "").strip()
 
-    if not isinstance(email_raw, str) or not isinstance(password_raw, str):
-        return _error(400, "Email and password are required", cors_origin)
-
-    email = email_raw.strip()
-    password = password_raw.strip()
+    # Validate input
     if not email or not password:
         return _error(400, "Email and password are required", cors_origin)
-    email_lower = email.lower()
-    if "@" not in email_lower:
-        return _error(400, "Email format is invalid", cors_origin)
 
-    # Rate limiting early (by IP)
-    ip, agent = extract_ip_and_agent(event)
-    allowed, rl_payload = check_rate_limit(ip)
-    if not allowed:
-        return _error(429, "Too many requests", cors_origin)
+    if len(password) < 8:
+        return _error(400, "Password must be at least 8 characters", cors_origin)
+
+    if "@" not in email:
+        return _error(400, "Invalid email format", cors_origin)
+
+    email_lower = email.lower()
+
+    # Get request metadata
+    request_context = event.get("requestContext") or {}
+    identity = request_context.get("identity") or {}
+    headers = event.get("headers") or {}
+    
+    ip = identity.get("sourceIp") or "unknown"
+    agent = headers.get("User-Agent") or "unknown"
+    issued_at = now_utc_iso()
 
     table = get_commerce_table()
-    user_pk = f"USER#{email_lower}"
-    existing = table.get_item(Key={"PK": user_pk, "SK": "PROFILE"}).get("Item")
-    if existing:
-        return _error(409, "User already exists", cors_origin)
 
-    # Create password hash
+    # 1. Check if email is already registered
+    try:
+        existing = table.get_item(
+            Key={"PK": f"EMAIL#{email_lower}", "SK": "LOOKUP"}
+        ).get("Item")
+        
+        if existing:
+            logger.info(f"Signup attempt with existing email: {email_lower}")
+            return _error(409, "Email already registered", cors_origin)
+    except Exception as exc:
+        logger.error(f"Failed to check email existence: {exc}")
+        return _error(500, "Database error", cors_origin)
+
+    # 2. Generate user ID and hash password
+    user_id = uuid.uuid4().hex  # 32-char hex string (no hyphens)
+    
     salt = os.urandom(16)
     pepper = get_password_pepper(optional=True) or ""
-    iterations = os.getenv("AUTH_HASH_ITERATIONS")
-    try:
-        iterations_int = int(iterations) if iterations is not None else 150_000
-    except (TypeError, ValueError):
-        iterations_int = 150_000
-
-    raw_hash = derive_hash(password, salt, iterations_int, pepper)
+    iterations = get_env_int("AUTH_HASH_ITERATIONS", 150_000)
+    
+    raw_hash = derive_hash(password, salt, iterations, pepper)
     salt_b64 = base64.b64encode(salt).decode("ascii")
     hash_b64 = base64.b64encode(raw_hash).decode("ascii")
 
-    user_id = uuid.uuid4().hex
-    issued_at = now_utc_iso()
-
-    profile = {
-        "userId": user_id,
-        "email": email,
-        "emailLower": email_lower,
-        "createdAt": issued_at,
-        "updatedAt": issued_at,
-        "displayName": display_name or email.split("@")[0],
-    }
-
-    user_item = {
-        "PK": user_pk,
+    # 3. Create user profile (UUID-based, single source of truth)
+    user_profile = {
+        "PK": f"USER#{user_id}",
         "SK": "PROFILE",
+        
+        # Identity
         "userId": user_id,
         "email": email,
         "emailLower": email_lower,
-        "status": "active",
-        "roles": [],
-        "profile": profile,
+        
+        # Authentication
         "passwordHash": hash_b64,
         "passwordSalt": salt_b64,
         "hashAlgorithm": "pbkdf2_sha256",
-        "hashIterations": iterations_int,
+        "hashIterations": iterations,
+        
+        # Profile
+        "displayName": display_name or email.split("@")[0],
+        
+        # Shipping (empty by default)
+        "shippingAddress": {
+            "line1": "",
+            "city": "",
+            "state": "",
+            "postalCode": "",
+            "country": "US"
+        },
+        
+        # Dashboard settings (defaults)
+        "dashboardSettings": {
+            "showOrderHistory": True,
+            "showNftHoldings": True,
+            "emailNotifications": True
+        },
+        
+        # Account status
+        "status": "active",
+        "roles": ["member"],
+        
+        # Timestamps
         "createdAt": issued_at,
         "updatedAt": issued_at,
+        "emailChangedAt": issued_at,  # Track for rate limiting
     }
 
-    # Persist user record under the email-keyed PK (for uniqueness) and also
-    # create a canonical UUID-keyed profile so downstream code that looks up
-    # `USER#<uuid>` can find the profile.
-    try:
-        table.put_item(Item=user_item)
-        # Also write canonical profile under USER#<userId>
-        uuid_user_pk = f"USER#{user_id}"
-        uuid_user_item = user_item.copy()
-        uuid_user_item["PK"] = uuid_user_pk
-        table.put_item(Item=uuid_user_item)
-    except Exception as exc:
-        logger.exception("Failed to create user record: %s", exc)
-        return _error(500, "Unable to create user", cors_origin)
+    # 4. Create email lookup (for login)
+    email_lookup = {
+        "PK": f"EMAIL#{email_lower}",
+        "SK": "LOOKUP",
+        "userId": user_id,
+        "email": email,
+        "emailLower": email_lower,
+        "createdAt": issued_at,
+        "setAt": issued_at
+    }
 
-    # Issue session (auto-login)
-    ttl_minutes = get_env_int(SESSION_TTL_ENV, 12 * 60)
-    expires_at = int(time.time()) + max(ttl_minutes, 1) * 60
+    # 5. Create session (auto-login after signup)
     session_id = uuid.uuid4().hex
+    session_ttl_minutes = get_env_int("SESSION_TTL_MINUTES", 12 * 60)  # 12 hours
+    max_session_days = 30
+    
+    inactivity_expire = int(time.time()) + (session_ttl_minutes * 60)
+    absolute_expire = int(time.time()) + (max_session_days * 24 * 3600)
+    expires_at = min(inactivity_expire, absolute_expire)
 
     session_item = {
         "PK": f"SESSION#{session_id}",
         "SK": "METADATA",
+        
         "sessionId": session_id,
-        "status": "active",
-        "userPk": user_pk,
         "userId": user_id,
+        "status": "active",
+        
+        # User snapshot (for fast auth)
         "email": email,
         "emailLower": email_lower,
-        "roles": [],
+        "roles": ["member"],
+        
+        # Lifecycle
         "issuedAt": issued_at,
         "expiresAt": expires_at,
+        "lastAccessedAt": issued_at,
+        
+        # Security metadata
         "ip": ip,
         "userAgent": agent,
+        
+        # DynamoDB TTL
+        "ttl": expires_at
     }
 
-    pointer_item = {
-        "PK": user_pk,
+    # 6. Create session index (for listing user's sessions)
+    session_index = {
+        "PK": f"USER#{user_id}",
         "SK": f"SESSION#{session_id}",
+        
         "sessionId": session_id,
         "status": "active",
         "issuedAt": issued_at,
         "expiresAt": expires_at,
+        "lastAccessedAt": issued_at,
+        "ip": ip,
+        "userAgent": agent,
+        "ttl": expires_at
     }
 
-    # Persist session pointer
+    # 7. Write all items in a transaction (atomic)
     try:
-        with table.batch_writer() as batch:
-            batch.put_item(Item=session_item)
-            batch.put_item(Item=pointer_item)
+        table.transact_write_items(
+            TransactItems=[
+                # Create user profile
+                {
+                    "Put": {
+                        "TableName": table.table_name,
+                        "Item": user_profile
+                    }
+                },
+                # Create email lookup (with uniqueness check)
+                {
+                    "Put": {
+                        "TableName": table.table_name,
+                        "Item": email_lookup,
+                        "ConditionExpression": "attribute_not_exists(PK)"  # Race condition protection
+                    }
+                },
+                # Create session
+                {
+                    "Put": {
+                        "TableName": table.table_name,
+                        "Item": session_item
+                    }
+                },
+                # Create session index
+                {
+                    "Put": {
+                        "TableName": table.table_name,
+                        "Item": session_index
+                    }
+                }
+            ]
+        )
+        
+        logger.info(f"Successfully created user: {user_id} ({email})")
+        
     except Exception as exc:
-        logger.exception("Failed to persist session: %s", exc)
-        return _error(500, "Unable to create session", cors_origin)
+        # Check if it's a conditional check failure (email taken in race condition)
+        if "ConditionalCheckFailed" in str(exc):
+            logger.warning(f"Race condition: email {email_lower} taken during signup")
+            return _error(409, "Email already registered", cors_origin)
+        
+        logger.exception(f"Failed to create user {email}: {exc}")
+        return _error(500, "Unable to create account", cors_origin)
 
+    # 8. Return session token (auto-login)
     response_payload = {
         "token": session_id,
         "expiresAt": expires_at,
-        "user": {"userId": user_id, "email": email, "displayName": profile["displayName"]},
+        "user": {
+            "userId": user_id,
+            "email": email,
+            "displayName": user_profile["displayName"]
+        }
     }
 
     return _build_response(201, response_payload, cors_origin)
