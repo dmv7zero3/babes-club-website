@@ -9,18 +9,35 @@ const getErrorMessage = (error: unknown): string => {
     return "Unable to sign in. Please try again.";
   }
 
-  if (error instanceof Error && error.message) {
-    return error.message;
+  const maybeAxios = error as AxiosError<{ error?: string; message?: string }>;
+  if (!maybeAxios?.response) {
+    return "Network error. Please check your connection and try again.";
   }
 
-  const maybeAxios = error as AxiosError<{ error?: string; message?: string }>;
-  const payload = maybeAxios?.response?.data;
+  const status = maybeAxios.response.status;
+  const payload = maybeAxios.response.data;
 
-  return (
-    payload?.error ||
-    payload?.message ||
-    "Unable to sign in. Please verify your credentials and try again."
-  );
+  switch (status) {
+    case 401:
+      return "Invalid email or password. Please try again.";
+    case 403:
+      return "Access denied. Please contact support if this persists.";
+    case 423:
+      return "Your account is locked. Please contact support@thebabesclub.com.";
+    case 429:
+      return "Too many login attempts. Please wait a moment and try again.";
+    case 500:
+    case 502:
+    case 503:
+    case 504:
+      return "Server error. Please try again in a few moments.";
+    default:
+      return (
+        payload?.error ||
+        payload?.message ||
+        "Unable to sign in. Please verify your credentials and try again."
+      );
+  }
 };
 
 const DashboardLoginScreen = () => {

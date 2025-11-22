@@ -19,6 +19,7 @@ const isRetryableError = (error: unknown): boolean => {
   );
 };
 import {
+  import DashboardErrorFallback from './DashboardErrorFallback';
   createContext,
   useCallback,
   useContext,
@@ -93,6 +94,9 @@ const DashboardRouteGuard = ({
   const [session, setSession] = useState<StoredDashboardSession | null>(() =>
     readStoredSession()
   );
+  const [loadingPhase, setLoadingPhase] = useState<
+    "session" | "profile" | "data" | null
+  >(null);
 
   const navigate = useNavigate();
 
@@ -115,6 +119,7 @@ const DashboardRouteGuard = ({
     const loadUser = async (attempt = 1): Promise<void> => {
       const MAX_RETRIES = 3;
       try {
+        setLoadingPhase("session");
         setStatus("loading");
         setError(undefined);
 
@@ -125,17 +130,22 @@ const DashboardRouteGuard = ({
           setSession(null);
           setUser(undefined);
           setStatus("unauthenticated");
+          setLoadingPhase(null);
           return;
         }
 
         if (!isMounted) return;
         setSession(activeSession);
+        setLoadingPhase("profile");
         // Fetch dashboard snapshot with retry logic
         const snapshot = await fetchDashboardSnapshot(activeSession.token);
         if (!isMounted) return;
+        setLoadingPhase("data");
         setUser(snapshot);
         setStatus("authenticated");
+        setLoadingPhase(null);
       } catch (err) {
+        setLoadingPhase(null);
         if (!isMounted) return;
         // Auth errors (401/403) - logout immediately
         if (isAuthError(err)) {
@@ -200,20 +210,51 @@ const DashboardRouteGuard = ({
         clearTimeout(timer);
       }
 
-      timer = setTimeout(() => {
+      // Calculate timeout considering both inactivity AND token expiry
+      const stored = readStoredSession();
+      if (!stored) {
+        logout();
+        return;
+      }
+
+      const nowSeconds = Math.floor(Date.now() / 1000);
+      const timeUntilExpiryMs = stored.expiresAt
+        ? Math.max(0, (stored.expiresAt - nowSeconds) * 1000)
+        : INACTIVITY_TIMEOUT_MS;
+
+      // Use the shorter of: inactivity timeout or time until token expires
+      const actualTimeoutMs = Math.min(
+        INACTIVITY_TIMEOUT_MS,
+        timeUntilExpiryMs
+      );
+
+      if (actualTimeoutMs <= 0) {
+        // Token already expired
         logout();
         try {
           navigate("/login", { replace: true });
         } catch (e) {
-          // ignore navigation errors in environments without router
+          // ignore navigation errors
         }
-      }, INACTIVITY_TIMEOUT_MS);
+        return;
+      }
+
+      LOGGER.info(`Setting inactivity timer for ${actualTimeoutMs}ms`);
+
+      timer = setTimeout(() => {
+        LOGGER.info("Inactivity timeout or token expiry reached - logging out");
+        logout();
+        try {
+          navigate("/login", { replace: true });
+        } catch (e) {
+          // ignore navigation errors
+        }
+      }, actualTimeoutMs);
     };
 
     const events = ["mousemove", "keydown", "click", "touchstart"];
     events.forEach((ev) => window.addEventListener(ev, resetTimer));
 
-    // start the timer
     resetTimer();
 
     return () => {
@@ -227,13 +268,37 @@ const DashboardRouteGuard = ({
   const location = useLocation();
 
   if (status === "loading") {
-    return <>{loading ?? <div>Loading dashboard…</div>}</>;
+    const loadingContent = loading ?? (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="space-y-4 text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-cotton-candy border-r-transparent"></div>
+          <p className="text-sm text-neutral-400">
+            {loadingPhase === "session" && "Checking authentication..."}
+            {loadingPhase === "profile" && "Loading your profile..."}
+            {loadingPhase === "data" && "Fetching dashboard data..."}
+            {!loadingPhase && "Loading dashboard..."}
+          </p>
+        </div>
+      </div>
+    );
+    return <>{loadingContent}</>;
   }
 
   if (status === "authenticated" && user) {
     return (
       <DashboardAuthContext.Provider value={contextValue}>
         {children}
+      </DashboardAuthContext.Provider>
+    );
+  }
+
+  if (status === "unauthenticated" && error) {
+    return (
+      <DashboardAuthContext.Provider value={contextValue}>
+        <DashboardErrorFallback 
+          error={error} 
+          onRetry={reload}
+        />
       </DashboardAuthContext.Provider>
     );
   }
