@@ -1,269 +1,344 @@
 """
-Authorizer Lambda - Validates session tokens and resets inactivity timer
-Returns IAM policy with userId in context
+Login Lambda - Authenticates via EMAIL# lookup → USER# profile
+Enforces max 5 concurrent sessions per user
 """
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
-import logging
-import os
 import time
-from typing import Any, Dict, Optional
+import uuid
+from typing import Any, Dict
 
-import boto3
+from shared_commerce import (
+    get_commerce_table,
+    get_env_int,
+    get_password_pepper,
+    now_utc_iso,
+    resolve_origin,
+)  # type: ignore
 
-# DynamoDB setup (direct - no shared layer dependency for authorizer)
-COMMERCE_TABLE = os.getenv("COMMERCE_TABLE") or "babesclub-commerce"
-_dynamodb = boto3.resource("dynamodb")
 
-LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.INFO)
-
-
-def get_session_metadata(session_id: str) -> dict | None:
-    """Fetch session metadata with consistent read"""
-    table = _dynamodb.Table(COMMERCE_TABLE)
-    
+def verify_password(profile: Dict[str, Any], password: str) -> bool:
+    """Verify password against stored hash"""
     try:
-        response = table.get_item(
-            Key={"PK": f"SESSION#{session_id}", "SK": "METADATA"},
-            ConsistentRead=True  # Strong consistency for auth
-        )
-        return response.get("Item")
+        stored_hash_b64 = profile.get("passwordHash")
+        salt_b64 = profile.get("passwordSalt")
+        iterations = profile.get("hashIterations", 150_000)
+        
+        if not stored_hash_b64 or not salt_b64:
+            return False
+        
+        salt = base64.b64decode(salt_b64)
+        stored_hash = base64.b64decode(stored_hash_b64)
+        
+        pepper = get_password_pepper(optional=True) or ""
+        password_bytes = (password + pepper).encode("utf-8")
+        
+        computed_hash = hashlib.pbkdf2_hmac("sha256", password_bytes, salt, iterations)
+        
+        return computed_hash == stored_hash
+        
+    except Exception:
+        return False
+
+
+def _error(status_code: int, message: str, cors_origin: str | None) -> Dict[str, Any]:
+    """Build error response"""
+    origin = cors_origin or "*"
+    return {
+        "statusCode": status_code,
+        "headers": {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Headers": "Content-Type,Authorization",
+            "Access-Control-Allow-Methods": "POST,OPTIONS",
+        },
+        "body": json.dumps({"error": message}),
+    }
+
+
+def _build_response(status_code: int, payload: Dict[str, Any], cors_origin: str | None) -> Dict[str, Any]:
+    """Build success response"""
+    origin = cors_origin or "*"
+    return {
+        "statusCode": status_code,
+        "headers": {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Headers": "Content-Type,Authorization",
+            "Access-Control-Allow-Methods": "POST,OPTIONS",
+        },
+        "body": json.dumps(payload),
+    }
+
+
+def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
+    """
+    Login handler - Authenticates user and creates session
+    
+    Flow:
+    1. Lookup EMAIL#{email} → get userId
+    2. Fetch USER#{userId} profile
+    3. Verify password
+    4. Check session limit (max 5)
+    5. Create new session
+    
+    Request body:
+        {
+            "email": "user@example.com",
+            "password": "securepass123"
+        }
+    
+    Response:
+        {
+            "token": "session-id",
+            "expiresAt": 1234567890,
+            "user": {
+                "userId": "uuid",
+                "email": "user@example.com",
+                "displayName": "John Doe",
+                "lastLoginAt": "2025-11-22T21:28:24.990Z"
+            }
+        }
+    """
+    import logging
+
+    logger = logging.getLogger(__name__)
+    if not logger.handlers:
+        logging.basicConfig(level=logging.INFO)
+    logger.setLevel(logging.INFO)
+
+    # Handle CORS preflight
+    method = (event.get("httpMethod") or "POST").upper()
+    cors_origin = resolve_origin(event)
+    
+    if method == "OPTIONS":
+        return _build_response(200, {"ok": True}, cors_origin)
+
+    # Parse request body
+    try:
+        raw_body = event.get("body", "{}")
+        body = json.loads(raw_body) if isinstance(raw_body, str) else raw_body
+    except (json.JSONDecodeError, TypeError):
+        return _error(400, "Invalid request body", cors_origin)
+
+    email = (body.get("email") or "").strip()
+    password = body.get("password") or ""
+
+    if not email or not password:
+        return _error(400, "Email and password are required", cors_origin)
+
+    email_lower = email.lower()
+
+    # Get request metadata
+    request_context = event.get("requestContext") or {}
+    identity = request_context.get("identity") or {}
+    headers = event.get("headers") or {}
+    
+    ip = identity.get("sourceIp") or "unknown"
+    agent = headers.get("User-Agent") or "unknown"
+    issued_at = now_utc_iso()
+
+    table = get_commerce_table()
+
+    # 1. Lookup user by email
+    try:
+        email_lookup = table.get_item(
+            Key={"PK": f"EMAIL#{email_lower}", "SK": "LOOKUP"}
+        ).get("Item")
+        
+        if not email_lookup:
+            logger.info(f"Login attempt with unknown email: {email_lower}")
+            return _error(401, "Invalid email or password", cors_origin)
+        
+        user_id = email_lookup["userId"]
+        
     except Exception as exc:
-        LOGGER.exception(f"Failed to read session {session_id}: {exc}")
-        return None
+        logger.error(f"Failed to lookup email {email_lower}: {exc}")
+        return _error(500, "Database error", cors_origin)
 
-
-def update_session_expiry(session_id: str, user_id: str, new_expiry: int) -> None:
-    """
-    Reset session expiry timer (async - doesn't block auth)
-    Updates both SESSION# and session index
-    """
-    table = _dynamodb.Table(COMMERCE_TABLE)
-    now_iso = time.strftime("%Y-%m-%dT%H:%M:%S.%fZ", time.gmtime())
-    
+    # 2. Fetch user profile
     try:
-        # Update both session and index in parallel
-        table.transact_write_items(
-            TransactItems=[
-                {
-                    "Update": {
-                        "TableName": COMMERCE_TABLE,
-                        "Key": {"PK": f"SESSION#{session_id}", "SK": "METADATA"},
-                        "UpdateExpression": "SET expiresAt = :expiry, lastAccessedAt = :now, #ttl = :expiry",
-                        "ExpressionAttributeNames": {"#ttl": "ttl"},
-                        "ExpressionAttributeValues": {
-                            ":expiry": new_expiry,
-                            ":now": now_iso
+        profile_response = table.get_item(
+            Key={"PK": f"USER#{user_id}", "SK": "PROFILE"}
+        )
+        
+        profile = profile_response.get("Item")
+        if not profile:
+            logger.error(f"Email lookup exists but profile missing for {user_id}")
+            return _error(500, "Account data inconsistent", cors_origin)
+        
+    except Exception as exc:
+        logger.error(f"Failed to fetch profile for {user_id}: {exc}")
+        return _error(500, "Database error", cors_origin)
+
+    # 3. Check account status
+    status = profile.get("status", "active")
+    if status != "active":
+        logger.info(f"Login attempt for {status} account: {email_lower}")
+        return _error(423, "Account is not active", cors_origin)
+
+    # 4. Verify password
+    if not verify_password(profile, password):
+        logger.info(f"Invalid password for {email_lower}")
+        return _error(401, "Invalid email or password", cors_origin)
+
+    # 5. Check active session count (max 5)
+    try:
+        current_time = int(time.time())
+        
+        sessions_response = table.query(
+            KeyConditionExpression="PK = :pk AND begins_with(SK, :sk_prefix)",
+            FilterExpression="status = :status AND expiresAt > :now",
+            ExpressionAttributeValues={
+                ":pk": f"USER#{user_id}",
+                ":sk_prefix": "SESSION#",
+                ":status": "active",
+                ":now": current_time
+            }
+        )
+        
+        active_sessions = sessions_response.get("Items", [])
+        
+        # If at limit (5), revoke oldest session
+        if len(active_sessions) >= 5:
+            oldest_session = min(active_sessions, key=lambda s: s.get("issuedAt", ""))
+            oldest_session_id = oldest_session["sessionId"]
+            
+            logger.info(f"Session limit reached for {user_id}, revoking oldest: {oldest_session_id}")
+            
+            # Revoke oldest session
+            table.transact_write_items(
+                TransactItems=[
+                    {
+                        "Update": {
+                            "TableName": table.table_name,
+                            "Key": {"PK": f"SESSION#{oldest_session_id}", "SK": "METADATA"},
+                            "UpdateExpression": "SET #status = :status, revokedAt = :now, revokedReason = :reason",
+                            "ExpressionAttributeNames": {"#status": "status"},
+                            "ExpressionAttributeValues": {
+                                ":status": "revoked",
+                                ":now": issued_at,
+                                ":reason": "session_limit_exceeded"
+                            }
+                        }
+                    },
+                    {
+                        "Update": {
+                            "TableName": table.table_name,
+                            "Key": {"PK": f"USER#{user_id}", "SK": f"SESSION#{oldest_session_id}"},
+                            "UpdateExpression": "SET #status = :status",
+                            "ExpressionAttributeNames": {"#status": "status"},
+                            "ExpressionAttributeValues": {":status": "revoked"}
                         }
                     }
+                ]
+            )
+        
+    except Exception as exc:
+        # Non-critical - log but continue with login
+        logger.warning(f"Failed to check/revoke sessions for {user_id}: {exc}")
+
+    # 6. Create new session
+    session_id = uuid.uuid4().hex
+    session_ttl_minutes = get_env_int("SESSION_TTL_MINUTES", 12 * 60)  # 12 hours
+    max_session_days = 30
+    
+    inactivity_expire = int(time.time()) + (session_ttl_minutes * 60)
+    absolute_expire = int(time.time()) + (max_session_days * 24 * 3600)
+    expires_at = min(inactivity_expire, absolute_expire)
+
+    session_item = {
+        "PK": f"SESSION#{session_id}",
+        "SK": "METADATA",
+        
+        "sessionId": session_id,
+        "userId": user_id,
+        "status": "active",
+        
+        # User snapshot (for fast auth)
+        "email": profile.get("email"),
+        "emailLower": profile.get("emailLower"),
+        "roles": profile.get("roles", ["member"]),
+        
+        # Lifecycle
+        "issuedAt": issued_at,
+        "expiresAt": expires_at,
+        "lastAccessedAt": issued_at,
+        
+        # Security metadata
+        "ip": ip,
+        "userAgent": agent,
+        
+        # DynamoDB TTL
+        "ttl": expires_at
+    }
+
+    session_index = {
+        "PK": f"USER#{user_id}",
+        "SK": f"SESSION#{session_id}",
+        
+        "sessionId": session_id,
+        "status": "active",
+        "issuedAt": issued_at,
+        "expiresAt": expires_at,
+        "lastAccessedAt": issued_at,
+        "ip": ip,
+        "userAgent": agent,
+        "ttl": expires_at
+    }
+
+    # 7. Write session and update lastLoginAt
+    try:
+        table.transact_write_items(
+            TransactItems=[
+                # Create session
+                {
+                    "Put": {
+                        "TableName": table.table_name,
+                        "Item": session_item
+                    }
                 },
+                # Create session index
+                {
+                    "Put": {
+                        "TableName": table.table_name,
+                        "Item": session_index
+                    }
+                },
+                # Update lastLoginAt on profile
                 {
                     "Update": {
-                        "TableName": COMMERCE_TABLE,
-                        "Key": {"PK": f"USER#{user_id}", "SK": f"SESSION#{session_id}"},
-                        "UpdateExpression": "SET expiresAt = :expiry, lastAccessedAt = :now, #ttl = :expiry",
-                        "ExpressionAttributeNames": {"#ttl": "ttl"},
+                        "TableName": table.table_name,
+                        "Key": {"PK": f"USER#{user_id}", "SK": "PROFILE"},
+                        "UpdateExpression": "SET lastLoginAt = :login, updatedAt = :login",
                         "ExpressionAttributeValues": {
-                            ":expiry": new_expiry,
-                            ":now": now_iso
+                            ":login": issued_at
                         }
                     }
                 }
             ]
         )
-        LOGGER.debug(f"Updated session expiry for {session_id} to {new_expiry}")
+        
+        logger.info(f"Successfully logged in user: {user_id} ({email})")
+        
     except Exception as exc:
-        # Non-blocking - log but don't fail auth
-        LOGGER.warning(f"Failed to update session expiry for {session_id}: {exc}")
+        logger.exception(f"Failed to create session for {user_id}: {exc}")
+        return _error(500, "Unable to create session", cors_origin)
 
-
-def _extract_token(event: Dict[str, Any]) -> Optional[str]:
-    """Extract bearer token from various event formats"""
-    
-    # TOKEN authorizer format
-    token = event.get("authorizationToken")
-    if token:
-        token = token.strip()
-        parts = token.split(None, 1)
-        if len(parts) == 2 and parts[0].lower() == "bearer":
-            return parts[1]
-        return token
-
-    # REQUEST authorizer format - check headers
-    headers = event.get("headers") or {}
-    for key in ("authorization", "Authorization"):
-        value = headers.get(key)
-        if value:
-            token = value.strip()
-            parts = token.split(None, 1)
-            if len(parts) == 2 and parts[0].lower() == "bearer":
-                return parts[1]
-            return token
-
-    # Fallback to multiValueHeaders
-    mvh = event.get("multiValueHeaders") or {}
-    for key in ("authorization", "Authorization"):
-        vals = mvh.get(key)
-        if vals and len(vals) > 0:
-            token = vals[0].strip()
-            parts = token.split(None, 1)
-            if len(parts) == 2 and parts[0].lower() == "bearer":
-                return parts[1]
-            return token
-
-    return None
-
-
-def _generate_policy(
-    principal_id: str,
-    effect: str,
-    method_arn: str,
-    context: Dict[str, str]
-) -> Dict[str, Any]:
-    """Generate IAM policy for API Gateway"""
-    
-    policy_document = {
-        "Version": "2012-10-17",
-        "Statement": [
-            {
-                "Action": "execute-api:Invoke",
-                "Effect": effect,
-                "Resource": method_arn
-            }
-        ]
-    }
-    
-    return {
-        "principalId": principal_id,
-        "policyDocument": policy_document,
-        "context": context  # Available in downstream lambdas
+    # 8. Return session token
+    response_payload = {
+        "token": session_id,
+        "expiresAt": expires_at,
+        "user": {
+            "userId": user_id,
+            "email": profile.get("email"),
+            "displayName": profile.get("displayName"),
+            "lastLoginAt": issued_at
+        }
     }
 
-
-def lambda_handler(event: Dict[str, Any], _context) -> Dict[str, Any]:
-    """
-    Authorize API Gateway requests via session validation
-    
-    Flow:
-    1. Extract session token from Authorization header
-    2. Fetch session metadata from DynamoDB
-    3. Validate session (status, expiry)
-    4. Reset inactivity timer (async)
-    5. Return Allow/Deny policy with userId in context
-    
-    Event:
-        {
-            "authorizationToken": "Bearer {sessionId}",
-            "methodArn": "arn:aws:execute-api:..."
-        }
-    
-    Response:
-        {
-            "principalId": "{sessionId}",
-            "policyDocument": {...},
-            "context": {
-                "userId": "{uuid}",
-                "sessionId": "{sessionId}"
-            }
-        }
-    """
-    
-    LOGGER.debug(f"Authorizer invoked: {json.dumps({'methodArn': event.get('methodArn')})}")
-    
-    # Extract token
-    token = _extract_token(event)
-    if not token:
-        LOGGER.info("No authorization token provided")
-        raise Exception("Unauthorized")  # Returns 401
-
-    # Fetch session
-    try:
-        session = get_session_metadata(token)
-    except Exception as exc:
-        LOGGER.exception(f"Failed to read session: {exc}")
-        raise Exception("Unauthorized")
-
-    if not session:
-        LOGGER.info(f"Session not found: {token[:8]}...")
-        return _generate_policy(
-            principal_id=token,
-            effect="Deny",
-            method_arn=event["methodArn"],
-            context={"reason": "session_not_found"}
-        )
-
-    # Validate expiry
-    expires_at = session.get("expiresAt", 0)
-    current_time = int(time.time())
-    
-    if expires_at > 0 and expires_at <= current_time:
-        LOGGER.info(f"Session expired: {token[:8]}... (expiresAt: {expires_at}, now: {current_time})")
-        return _generate_policy(
-            principal_id=token,
-            effect="Deny",
-            method_arn=event["methodArn"],
-            context={"reason": "session_expired"}
-        )
-
-    # Validate status
-    status = session.get("status", "")
-    if status != "active":
-        LOGGER.info(f"Session not active: {token[:8]}... (status: {status})")
-        return _generate_policy(
-            principal_id=token,
-            effect="Deny",
-            method_arn=event["methodArn"],
-            context={"reason": "session_inactive", "status": str(status)}
-        )
-
-    # Get userId
-    user_id = session.get("userId")
-    if not user_id:
-        LOGGER.error(f"Session missing userId: {token[:8]}...")
-        return _generate_policy(
-            principal_id=token,
-            effect="Deny",
-            method_arn=event["methodArn"],
-            context={"reason": "missing_userId"}
-        )
-
-    # Reset inactivity timer (12 hours from now, up to 30-day absolute max)
-    issued_at = session.get("issuedAt", "")
-    try:
-        # Parse issuedAt to get absolute expiry
-        import datetime
-        issued_dt = datetime.datetime.fromisoformat(issued_at.replace("Z", "+00:00"))
-        issued_timestamp = int(issued_dt.timestamp())
-        
-        # Calculate new expiry
-        inactivity_timeout_hours = int(os.getenv("SESSION_INACTIVITY_HOURS", "12"))
-        max_session_days = int(os.getenv("SESSION_MAX_DAYS", "30"))
-        
-        inactivity_expire = current_time + (inactivity_timeout_hours * 3600)
-        absolute_expire = issued_timestamp + (max_session_days * 24 * 3600)
-        
-        new_expiry = min(inactivity_expire, absolute_expire)
-        
-        # Update expiry (async - doesn't block response)
-        if new_expiry != expires_at:
-            update_session_expiry(token, user_id, new_expiry)
-        
-    except Exception as exc:
-        # Non-critical - log but don't fail auth
-        LOGGER.warning(f"Failed to reset session timer: {exc}")
-
-    # Allow request with userId in context
-    LOGGER.debug(f"Authorized user {user_id} via session {token[:8]}...")
-    
-    return _generate_policy(
-        principal_id=token,
-        effect="Allow",
-        method_arn=event["methodArn"],
-        context={
-            "userId": str(user_id),
-            "sessionId": str(token)
-        }
-    )
+    return _build_response(200, response_payload, cors_origin)
