@@ -1,5 +1,8 @@
-import { Fragment, useMemo } from "react";
+import { useMemo } from "react";
 import { useDashboardData } from "./DashboardDataProvider";
+import { usePagination } from "@/hooks/usePagination";
+import Pagination from "@/components/common/Pagination";
+import { announce } from "@/utils/accessibility";
 
 const formatCurrency = (amountCents: number, currency: string) =>
   new Intl.NumberFormat(undefined, {
@@ -29,39 +32,22 @@ interface OrderHistoryTableProps {
 const OrderHistoryTable = ({ onSelectOrder }: OrderHistoryTableProps = {}) => {
   const { orders, activeOrderId, setActiveOrderId } = useDashboardData();
 
-  const groupedOrders = useMemo(() => {
-    return orders.reduce<Record<string, typeof orders>>((acc, order) => {
-      const key = new Date(order.createdAt).toISOString().slice(0, 7);
-      if (!acc[key]) {
-        acc[key] = [];
-      }
+  // Pagination integration
+  const pagination = usePagination(orders, {
+    totalItems: orders.length,
+    itemsPerPage: 10,
+    initialPage: 1,
+    siblingCount: 1,
+  });
 
-      acc[key].push(order);
-      return acc;
-    }, {});
-  }, [orders]);
-
-  const monthKeys = useMemo(
-    () =>
-      Object.keys(groupedOrders)
-        .sort((a, b) => (a < b ? 1 : -1))
-        .map((key) => {
-          const [year, month] = key.split("-");
-          const label = new Date(
-            Number(year),
-            Number(month) - 1
-          ).toLocaleDateString(undefined, {
-            month: "long",
-            year: "numeric",
-          });
-
-          return {
-            key,
-            label,
-          };
-        }),
-    [groupedOrders]
-  );
+  const handlePageChange = (page: number) => {
+    pagination.goToPage(page);
+    announce(`Navigated to page ${page} of ${pagination.totalPages}`, "polite");
+    document.getElementById("order-history-table")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
 
   if (orders.length === 0) {
     return (
@@ -73,73 +59,105 @@ const OrderHistoryTable = ({ onSelectOrder }: OrderHistoryTableProps = {}) => {
 
   return (
     <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
-      <table className="min-w-full divide-y divide-neutral-200">
-        <thead className="bg-neutral-50">
-          <tr className="text-left text-xs uppercase tracking-wide text-neutral-500">
-            <th className="px-6 py-3">Order</th>
-            <th className="px-6 py-3">Status</th>
-            <th className="px-6 py-3">Total</th>
-            <th className="px-6 py-3">Created</th>
-            <th className="px-6 py-3">Items</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-neutral-100 text-sm text-neutral-700">
-          {monthKeys.map(({ key, label }) => (
-            <Fragment key={key}>
-              <tr className="bg-neutral-100 text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                <td className="px-6 py-2" colSpan={5}>
-                  {label}
-                </td>
-              </tr>
-              {groupedOrders[key]?.map((order) => {
-                const isActive = order.orderId === activeOrderId;
-
-                return (
-                  <tr
-                    key={order.orderId}
-                    className={
-                      isActive ? "bg-neutral-50" : "hover:bg-neutral-50"
-                    }
-                  >
-                    <td className="px-6 py-4">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveOrderId(order.orderId);
-                          onSelectOrder?.(order.orderId);
-                        }}
-                        className="text-left text-sm font-medium text-black"
-                      >
-                        {order.orderNumber}
-                      </button>
-                      <p className="text-xs text-neutral-500">
-                        {order.orderId}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium capitalize text-neutral-700">
-                        {order.status}
+      <div className="flex items-center justify-between px-6 py-3">
+        <p className="text-sm text-neutral-600">
+          Showing {pagination.startIndex + 1} to {pagination.endIndex} of{" "}
+          {orders.length} orders
+        </p>
+      </div>
+      <div id="order-history-table" className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-neutral-200">
+          <thead className="bg-neutral-50">
+            <tr className="text-left text-xs uppercase tracking-wide text-neutral-500">
+              <th className="px-6 py-3">Order</th>
+              <th className="px-6 py-3">Status</th>
+              <th className="px-6 py-3">Total</th>
+              <th className="px-6 py-3">Created</th>
+              <th className="px-6 py-3">Items</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-neutral-100 text-sm text-neutral-700">
+            {pagination.pageData.map((order) => {
+              const isActive = order.orderId === activeOrderId;
+              return (
+                <tr
+                  key={order.orderId}
+                  className={isActive ? "bg-neutral-50" : "hover:bg-neutral-50"}
+                >
+                  <td className="px-6 py-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveOrderId(order.orderId);
+                        onSelectOrder?.(order.orderId);
+                        announce(
+                          `Viewing order ${order.orderNumber}`,
+                          "polite"
+                        );
+                      }}
+                      className="text-left text-sm font-medium text-black hover:underline focus:outline-none focus:ring-2 focus:ring-cotton-candy focus:ring-offset-2 rounded"
+                    >
+                      {order.orderNumber}
+                    </button>
+                    <p className="text-xs text-neutral-500">{order.orderId}</p>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className="inline-flex rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium capitalize text-neutral-700"
+                      role="status"
+                    >
+                      {order.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 font-medium text-neutral-900">
+                    {formatCurrency(order.amount, order.currency.toUpperCase())}
+                  </td>
+                  <td className="px-6 py-4 text-neutral-500">
+                    {formatDateTime(order.createdAt)}
+                  </td>
+                  <td className="px-6 py-4 text-neutral-500">
+                    {order.items.length > 0 ? (
+                      <span>
+                        {order.items.map((item) => item.name).join(", ")}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 font-medium text-neutral-900">
-                      {formatCurrency(
-                        order.amount,
-                        order.currency.toUpperCase()
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-neutral-500">
-                      {formatDateTime(order.createdAt)}
-                    </td>
-                    <td className="px-6 py-4 text-neutral-500">
-                      {order.items.map((item) => item.name).join(", ")}
-                    </td>
-                  </tr>
-                );
-              })}
-            </Fragment>
-          ))}
-        </tbody>
-      </table>
+                    ) : (
+                      <span className="text-neutral-400">No items</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <Pagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        pageNumbers={pagination.pageNumbers}
+        onPageChange={handlePageChange}
+        onPreviousPage={() => {
+          pagination.previousPage();
+          announce(`Moved to page ${pagination.currentPage - 1}`, "polite");
+        }}
+        onNextPage={() => {
+          pagination.nextPage();
+          announce(`Moved to page ${pagination.currentPage + 1}`, "polite");
+        }}
+        onFirstPage={() => {
+          pagination.goToFirstPage();
+          announce("Moved to first page", "polite");
+        }}
+        onLastPage={() => {
+          pagination.goToLastPage();
+          announce(
+            `Moved to last page, page ${pagination.totalPages}`,
+            "polite"
+          );
+        }}
+        hasNextPage={pagination.hasNextPage}
+        hasPreviousPage={pagination.hasPreviousPage}
+        ariaLabel="Order history pagination"
+      />
     </div>
   );
 };
