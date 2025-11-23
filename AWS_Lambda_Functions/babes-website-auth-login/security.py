@@ -64,7 +64,16 @@ def verify_password(user_item: Dict[str, Any], password: str) -> bool:
     except (TypeError, ValueError):
         iterations = DEFAULT_HASH_ITERATIONS
     pepper = get_password_pepper(optional=True) or ""
+    
+    # DEBUG: Log what we're comparing
     derived = derive_hash(password, salt, max(iterations, 1), pepper)
+    
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Password verification - Iterations: {iterations}, Pepper: '{pepper}', Salt length: {len(salt)}, Stored hash length: {len(stored_hash)}, Derived hash length: {len(derived)}")
+    logger.info(f"Stored hash (base64): {user_item.get('passwordHash')[:20]}...")
+    logger.info(f"Derived hash (base64): {base64.b64encode(derived).decode('ascii')[:20]}...")
+    
     if len(derived) != len(stored_hash):
         return False
     return hmac.compare_digest(derived, stored_hash)
