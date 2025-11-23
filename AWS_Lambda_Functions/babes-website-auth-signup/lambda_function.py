@@ -59,6 +59,22 @@ def _build_response(status_code: int, payload: Dict[str, Any], cors_origin: str 
     }
 
 
+def to_dynamodb(item):
+    if isinstance(item, str):
+        return {"S": item}
+    elif isinstance(item, bool):
+        return {"BOOL": item}
+    elif isinstance(item, int):
+        return {"N": str(item)}
+    elif isinstance(item, dict):
+        return {"M": {k: to_dynamodb(v) for k, v in item.items()}}
+    elif isinstance(item, list):
+        return {"L": [to_dynamodb(v) for v in item]}
+    elif item is None:
+        return {"NULL": True}
+    else:
+        return {"S": str(item)}
+
 def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
     """
     Signup handler - Creates new user account
@@ -128,6 +144,8 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
     issued_at = now_utc_iso()
 
     table = get_commerce_table()
+    import boto3
+    client = boto3.client("dynamodb")
 
     # 1. Check if email is already registered
     try:
@@ -261,48 +279,40 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
 
     # 7. Write all items in a transaction (atomic)
     try:
-        table.transact_write_items(
-            TransactItems=[
-                # Create user profile
-                {
-                    "Put": {
-                        "TableName": table.table_name,
-                        "Item": user_profile
-                    }
-                },
-                # Create email lookup (with uniqueness check)
-                {
-                    "Put": {
-                        "TableName": table.table_name,
-                        "Item": email_lookup,
-                        "ConditionExpression": "attribute_not_exists(PK)"  # Race condition protection
-                    }
-                },
-                # Create session
-                {
-                    "Put": {
-                        "TableName": table.table_name,
-                        "Item": session_item
-                    }
-                },
-                # Create session index
-                {
-                    "Put": {
-                        "TableName": table.table_name,
-                        "Item": session_index
-                    }
+        transact_items = [
+            {
+                "Put": {
+                    "TableName": table.table_name,
+                    "Item": {k: to_dynamodb(v) for k, v in user_profile.items()}
                 }
-            ]
-        )
-        
+            },
+            {
+                "Put": {
+                    "TableName": table.table_name,
+                    "Item": {k: to_dynamodb(v) for k, v in email_lookup.items()},
+                    "ConditionExpression": "attribute_not_exists(PK)"
+                }
+            },
+            {
+                "Put": {
+                    "TableName": table.table_name,
+                    "Item": {k: to_dynamodb(v) for k, v in session_item.items()}
+                }
+            },
+            {
+                "Put": {
+                    "TableName": table.table_name,
+                    "Item": {k: to_dynamodb(v) for k, v in session_index.items()}
+                }
+            }
+        ]
+        client.transact_write_items(TransactItems=transact_items)
         logger.info(f"Successfully created user: {user_id} ({email})")
-        
     except Exception as exc:
         # Check if it's a conditional check failure (email taken in race condition)
         if "ConditionalCheckFailed" in str(exc):
             logger.warning(f"Race condition: email {email_lower} taken during signup")
             return _error(409, "Email already registered", cors_origin)
-        
         logger.exception(f"Failed to create user {email}: {exc}")
         return _error(500, "Unable to create account", cors_origin)
 

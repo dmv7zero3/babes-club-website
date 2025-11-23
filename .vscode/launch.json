@@ -3,6 +3,261 @@
     {
       "type": "aws-sam",
       "request": "direct-invoke",
+      "name": "babes-website-auth-authorizer:lambda_function.lambda_handler (python3.12)",
+      "invokeTarget": {
+        "target": "code",
+        "projectRoot": "${workspaceFolder}/AWS_Lambda_Functions/babes-website-auth-authorizer",
+        "lambdaHandler": "lambda_function.lambda_handler"
+      },
+      "lambda": {
+        "runtime": "python3.12",
+        "payload": {},
+        "environmentVariables": {}
+      }
+    },
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "babes-website-stripe-webhook:lambda_function.lambda_handler (python3.12)",
+      "invokeTarget": {
+        "target": "code",
+        "projectRoot": "${workspaceFolder}/AWS_Lambda_Functions/babes-website-stripe-webhook",
+        "lambdaHandler": "lambda_function.lambda_handler"
+      },
+      "lambda": {
+        "runtime": "python3.12",
+        "payload": {},
+        "environmentVariables": {}
+      }
+    },
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "babes-website-stripe-nightly-sync:lambda_function.lambda_handler (python3.12)",
+      "invokeTarget": {
+        "target": "code",
+        "projectRoot": "${workspaceFolder}/AWS_Lambda_Functions/babes-website-stripe-nightly-sync",
+        "lambdaHandler": "lambda_function.lambda_handler"
+      },
+      "lambda": {
+        "runtime": "python3.12",
+        "payload": {},
+        "environmentVariables": {}
+      }
+    },
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "babes-website-nft-refresh:lambda_function.lambda_handler (python3.12)",
+      "invokeTarget": {
+        "target": "code",
+        "projectRoot": "${workspaceFolder}/AWS_Lambda_Functions/babes-website-nft-refresh",
+        "lambdaHandler": "lambda_function.lambda_handler"
+      },
+      "lambda": {
+        "runtime": "python3.12",
+        "payload": {},
+        "environmentVariables": {}
+      }
+    },
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "babes-website-internal-sync-stripe:lambda_function.lambda_handler (python3.12)",
+      "invokeTarget": {
+        "target": "code",
+        "projectRoot": "${workspaceFolder}/AWS_Lambda_Functions/babes-website-internal-sync-stripe",
+        "lambdaHandler": "lambda_function.lambda_handler"
+      },
+      "lambda": {
+        "runtime": "python3.12",
+        "payload": {},
+        "environmentVariables": {}
+      }
+    },
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "babes-website-internal-sync-nfts:lambda_function.lambda_handler (python3.12)",
+      "invokeTarget": {
+        "target": "code",
+        "projectRoot": "${workspaceFolder}/AWS_Lambda_Functions/babes-website-internal-sync-nfts",
+        "lambdaHandler": "lambda_function.lambda_handler"
+      },
+      "lambda": {
+        "runtime": "python3.12",
+        "payload": {},
+        "environmentVariables": {}
+      }
+    },
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "babes-website-dashboard-update-profile:lambda_function.lambda_handler (python3.12)",
+      "invokeTarget": {
+        "target": "code",
+        "projectRoot": "${workspaceFolder}/AWS_Lambda_Functions/babes-website-dashboard-update-profile",
+        "lambdaHandler": "lambda_function.lambda_handler"
+      },
+      "lambda": {
+        "runtime": "python3.12",
+        "payload": {},
+        "environmentVariables": {}
+      }
+    },
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "babes-website-dashboard-revoke-session:lambda_function.lambda_handler (python3.12)",
+      "invokeTarget": {
+        "target": "code",
+        "projectRoot": "${workspaceFolder}/AWS_Lambda_Functions/babes-website-dashboard-revoke-session",
+        "lambdaHandler": "lambda_function.lambda_handler"
+      },
+      "lambda": {
+        "runtime": "python3.12",
+        "payload": {},
+        "environmentVariables": {}
+      }
+    },
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "babes-website-dashboard-list-sessions:lambda_function.lambda_handler (python3.12)",
+      "invokeTarget": {
+        "target": "code",
+        "projectRoot": "${workspaceFolder}/AWS_Lambda_Functions/babes-website-dashboard-list-sessions",
+        "lambdaHandler": "lambda_function.lambda_handler"
+      },
+      "lambda": {
+        "runtime": "python3.12",
+        "payload": {},
+        "environmentVariables": {}
+      }
+    },
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "babes-website-dashboard-list-orders:lambda_function.lambda_handler (python3.12)",
+      "invokeTarget": {
+        "target": "code",
+        "projectRoot": "${workspaceFolder}/AWS_Lambda_Functions/babes-website-dashboard-list-orders",
+        "lambdaHandler": "lambda_function.lambda_handler"
+      },
+      "lambda": {
+        "runtime": "python3.12",
+        "payload": {},
+        "environmentVariables": {}
+      }
+    },
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "babes-website-dashboard-list-nfts:lambda_function.lambda_handler (python3.12)",
+      "invokeTarget": {
+        "target": "code",
+        "projectRoot": "${workspaceFolder}/AWS_Lambda_Functions/babes-website-dashboard-list-nfts",
+        "lambdaHandler": "lambda_function.lambda_handler"
+      },
+      "lambda": {
+        "runtime": "python3.12",
+        "payload": {},
+        "environmentVariables": {}
+      }
+    },
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "babes-website-dashboard-get-profile:lambda_function.lambda_handler (python3.12)",
+      "invokeTarget": {
+        "target": "code",
+        "projectRoot": "${workspaceFolder}/AWS_Lambda_Functions/babes-website-dashboard-get-profile",
+        "lambdaHandler": "lambda_function.lambda_handler"
+      },
+      "lambda": {
+        "runtime": "python3.12",
+        "payload": {},
+        "environmentVariables": {}
+      }
+    },
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "babes-website-dashboard-get-order:lambda_function.lambda_handler (python3.12)",
+      "invokeTarget": {
+        "target": "code",
+        "projectRoot": "${workspaceFolder}/AWS_Lambda_Functions/babes-website-dashboard-get-order",
+        "lambdaHandler": "lambda_function.lambda_handler"
+      },
+      "lambda": {
+        "runtime": "python3.12",
+        "payload": {},
+        "environmentVariables": {}
+      }
+    },
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "babes-website-checkout-create-session:lambda_function.lambda_handler (python3.12)",
+      "invokeTarget": {
+        "target": "code",
+        "projectRoot": "${workspaceFolder}/AWS_Lambda_Functions/babes-website-checkout-create-session",
+        "lambdaHandler": "lambda_function.lambda_handler"
+      },
+      "lambda": {
+        "runtime": "python3.12",
+        "payload": {},
+        "environmentVariables": {}
+      }
+    },
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "babes-website-cart-quote:lambda_function.lambda_handler (python3.12)",
+      "invokeTarget": {
+        "target": "code",
+        "projectRoot": "${workspaceFolder}/AWS_Lambda_Functions/babes-website-cart-quote",
+        "lambdaHandler": "lambda_function.lambda_handler"
+      },
+      "lambda": {
+        "runtime": "python3.12",
+        "payload": {},
+        "environmentVariables": {}
+      }
+    },
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "babes-website-auth-signup:lambda_function.lambda_handler (python3.12)",
+      "invokeTarget": {
+        "target": "code",
+        "projectRoot": "${workspaceFolder}/AWS_Lambda_Functions/babes-website-auth-signup",
+        "lambdaHandler": "lambda_function.lambda_handler"
+      },
+      "lambda": {
+        "runtime": "python3.12",
+        "payload": {},
+        "environmentVariables": {}
+      }
+    },
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "babes-website-auth-login:lambda_function.lambda_handler (python3.12)",
+      "invokeTarget": {
+        "target": "code",
+        "projectRoot": "${workspaceFolder}/AWS_Lambda_Functions/babes-website-auth-login",
+        "lambdaHandler": "lambda_function.lambda_handler"
+      },
+      "lambda": {
+        "runtime": "python3.12",
+        "payload": {},
+        "environmentVariables": {}
+      }
+    },
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
       "name": "babes-website-dashboard-list-sessions:lambda_function.lambda_handler (python3.12)",
       "invokeTarget": {
         "target": "code",
