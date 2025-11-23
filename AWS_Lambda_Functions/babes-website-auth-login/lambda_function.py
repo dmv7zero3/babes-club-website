@@ -1,6 +1,6 @@
 """
-Login Lambda - UUID-based schema WITH DEBUG LOGGING
-Looks up EMAIL#{email} → gets userId → fetches USER#{uuid}
+Login Lambda - UUID-based schema (Production Ready)
+Handles all DynamoDB type conversions properly
 """
 
 from __future__ import annotations
@@ -11,6 +11,7 @@ import hmac
 import json
 import time
 import uuid
+from decimal import Decimal
 from typing import Any, Dict
 
 from shared_commerce import (
@@ -34,7 +35,7 @@ def derive_hash(password: str, salt: bytes, iterations: int, pepper: str) -> byt
     return hashlib.pbkdf2_hmac("sha256", password_bytes, salt, iterations)
 
 def verify_password(profile: Dict[str, Any], password: str) -> bool:
-    """Verify password against stored hash - WITH DEBUG LOGGING"""
+    """Verify password against stored hash"""
     import logging
     logger = logging.getLogger(__name__)
     
@@ -43,44 +44,20 @@ def verify_password(profile: Dict[str, Any], password: str) -> bool:
         salt_b64 = profile.get("passwordSalt")
         iterations = int(profile.get("hashIterations", 150_000))  # Convert Decimal to int
         
-        logger.info("=" * 60)
-        logger.info("PASSWORD VERIFICATION DEBUG")
-        logger.info("=" * 60)
-        
         if not stored_hash_b64 or not salt_b64:
-            logger.error("❌ Missing passwordHash or passwordSalt in profile")
+            logger.error("Missing passwordHash or passwordSalt")
             return False
         
         salt = base64.b64decode(salt_b64)
         stored_hash = base64.b64decode(stored_hash_b64)
         pepper = get_password_pepper(optional=True) or ""
         
-        # Log all inputs
-        logger.info(f"Iterations: {iterations}")
-        logger.info(f"Pepper: '{pepper}' (length: {len(pepper)})")
-        logger.info(f"Salt (base64): {salt_b64}")
-        logger.info(f"Salt (bytes): {salt.hex()}")
-        logger.info(f"Password: '{password}' (length: {len(password)})")
-        logger.info(f"Password (repr): {repr(password)}")
-        logger.info(f"Stored hash (base64): {stored_hash_b64}")
-        
-        # Compute hash
         computed_hash = derive_hash(password, salt, iterations, pepper)
-        computed_hash_b64 = base64.b64encode(computed_hash).decode("ascii")
         
-        logger.info(f"Computed hash (base64): {computed_hash_b64}")
-        logger.info(f"Computed hash (hex): {computed_hash.hex()}")
-        logger.info(f"Stored hash (hex): {stored_hash.hex()}")
-        
-        # Compare
-        match = hmac.compare_digest(computed_hash, stored_hash)
-        logger.info(f"Hashes match: {match}")
-        logger.info("=" * 60)
-        
-        return match
+        return hmac.compare_digest(computed_hash, stored_hash)
         
     except Exception as exc:
-        logger.exception(f"❌ Password verification exception: {exc}")
+        logger.exception(f"Password verification error: {exc}")
         return False
 
 def _error(status_code: int, message: str, cors_origin: str | None) -> Dict[str, Any]:
@@ -153,11 +130,11 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
         ).get("Item")
         
         if not email_lookup:
-            logger.info(f"❌ Login attempt with unknown email: {email_lower}")
+            logger.info(f"Login attempt with unknown email: {email_lower}")
             return _error(401, "Invalid email or password", cors_origin)
         
         user_id = email_lookup["userId"]
-        logger.info(f"✅ Found userId: {user_id}")
+        logger.info(f"Found userId: {user_id}")
     except Exception as exc:
         logger.error(f"Failed to lookup email: {exc}")
         return _error(500, "Database error", cors_origin)
@@ -171,13 +148,10 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
         profile = profile_response.get("Item")
         
         if not profile:
-            logger.error(f"❌ Email lookup exists but profile missing for {user_id}")
+            logger.error(f"Email lookup exists but profile missing for {user_id}")
             return _error(500, "Account data inconsistent", cors_origin)
         
-        logger.info(f"✅ Found profile for {user_id}")
-        logger.info(f"Profile has passwordHash: {bool(profile.get('passwordHash'))}")
-        logger.info(f"Profile has passwordSalt: {bool(profile.get('passwordSalt'))}")
-        logger.info(f"Profile hashIterations: {profile.get('hashIterations')}")
+        logger.info(f"Found profile for {user_id}")
         
     except Exception as exc:
         logger.error(f"Failed to fetch profile: {exc}")
@@ -189,12 +163,12 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
         return _error(423, "Account is not active", cors_origin)
 
     # 4. Verify password
-    logger.info("Starting password verification...")
+    logger.info("Verifying password...")
     if not verify_password(profile, password):
-        logger.info(f"❌ Invalid password for {email_lower}")
+        logger.info(f"Invalid password for {email_lower}")
         return _error(401, "Invalid email or password", cors_origin)
     
-    logger.info("✅ Password verified successfully!")
+    logger.info("Password verified successfully!")
 
     # 5. Check session count (max 5)
     try:
@@ -253,20 +227,27 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
     absolute_expire = int(time.time()) + (max_session_days * 24 * 3600)
     expires_at = min(inactivity_expire, absolute_expire)
 
+    # Get roles from profile (handle Decimal/list conversion)
+    roles = profile.get("roles", ["member"])
+    if isinstance(roles, list):
+        roles = [str(r) for r in roles]
+    else:
+        roles = ["member"]
+
     session_item = {
         "PK": f"SESSION#{session_id}",
         "SK": "METADATA",
         "sessionId": session_id,
         "userId": user_id,
         "status": "active",
-        "email": profile.get("email"),
-        "emailLower": profile.get("emailLower"),
-        "roles": profile.get("roles", ["member"]),
+        "email": str(profile.get("email", "")),
+        "emailLower": str(profile.get("emailLower", "")),
+        "roles": roles,
         "issuedAt": issued_at,
         "expiresAt": expires_at,
         "lastAccessedAt": issued_at,
-        "ip": ip,
-        "userAgent": agent,
+        "ip": str(ip),
+        "userAgent": str(agent),
         "ttl": expires_at
     }
 
@@ -278,28 +259,76 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
         "issuedAt": issued_at,
         "expiresAt": expires_at,
         "lastAccessedAt": issued_at,
-        "ip": ip,
-        "userAgent": agent,
+        "ip": str(ip),
+        "userAgent": str(agent),
         "ttl": expires_at
     }
 
     # 7. Write session + update lastLoginAt
     try:
-        table.transact_write_items(
+        logger.info("Creating session transaction...")
+        
+        # Use client for transactions (table resource doesn't support transact_write_items)
+        import boto3
+        dynamodb_client = boto3.client('dynamodb')
+        table_name = table.table_name
+        
+        dynamodb_client.transact_write_items(
             TransactItems=[
-                {"Put": {"TableName": table.table_name, "Item": session_item}},
-                {"Put": {"TableName": table.table_name, "Item": session_index}},
+                {
+                    "Put": {
+                        "TableName": table_name,
+                        "Item": {
+                            "PK": {"S": f"SESSION#{session_id}"},
+                            "SK": {"S": "METADATA"},
+                            "sessionId": {"S": session_id},
+                            "userId": {"S": user_id},
+                            "status": {"S": "active"},
+                            "email": {"S": str(profile.get("email", ""))},
+                            "emailLower": {"S": str(profile.get("emailLower", ""))},
+                            "roles": {"L": [{"S": r} for r in roles]},
+                            "issuedAt": {"S": issued_at},
+                            "expiresAt": {"N": str(expires_at)},
+                            "lastAccessedAt": {"S": issued_at},
+                            "ip": {"S": str(ip)},
+                            "userAgent": {"S": str(agent)},
+                            "ttl": {"N": str(expires_at)}
+                        }
+                    }
+                },
+                {
+                    "Put": {
+                        "TableName": table_name,
+                        "Item": {
+                            "PK": {"S": f"USER#{user_id}"},
+                            "SK": {"S": f"SESSION#{session_id}"},
+                            "sessionId": {"S": session_id},
+                            "status": {"S": "active"},
+                            "issuedAt": {"S": issued_at},
+                            "expiresAt": {"N": str(expires_at)},
+                            "lastAccessedAt": {"S": issued_at},
+                            "ip": {"S": str(ip)},
+                            "userAgent": {"S": str(agent)},
+                            "ttl": {"N": str(expires_at)}
+                        }
+                    }
+                },
                 {
                     "Update": {
-                        "TableName": table.table_name,
-                        "Key": {"PK": f"USER#{user_id}", "SK": "PROFILE"},
+                        "TableName": table_name,
+                        "Key": {
+                            "PK": {"S": f"USER#{user_id}"},
+                            "SK": {"S": "PROFILE"}
+                        },
                         "UpdateExpression": "SET lastLoginAt = :login, updatedAt = :login",
-                        "ExpressionAttributeValues": {":login": issued_at}
+                        "ExpressionAttributeValues": {
+                            ":login": {"S": issued_at}
+                        }
                     }
                 }
             ]
         )
-        logger.info(f"✅ Successfully logged in user: {user_id} ({email})")
+        logger.info(f"Successfully logged in user: {user_id} ({email})")
     except Exception as exc:
         logger.exception(f"Failed to create session: {exc}")
         return _error(500, "Unable to create session", cors_origin)
@@ -309,8 +338,8 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
         "expiresAt": expires_at,
         "user": {
             "userId": user_id,
-            "email": profile.get("email"),
-            "displayName": profile.get("displayName"),
+            "email": str(profile.get("email", "")),
+            "displayName": str(profile.get("displayName", "")),
             "lastLoginAt": issued_at
         }
     }, cors_origin)
