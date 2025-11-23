@@ -50,7 +50,23 @@ from .validation import (
 
 from .rate_limiting import check_rate_limit
 from .cors import resolve_origin
-from .security import derive_hash, get_password_pepper
+from .security import derive_hash
+
+# Add get_password_pepper implementation here
+import os
+def get_password_pepper(optional: bool = False) -> str | None:
+    """
+    Get password pepper from environment variable.
+    Pepper is a secret value added to all passwords before hashing.
+    Args:
+        optional: If True, returns None if not set. If False, raises error.
+    Returns:
+        Pepper string or None
+    """
+    pepper = os.environ.get("PASSWORD_PEPPER") or os.environ.get("AUTH_PASSWORD_PEPPER")
+    if not pepper and not optional:
+        raise ValueError("PASSWORD_PEPPER environment variable not set")
+    return pepper or ""
 from .event_utils import redact_event, extract_ip_and_agent
 
 __all__ = [

@@ -7,7 +7,7 @@ import logging
 import os
 import re
 import time
-import uuid
+        'arn:aws:lambda:us-east-1:752567131183:layer:babesclub-shared-commerce:7',
 from typing import Any, Dict, Iterable, List, Optional
 
 import stripe  # type: ignore[attr-defined]
