@@ -4,11 +4,11 @@ Custom Lambda authorizer placeholder for validating Babes Club dashboard/interna
 
 ## Handler contract
 
-- **Runtime**: Python 3.12
-- **Entry point**: `lambda_function.lambda_handler`
-- **Type**: API Gateway REQUEST authorizer (token-based works too depending on final wiring).
-- **Input**: `event['authorizationToken']` or headers forwarded via stage variables.
-- **Output**: IAM policy document containing `principalId`, `policyDocument`, and `context` map.
+**Runtime**: Python 3.12
+**Entry point**: `lambda_function.lambda_handler`
+**Type**: API Gateway TOKEN authorizer (REQUEST authorizer can be supported with header forwarding).
+**Input**: `event['authorizationToken']` (for TOKEN authorizer). The token is expected in the format `Bearer <sessionId>` and is extracted/validated by the Lambda (the `Bearer` prefix is stripped automatically). If using REQUEST authorizer, the token may be forwarded in headers.
+**Output**: IAM policy document containing `principalId`, `policyDocument`, and `context` map. The context always includes `userId` as a string, which is available to downstream Lambdas via `event['requestContext']['authorizer']['userId']`.
 
 ## Environment variables
 

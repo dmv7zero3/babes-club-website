@@ -1,6 +1,19 @@
 """
 Dashboard Update Profile Lambda - Updates user profile with email change support
 Enforces 4-day cooldown between email changes
+
+---
+REQUIRED SETUP:
+- API Gateway POST and OPTIONS methods for `/dashboard/update-profile`
+- API Gateway method response for POST must include:
+    - Access-Control-Allow-Origin
+    - Access-Control-Allow-Headers
+    - Access-Control-Allow-Methods
+- Lambda must return these CORS headers for all responses (success and error)
+- API Gateway must attach a CUSTOM authorizer that returns `userId` in the request context
+- Frontend must send a valid Authorization header (JWT/session token)
+- DynamoDB table must be accessible and have correct schema for user profiles and email lookups
+---
 """
 
 from __future__ import annotations

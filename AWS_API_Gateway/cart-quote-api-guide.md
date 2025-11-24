@@ -244,10 +244,6 @@ With the authorizer in place, direct calls to `https://api.thebabesclub.com/cart
 
 ## Quick checklist
 
-- [x] ACM certificate for `api.thebabesclub.com` (arn:aws:acm:us-east-1:752567131183:certificate/976fe391-8da6-4884-9afd-3d1cf4329b80) issued and attached to the API Gateway custom domain.
-- [x] Route 53 alias for `api.thebabesclub.com` pointing to `d-f08fcecmfg.execute-api.us-east-1.amazonaws.com` (hosted zone `Z1UJRXOUMOOFQ8`).
-- [x] API Gateway custom domain + base-path mapping wired to REST API `a2fps4r1la` (stage `PROD`).
+See `api-gateway-overview.md` for a summary of API Gateway structure, authentication, and CORS requirements for all endpoints.
+
 - [x] CloudFront origin/behaviour updated to forward `/cart/quote` to the API with required headers (`cart/quote*` → `api.thebabesclub.com-origin`, cache policy `4135ea2d-6df8-44a3-9df3-4b5a84be39ad`, origin request policy `0e599d8e-9f2a-48b6-ba34-0abded3d8cc8`).
-- [x] Resource policy or authorizer in place to block direct public access (Lambda authorizer `babes-cart-quote-authorizer` validates `X-Api-Gateway-Key` against SSM `/commerce/cart-quote/api-gateway-key`).
-- [x] Lambda CORS origin restricted to production domains, temporary logging removed, latest package deployed (env `CORS_ALLOW_ORIGIN` set to prod origins, sanitized logging deployed with `dist/babes-website-cart-quote.zip`).
-- [x] Deployment commands scripted/documented and CloudWatch alarms configured (see `scripts/cart-quote/deploy.sh` and `scripts/cart-quote/README.md`; alarms managed via `scripts/cart-quote/deploy.sh alarms`).

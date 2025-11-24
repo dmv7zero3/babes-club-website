@@ -67,6 +67,17 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
     token,
   } = useDashboardAuth();
 
+  // Debug: Log initial auth context
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log("[DashboardDataProvider] Auth context", {
+      authStatus,
+      user,
+      authError,
+      token,
+    });
+  }, [authStatus, user, authError, token]);
+
   // Prefer a fully-loaded `user` snapshot, but fall back to any minimal
   // session info persisted in sessionStorage so the UI can show the
   // authenticated user's name/email immediately while the server snapshot
@@ -111,6 +122,8 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Debug: Log status changes
+    console.log("[DashboardDataProvider] useEffect status", authStatus, user);
     if (authStatus === "loading") {
       setStatus("loading");
       return;
@@ -146,22 +159,37 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
 
   const updateProfile = useCallback(
     async (fields: UpdateableProfileFields) => {
+      // Debug: Log updateProfile call
+      console.log("[DashboardDataProvider] updateProfile called", {
+        token,
+        fields,
+      });
       if (!token) {
+        console.error(
+          "[DashboardDataProvider] No token available for updateProfile"
+        );
         throw new Error("Dashboard session is not available.");
       }
 
-      const updatedProfile = await updateDashboardProfile(token, fields);
-
-      setData((previous) => {
-        if (!previous) {
-          return previous;
-        }
-
-        return {
-          ...previous,
-          profile: updatedProfile,
-        };
-      });
+      try {
+        const updatedProfile = await updateDashboardProfile(token, fields);
+        console.log(
+          "[DashboardDataProvider] updateDashboardProfile response",
+          updatedProfile
+        );
+        setData((previous) => {
+          if (!previous) {
+            return previous;
+          }
+          return {
+            ...previous,
+            profile: updatedProfile,
+          };
+        });
+      } catch (err) {
+        console.error("[DashboardDataProvider] updateProfile error", err);
+        throw err;
+      }
     },
     [token]
   );

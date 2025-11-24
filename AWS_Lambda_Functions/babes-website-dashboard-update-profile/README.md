@@ -113,6 +113,18 @@ This Lambda handles authenticated profile updates from the React dashboard, with
 - [ ] UI updates with new profile data
 - [ ] Error cases show meaningful messages
 
+## 🔒 Required API Gateway & Auth Setup
+
+- API Gateway POST and OPTIONS methods must be present for `/dashboard/update-profile`.
+- Method response for POST must include:
+  - `Access-Control-Allow-Origin`
+  - `Access-Control-Allow-Headers`
+  - `Access-Control-Allow-Methods`
+- Lambda must return these CORS headers for all responses (success and error).
+- API Gateway must attach a CUSTOM authorizer that returns `userId` in the request context.
+- Frontend must send a valid `Authorization` header (JWT/session token).
+- DynamoDB table must be accessible and have correct schema for user profiles and email lookups.
+
 ## 📖 Documentation
 
 - **lambda_function.py** – Main Lambda code

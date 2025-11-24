@@ -88,14 +88,11 @@ def lambda_handler(event: Dict[str, Any], _context) -> Dict[str, Any]:
     LOGGER.debug("Authorizer invoked: %s", json.dumps({"methodArn": event.get("methodArn"), "headers": event.get('headers')}))
     LOGGER.info("Authorizer event: %s", json.dumps(event))
     LOGGER.info("Authorizer context: %s", str(_context))
-    # Extract JWT from headers
-    headers = (event.get("headers") or {})
-    jwt_token = headers.get("Authorization") or headers.get("authorization")
-    LOGGER.info("JWT token from headers: %s", jwt_token)
+    # Extract JWT from event['authorizationToken'] (TOKEN authorizer)
     token = _extract_token(event)
+    LOGGER.info("Extracted token for validation: %s", token)
     if not token:
         LOGGER.info("No authorization token provided")
-        # No token -> 401 Unauthorized (raise so API Gateway returns 401)
         raise Exception("Unauthorized")
 
     # Resolve session metadata
