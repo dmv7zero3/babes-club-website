@@ -11,8 +11,6 @@ interface FormState {
   shippingState: string;
   shippingPostalCode: string;
   shippingCountry: string;
-  showOrderHistory: boolean;
-  showNftHoldings: boolean;
 }
 
 const booleanSetting = (value: unknown, fallback = true): boolean => {
@@ -35,8 +33,6 @@ const buildFormState = (
   profile: ReturnType<typeof useDashboardData>["profile"]
 ): FormState => {
   const shipping = profile?.shippingAddress;
-  const settings = profile?.dashboardSettings ?? {};
-
   return {
     displayName: profile?.displayName ?? "",
     email: profile?.email ?? "",
@@ -47,12 +43,6 @@ const buildFormState = (
     shippingState: shipping?.state ?? "",
     shippingPostalCode: shipping?.postalCode ?? "",
     shippingCountry: shipping?.country ?? "",
-    showOrderHistory: booleanSetting(
-      (settings as Record<string, unknown>).showOrderHistory
-    ),
-    showNftHoldings: booleanSetting(
-      (settings as Record<string, unknown>).showNftHoldings
-    ),
   };
 };
 
@@ -89,13 +79,7 @@ const ProfileEditForm = () => {
     }));
   };
 
-  const handleCheckboxChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = event.target;
-    setFormState((previous) => ({
-      ...previous,
-      [name]: checked,
-    }));
-  };
+  // Checkbox handler removed (no toggles)
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -116,11 +100,6 @@ const ProfileEditForm = () => {
           state: formState.shippingState.trim(),
           postalCode: formState.shippingPostalCode.trim(),
           country: formState.shippingCountry.trim(),
-        },
-        dashboardSettings: {
-          ...(profile.dashboardSettings ?? {}),
-          showOrderHistory: formState.showOrderHistory,
-          showNftHoldings: formState.showNftHoldings,
         },
       });
 
@@ -306,51 +285,7 @@ const ProfileEditForm = () => {
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2">
-        <div className="flex items-center justify-between p-4 border rounded-lg border-neutral-200 bg-neutral-100">
-          <div>
-            <h5 className="text-sm font-medium text-neutral-800">
-              Show Order History
-            </h5>
-            <p className="text-xs text-neutral-500">
-              Toggle visibility of the orders panel for this member.
-            </p>
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              name="showOrderHistory"
-              checked={formState.showOrderHistory}
-              onChange={handleCheckboxChange}
-              className="sr-only peer"
-            />
-            <span className="w-10 h-6 transition rounded-full bg-neutral-300 peer-checked:bg-black"></span>
-            <span className="absolute w-4 h-4 transition bg-white rounded-full left-1 top-1 peer-checked:translate-x-4"></span>
-          </label>
-        </div>
-        <div className="flex items-center justify-between p-4 border rounded-lg border-neutral-200 bg-neutral-100">
-          <div>
-            <h5 className="text-sm font-medium text-neutral-800">
-              Show NFT Holdings
-            </h5>
-            <p className="text-xs text-neutral-500">
-              Allow access to the NFTs gallery inside the dashboard.
-            </p>
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              name="showNftHoldings"
-              checked={formState.showNftHoldings}
-              onChange={handleCheckboxChange}
-              className="sr-only peer"
-            />
-            <span className="w-10 h-6 transition rounded-full bg-neutral-300 peer-checked:bg-black"></span>
-            <span className="absolute w-4 h-4 transition bg-white rounded-full left-1 top-1 peer-checked:translate-x-4"></span>
-          </label>
-        </div>
-        {/* Theme preference removed — no theme option currently */}
-      </section>
+      {/* Toggles for Show Order History and Show NFT Holdings removed */}
 
       {feedback ? (
         <div className="p-3 text-sm text-green-700 rounded-md bg-green-50">

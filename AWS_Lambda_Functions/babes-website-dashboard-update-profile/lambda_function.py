@@ -101,7 +101,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     # Log the entire event for debugging
     logger.info("=" * 80)
     logger.info("LAMBDA INVOCATION START")
-    logger.info(f"Request ID: {context.request_id if context else 'N/A'}")
+    logger.info(f"Request ID: {getattr(context, 'aws_request_id', 'N/A')}")
     logger.info(f"HTTP Method: {event.get('httpMethod', 'UNKNOWN')}")
     logger.info(f"Path: {event.get('path', 'UNKNOWN')}")
     logger.info(f"Headers: {json.dumps(event.get('headers', {}), indent=2)}")
