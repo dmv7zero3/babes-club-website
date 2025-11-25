@@ -39,6 +39,21 @@ const ProfileOverviewCard = () => {
     );
   }
 
+  // Stripe Customer ID display logic
+  let stripeCustomerIdDisplay: string;
+  if (
+    profile.stripeCustomerId === undefined ||
+    profile.stripeCustomerId === null
+  ) {
+    stripeCustomerIdDisplay = "Pending (created after first purchase)";
+  } else if (
+    typeof profile.stripeCustomerId === "string" &&
+    profile.stripeCustomerId.trim()
+  ) {
+    stripeCustomerIdDisplay = profile.stripeCustomerId;
+  } else {
+    stripeCustomerIdDisplay = "Unavailable (contact support)";
+  }
   const totalSpent = orders.reduce((sum, order) => sum + order.amount, 0);
   const updatedAt = new Date(profile.updatedAt);
   const formattedDate = Number.isNaN(updatedAt.getTime())
@@ -85,44 +100,33 @@ const ProfileOverviewCard = () => {
             {profile.displayName}
           </h3>
           <p className="text-sm text-neutral-500">{profile.email}</p>
-          <p className="inline-flex items-center gap-2 px-3 py-1 mt-1 text-xs font-medium rounded-full bg-neutral-100 text-neutral-700">
-            {profile.category}
-          </p>
         </div>
         <dl className="grid w-full grid-cols-2 gap-4 text-sm text-left">
           <div>
             <dt className="text-xs tracking-wide uppercase text-neutral-400">
               Orders
             </dt>
-            <dd className="text-lg font-semibold text-neutral-900">
-              {orders.length}
-            </dd>
+            <dd className="font-semibold text-neutral-900">{orders.length}</dd>
           </div>
           <div>
             <dt className="text-xs tracking-wide uppercase text-neutral-400">
               NFTs
             </dt>
-            <dd className="text-lg font-semibold text-neutral-900">
-              {nfts.length}
-            </dd>
+            <dd className="font-semibold text-neutral-900">{nfts.length}</dd>
           </div>
           <div>
             <dt className="text-xs tracking-wide uppercase text-neutral-400">
               Total Spent
             </dt>
-            <dd className="text-lg font-semibold text-neutral-900">
-              $
-              {(totalSpent / 100).toLocaleString(undefined, {
-                style: "currency",
-                currency: "USD",
-              })}
+            <dd className="font-semibold text-neutral-900">
+              {totalSpent > 0 ? `$${totalSpent.toFixed(2)}` : "$0.00"}
             </dd>
           </div>
           <div>
             <dt className="text-xs tracking-wide uppercase text-neutral-400">
               Last Updated
             </dt>
-            <dd className="text-sm text-neutral-600">{formattedDate}</dd>
+            <dd className="text-neutral-700">{formattedDate}</dd>
           </div>
         </dl>
       </div>
@@ -135,58 +139,23 @@ const ProfileOverviewCard = () => {
         </pre>
         <dl className="grid grid-cols-1 gap-4 mt-6 text-sm text-neutral-600 md:grid-cols-2">
           <div className="flex flex-col gap-1">
-            <dt className="text-xs tracking-wide uppercase text-neutral-400">
+            <span className="text-xs tracking-wide uppercase text-neutral-400">
               Stripe Customer ID
-            </dt>
-            <dd className="font-medium text-neutral-800">
-              {profile.stripeCustomerId ?? "Not connected"}
-            </dd>
+            </span>
+            <span className="font-mono text-sm text-neutral-700">
+              {stripeCustomerIdDisplay}
+            </span>
           </div>
           <div className="flex flex-col gap-1">
-            <dt className="text-xs tracking-wide uppercase text-neutral-400">
+            <span className="text-xs tracking-wide uppercase text-neutral-400">
               Preferred Wallet
-            </dt>
-            <dd className="font-mono text-xs">
+            </span>
+            <span className="font-mono text-xs">
               {profile.preferredWallet ?? "Not provided"}
-            </dd>
+            </span>
           </div>
         </dl>
-        {/* <div className="mt-6">
-          <h4 className="text-sm font-semibold tracking-wide uppercase text-neutral-500">
-            Dashboard Settings
-          </h4>
-          <div className="grid gap-3 mt-3 sm:grid-cols-2">
-            {settingsSummary.map((item) => (
-              <div
-                key={item.key}
-                className="p-4 border rounded-lg border-neutral-200 bg-neutral-50"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-neutral-900">
-                    {item.label}
-                  </span>
-                  <span
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                      item.isEnabled
-                        ? "bg-green-100 text-green-700"
-                        : "bg-neutral-200 text-neutral-600"
-                    }`}
-                  >
-                    {item.isEnabled ? "Enabled" : "Hidden"}
-                  </span>
-                </div>
-                <p className="mt-2 text-xs text-neutral-500">
-                  {item.description}
-                </p>
-                {item.isDefault ? (
-                  <p className="mt-2 text-xs text-neutral-400">
-                    Using default preference
-                  </p>
-                ) : null}
-              </div>
-            ))}
-          </div>
-        </div> */}
+        {/* ...existing code... */}
       </div>
     </section>
   );

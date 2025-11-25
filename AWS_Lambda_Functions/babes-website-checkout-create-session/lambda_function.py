@@ -1,4 +1,7 @@
-"""Babes Club checkout session Lambda entrypoint (commerce shared layer integration)."""
+"""Babes Club checkout session Lambda entrypoint (commerce shared layer integration).
+AWS_Lambda_Functions/babes-website-checkout-create-session/lambda_function.py
+
+"""
 
 from __future__ import annotations
 
@@ -286,18 +289,20 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
     if not isinstance(quote_signature, str) or not quote_signature.strip():
         return _error(400, "quoteSignature is required", cors_origin)
 
-    limited, limit_message = check_rate_limit(_extract_rate_limit_key(event, quote_signature))
-    if not limited:
+    allowed, limit_message = check_rate_limit(_extract_rate_limit_key(event, quote_signature))
+    if not allowed:
         return _error(429, limit_message or "Too many requests", cors_origin)
 
     table = get_commerce_table()
 
     pointer = get_quote_pointer(quote_signature, table=table)
     if not pointer:
+        logger.warning("Missing quote pointer for %s", quote_signature)
         return _error(404, "Quote not found or expired", cors_origin)
 
     normalized_hash = pointer.get("normalizedHash")
     if not isinstance(normalized_hash, str) or not normalized_hash:
+        logger.error("No normalizedHash in pointer %s", pointer)
         return _error(500, "Quote metadata missing normalized hash", cors_origin)
 
     expires_at_raw = pointer.get("expiresAt")
@@ -308,10 +313,20 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
         pointer_expires_at = None
 
     if pointer_expires_at and pointer_expires_at <= now_seconds:
+        logger.info("Quote expired: %s", quote_signature)
         return _error(410, "Quote has expired", cors_origin)
 
-    quote_item = get_latest_quote_for_hash(normalized_hash, table=table)
+    # Directly fetch CACHE item by PK/SK
+    cache_item_resp = table.get_item(
+        Key={"PK": f"QUOTE#{quote_signature}", "SK": "CACHE"},
+        ConsistentRead=True
+    )
+    quote_item = cache_item_resp.get("Item")
     if not quote_item:
+        logger.warning(
+            "Cache record not found for quoteSignature=%s normalizedHash=%s pointer=%s",
+            quote_signature, normalized_hash, pointer
+        )
         return _error(404, "Quote cache not found", cors_origin)
 
     if not _initialize_stripe_if_needed(required=True):
@@ -330,6 +345,7 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
 
     line_items = _build_line_items(quote_items, default_currency=default_currency)
     if not line_items:
+        logger.warning("No valid Stripe line items for quoteSignature=%s", quote_signature)
         return _error(400, "Quote items are missing Stripe pricing details", cors_origin)
 
     session_id = f"sess_{uuid.uuid4().hex}"
@@ -448,8 +464,13 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
         stripe_max_window = int(time.time()) + 24 * 60 * 60
         session_args["expires_at"] = min(session_expires_at, stripe_max_window)
 
+    # Add idempotency key for Stripe session creation
+    idem_key = f"checkout_session_{quote_signature}_{session_id}"
     try:
-        checkout_session = stripe.checkout.Session.create(**session_args)
+        checkout_session = stripe.checkout.Session.create(
+            idempotency_key=idem_key,
+            **session_args
+        )
     except stripe.error.StripeError as exc:  # type: ignore[attr-defined]
         logger.exception("Stripe checkout session creation failed: %s", exc)
         return _error(502, "Unable to create Stripe checkout session", cors_origin)

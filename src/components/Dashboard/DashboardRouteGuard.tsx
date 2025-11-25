@@ -114,19 +114,25 @@ const DashboardRouteGuard = ({
   }, []);
 
   useEffect(() => {
+    console.debug("[DashboardRouteGuard] useEffect triggered", { reloadFlag });
     let isMounted = true;
 
     const loadUser = async (attempt = 1): Promise<void> => {
       const MAX_RETRIES = 3;
+      console.debug("[DashboardRouteGuard] loadUser called", { attempt });
       try {
         setLoadingPhase("session");
         setStatus("loading");
         setError(undefined);
 
         const activeSession = readStoredSession();
+        console.debug("[DashboardRouteGuard] activeSession", activeSession);
 
         if (!activeSession || !activeSession.token) {
           if (!isMounted) return;
+          console.debug(
+            "[DashboardRouteGuard] No active session, setting unauthenticated"
+          );
           setSession(null);
           setUser(undefined);
           setStatus("unauthenticated");
@@ -139,17 +145,20 @@ const DashboardRouteGuard = ({
         setLoadingPhase("profile");
         // Fetch dashboard snapshot with retry logic
         const snapshot = await fetchDashboardSnapshot(activeSession.token);
+        console.debug("[DashboardRouteGuard] dashboard snapshot", snapshot);
         if (!isMounted) return;
         setLoadingPhase("data");
         setUser(snapshot);
         setStatus("authenticated");
         setLoadingPhase(null);
+        console.debug("[DashboardRouteGuard] Authenticated, user set");
       } catch (err) {
         setLoadingPhase(null);
         if (!isMounted) return;
         // Auth errors (401/403) - logout immediately
         if (isAuthError(err)) {
           LOGGER.warn("Authentication error during profile fetch", err);
+          console.debug("[DashboardRouteGuard] Auth error, calling logout");
           logout();
           return;
         }
@@ -170,13 +179,14 @@ const DashboardRouteGuard = ({
             ? err
             : new Error("Unable to load dashboard. Please refresh the page.")
         );
+        console.debug("[DashboardRouteGuard] Error, set unauthenticated", err);
       }
     };
     void loadUser();
     return () => {
       isMounted = false;
     };
-  }, [reloadFlag, logout]);
+  }, [reloadFlag]);
 
   const contextValue = useMemo<DashboardAuthContextValue>(
     () => ({
