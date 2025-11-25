@@ -74,14 +74,44 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Only clear session for authentication errors (401/403)
+    // On 401/403, try to refresh token before logging out
     if (error.response.status === 401 || error.response.status === 403) {
       try {
-        // Only import if needed to avoid circular deps
-        const { clearSession } = await import("@/lib/auth/session");
+        const {
+          getStoredRefreshToken,
+          persistSession,
+          readStoredSession,
+          clearSession,
+        } = await import("@/lib/auth/session");
+        const refreshToken = getStoredRefreshToken();
+        if (refreshToken) {
+          // Attempt to refresh the access token
+          const refreshResp = await axios.post(
+            `${API_BASE_URL}/auth/refresh`,
+            { refresh_token: refreshToken },
+            { headers: { "Content-Type": "application/json" } }
+          );
+          const { access_token, user } = refreshResp.data;
+          if (access_token) {
+            // Update session with new access token
+            const payload = await import("@/lib/auth/jwt").then((m) =>
+              m.decodeJWT(access_token)
+            );
+            const expiresAt =
+              payload?.exp || Math.floor(Date.now() / 1000) + 3600;
+            persistSession(access_token, expiresAt, user, true, refreshToken);
+            // Retry the original request with new token
+            originalRequest.headers = originalRequest.headers || {};
+            originalRequest.headers["Authorization"] = `Bearer ${access_token}`;
+            return apiClient(originalRequest);
+          }
+        }
+        // If refresh fails, clear session and log out
         clearSession();
       } catch (e) {
-        console.error("[apiClient] Failed to clear session on auth error", e);
+        console.error("[apiClient] Token refresh failed, clearing session", e);
+        const { clearSession } = await import("@/lib/auth/session");
+        clearSession();
       }
     }
 

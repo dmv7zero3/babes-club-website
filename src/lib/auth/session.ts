@@ -22,6 +22,7 @@ export interface DashboardUser {
 
 export interface StoredDashboardSession {
   token: string;
+  refreshToken?: string;
   expiresAt: number;
   user: DashboardUser;
   storedAt?: number;
@@ -76,16 +77,19 @@ export const persistSession = (
   token: string,
   expiresAt: number,
   user: Pick<AuthUser, "userId" | "email" | "displayName">,
-  remember: boolean = false
+  remember: boolean = false,
+  refreshToken?: string
 ): void => {
   log.debug("persistSession called", {
     hasToken: !!token,
     expiresAt,
     userId: user.userId,
     remember,
+    hasRefreshToken: !!refreshToken,
   });
   const session: StoredDashboardSession = {
     token,
+    refreshToken,
     expiresAt,
     user: {
       userId: user.userId,
@@ -110,6 +114,7 @@ export const persistSession = (
 
 export const persistSessionObject = (session: {
   token: string;
+  refreshToken?: string;
   expiresAt?: number;
   user?: Pick<AuthUser, "userId" | "email" | "displayName">;
 }): void => {
@@ -139,7 +144,7 @@ export const persistSessionObject = (session: {
       displayName: "User",
     };
   }
-  persistSession(session.token, expiresAt, user);
+  persistSession(session.token, expiresAt, user, false, session.refreshToken);
 };
 
 export const readStoredSession = (): StoredSession | null => {
@@ -224,6 +229,11 @@ export const clearSession = (): void => {
 export const getStoredToken = (): string | null => {
   const session = readStoredSession();
   return session?.token ?? null;
+};
+
+export const getStoredRefreshToken = (): string | null => {
+  const session = readStoredSession();
+  return session?.refreshToken ?? null;
 };
 
 export const getStoredUser = (): StoredSession["user"] | null => {

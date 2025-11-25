@@ -181,7 +181,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
         expiresAt = Math.floor(Date.now() / 1000) + 3600;
       }
       // Always persist to localStorage (persistent)
-      persistSession(response.accessToken, expiresAt, response.user, true);
+      persistSession(
+        response.accessToken,
+        expiresAt,
+        response.user,
+        true,
+        response.refreshToken
+      );
       dispatch({
         type: "AUTH_SUCCESS",
         user: response.user,
@@ -211,7 +217,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
           expiresAt = Math.floor(Date.now() / 1000) + 3600;
         }
         // Always persist to localStorage (persistent)
-        persistSession(response.accessToken, expiresAt, response.user, true);
+        persistSession(
+          response.accessToken,
+          expiresAt,
+          response.user,
+          true,
+          response.refreshToken
+        );
         dispatch({
           type: "AUTH_SUCCESS",
           user: response.user,

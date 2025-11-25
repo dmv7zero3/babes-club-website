@@ -203,7 +203,7 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
         logger.exception(f"Failed to create user: {exc}")
         return _error(500, "Unable to create account", cors_origin)
 
-    # Issue JWT for auto-login
+    # Issue JWTs for auto-login (access + refresh)
     jwt_payload = {
         "userId": user_id,
         "email": email,
@@ -212,8 +212,13 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
     }
     access_token = create_jwt(jwt_payload)
 
+    # Issue refresh token with longer TTL (e.g., 30 days)
+    from shared_commerce.jwt_utils import create_refresh_token
+    refresh_token = create_refresh_token(jwt_payload, expires_in=30*24*3600)  # 30 days
+
     return _build_response(201, {
         "accessToken": access_token,
+        "refreshToken": refresh_token,
         "user": {
             "userId": user_id,
             "email": email,

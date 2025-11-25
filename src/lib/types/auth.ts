@@ -10,6 +10,7 @@ export interface AuthUser {
 
 export interface AuthResponse {
   accessToken: string;
+  refreshToken?: string;
   expiresAt?: number; // Unix timestamp (seconds)
   user: AuthUser;
 }
@@ -42,6 +43,7 @@ export interface AuthContextValue {
 
 export interface StoredSession {
   token: string;
+  refreshToken?: string;
   expiresAt: number; // Unix timestamp (seconds)
   user: {
     userId: string;
