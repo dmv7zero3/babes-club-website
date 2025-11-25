@@ -1,3 +1,8 @@
+// Unified session event constants
+export const SESSION_EVENTS = {
+  UPDATED: "babes.dashboard.session.updated",
+  CLEARED: "babes.dashboard.session.cleared",
+} as const;
 // Unified session key for dashboard auth
 import type { AuthUser, StoredSession } from "@/lib/types/auth";
 import { decodeJWT, isTokenExpired } from "@/lib/auth/jwt";
@@ -58,13 +63,6 @@ const getLocalStorage = (): Storage | null => {
   }
 };
 
-const dispatchSessionUpdate = () => {
-  if (typeof window !== "undefined") {
-    log.debug("Dispatching session-updated event");
-    window.dispatchEvent(new CustomEvent("session-updated"));
-  }
-};
-
 const safeParseJSON = <T>(value: string | null): T | null => {
   if (!value) return null;
   try {
@@ -97,21 +95,17 @@ export const persistSession = (
     storedAt: Math.floor(Date.now() / 1000),
   };
   const sessionJson = JSON.stringify(session);
-  const storage = getSessionStorage();
-  if (storage) {
-    storage.setItem(SESSION_STORAGE_KEY, sessionJson);
-    log.debug("Session written to sessionStorage");
-  } else {
-    log.warn("Failed to write session - sessionStorage not available");
-  }
+  // Always write to sessionStorage for current tab
+  sessionStorage.setItem(SESSION_STORAGE_KEY, sessionJson);
+  log.debug("Session written to sessionStorage");
+  // Optionally persist to localStorage for cross-tab/persistence
   if (remember) {
-    const local = getLocalStorage();
-    if (local) {
-      local.setItem(SESSION_STORAGE_KEY, sessionJson);
-      log.debug("Session written to localStorage (remember me)");
-    }
+    localStorage.setItem(SESSION_STORAGE_KEY, sessionJson);
+    log.debug("Session written to localStorage (remember me)");
   }
-  dispatchSessionUpdate();
+  window.dispatchEvent(
+    new CustomEvent(SESSION_EVENTS.UPDATED, { detail: session })
+  );
 };
 
 export const persistSessionObject = (session: {
@@ -149,22 +143,18 @@ export const persistSessionObject = (session: {
 };
 
 export const readStoredSession = (): StoredSession | null => {
+  // Always prefer sessionStorage for current tab, fallback to localStorage for persistence
   log.debug("readStoredSession called");
-  const sessionStorage = getSessionStorage();
   let raw: string | null = null;
-  if (sessionStorage) {
-    raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
-    log.debug("sessionStorage read", { found: !!raw });
-  }
-  if (!raw) {
-    const localStorage = getLocalStorage();
-    if (localStorage) {
-      raw = localStorage.getItem(SESSION_STORAGE_KEY);
-      log.debug("localStorage fallback read", { found: !!raw });
-      if (raw && sessionStorage) {
-        sessionStorage.setItem(SESSION_STORAGE_KEY, raw);
-        log.debug("Copied session from localStorage to sessionStorage");
-      }
+  const sessionStore = getSessionStorage();
+  const localStore = getLocalStorage();
+  if (sessionStore) raw = sessionStore.getItem(SESSION_STORAGE_KEY);
+  if (!raw && localStore) {
+    raw = localStore.getItem(SESSION_STORAGE_KEY);
+    // If found in localStorage, copy to sessionStorage for current tab
+    if (raw && sessionStore) {
+      sessionStore.setItem(SESSION_STORAGE_KEY, raw);
+      log.debug("Copied session from localStorage to sessionStorage");
     }
   }
   if (!raw) {
@@ -173,11 +163,13 @@ export const readStoredSession = (): StoredSession | null => {
   }
   try {
     const session: StoredSession = JSON.parse(raw);
+    // Validate token presence
     if (!session.token) {
       log.warn("Invalid session: missing token");
       clearSession();
       return null;
     }
+    // Validate expiry
     const nowSeconds = Math.floor(Date.now() / 1000);
     if (session.expiresAt && session.expiresAt <= nowSeconds) {
       log.debug("Session expired", {
@@ -226,7 +218,7 @@ export const clearSession = (): void => {
   if (localStorage) {
     localStorage.removeItem(SESSION_STORAGE_KEY);
   }
-  dispatchSessionUpdate();
+  window.dispatchEvent(new CustomEvent(SESSION_EVENTS.CLEARED));
 };
 
 export const getStoredToken = (): string | null => {

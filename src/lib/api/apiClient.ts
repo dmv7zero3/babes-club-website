@@ -62,6 +62,29 @@ apiClient.interceptors.response.use(
     });
     const originalRequest = error.config;
 
+    // Network/CORS error: error.response is undefined
+    if (!error.response) {
+      // Only log and propagate network/CORS errors, do NOT clear session
+      if (error.code === "ERR_NETWORK") {
+        console.error(
+          "[apiClient] Network error - possible CORS issue:",
+          error.message
+        );
+      }
+      return Promise.reject(error);
+    }
+
+    // Only clear session for authentication errors (401/403)
+    if (error.response.status === 401 || error.response.status === 403) {
+      try {
+        // Only import if needed to avoid circular deps
+        const { clearSession } = await import("@/lib/auth/session");
+        clearSession();
+      } catch (e) {
+        console.error("[apiClient] Failed to clear session on auth error", e);
+      }
+    }
+
     // Only retry if we haven't reached MAX_RETRIES
     if (retries < MAX_RETRIES && error.response?.status >= 500) {
       retries++;

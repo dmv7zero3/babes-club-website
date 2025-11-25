@@ -35,7 +35,8 @@ import {
   clearSession,
   readStoredSession,
   type StoredDashboardSession,
-} from "@/lib/dashboard/session";
+  SESSION_EVENTS,
+} from "@/lib/auth/session";
 import type { DashboardUserData } from "@/lib/types/dashboard";
 
 export const DASHBOARD_USER_STORAGE_KEY = "babes.dashboard.session";
@@ -83,11 +84,16 @@ const isAuthError = (error: unknown): boolean => {
   return status === 401 || status === 403;
 };
 
-const DashboardRouteGuard = ({
-  children,
-  fallback,
-  loading,
-}: DashboardRouteGuardProps) => {
+const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = (props) => {
+  const { children, fallback, loading } = props;
+  // Stable navigation ref for useEffect
+  const navigate = useNavigate();
+  const navigateRef = React.useRef(navigate);
+  useEffect(() => {
+    navigateRef.current = navigate;
+  }, [navigate]);
+  // Prevent multiple simultaneous auth checks
+  const isCheckingAuth = React.useRef(false);
   const [status, setStatus] = useState<DashboardAuthStatus>("loading");
   const [user, setUser] = useState<DashboardUserData | undefined>();
   const [error, setError] = useState<Error | undefined>();
@@ -98,8 +104,7 @@ const DashboardRouteGuard = ({
     "session" | "profile" | "data" | null
   >(null);
 
-  const navigate = useNavigate();
-
+  // Stable reload flag
   const [reloadFlag, setReloadFlag] = useState(0);
 
   const reload = useCallback(() => {
@@ -110,29 +115,39 @@ const DashboardRouteGuard = ({
     clearSession();
     setSession(null);
     setUser(undefined);
-    setStatus("unauthenticated");
+    setStatus((prev) =>
+      prev === "unauthenticated" ? prev : "unauthenticated"
+    );
   }, []);
 
   useEffect(() => {
     LOGGER.info("[DashboardRouteGuard] useEffect triggered", { reloadFlag });
     let isMounted = true;
 
-    // Listen for custom session change events to trigger reload
-    const handleSessionEvent = (e: Event) => {
-      LOGGER.info("Session event received, reloading dashboard guard", e);
-      // Only reload if session is not already null
+    // Listen for custom session change events to trigger reload only if session state changed
+    const handleSessionUpdate = () => {
       const currentSession = readStoredSession();
-      if (currentSession) reload();
+      // Only reload if session changed (null <-> not null, or token changed)
+      if (
+        (!currentSession && session !== null) ||
+        (currentSession && (!session || currentSession.token !== session.token))
+      ) {
+        reload();
+      }
     };
-    window.addEventListener("babes.dashboard.session", handleSessionEvent);
+    window.addEventListener(SESSION_EVENTS.UPDATED, handleSessionUpdate);
+    window.addEventListener(SESSION_EVENTS.CLEARED, handleSessionUpdate);
 
     const loadUser = async (attempt = 1): Promise<void> => {
+      if (isCheckingAuth.current) return;
+      isCheckingAuth.current = true;
       const MAX_RETRIES = 3;
       LOGGER.info("loadUser called", { attempt });
       try {
         setLoadingPhase("session");
         setStatus("loading");
         setError(undefined);
+        isCheckingAuth.current = false;
 
         // Always re-read session from storage for latest value
         const activeSession = readStoredSession();
@@ -151,7 +166,9 @@ const DashboardRouteGuard = ({
           LOGGER.info("No active session, setting unauthenticated");
           setSession(null);
           setUser(undefined);
-          setStatus("unauthenticated");
+          setStatus((prev) =>
+            prev === "unauthenticated" ? prev : "unauthenticated"
+          );
           setLoadingPhase(null);
           return;
         }
@@ -201,7 +218,8 @@ const DashboardRouteGuard = ({
     void loadUser();
     return () => {
       isMounted = false;
-      window.removeEventListener("babes.dashboard.session", handleSessionEvent);
+      window.removeEventListener(SESSION_EVENTS.UPDATED, handleSessionUpdate);
+      window.removeEventListener(SESSION_EVENTS.CLEARED, handleSessionUpdate);
     };
   }, [reloadFlag]);
 
@@ -254,7 +272,7 @@ const DashboardRouteGuard = ({
         // Token already expired
         logout();
         try {
-          navigate("/login", { replace: true });
+          navigateRef.current("/login", { replace: true });
         } catch (e) {
           // ignore navigation errors
         }
@@ -267,7 +285,7 @@ const DashboardRouteGuard = ({
         LOGGER.info("Inactivity timeout or token expiry reached - logging out");
         logout();
         try {
-          navigate("/login", { replace: true });
+          navigateRef.current("/login", { replace: true });
         } catch (e) {
           // ignore navigation errors
         }
@@ -285,7 +303,7 @@ const DashboardRouteGuard = ({
       }
       events.forEach((ev) => window.removeEventListener(ev, resetTimer));
     };
-  }, [status, logout, navigate]);
+  }, [status, logout]);
 
   const location = useLocation();
 
