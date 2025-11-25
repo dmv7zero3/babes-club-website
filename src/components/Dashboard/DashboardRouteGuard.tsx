@@ -120,7 +120,9 @@ const DashboardRouteGuard = ({
     // Listen for custom session change events to trigger reload
     const handleSessionEvent = (e: Event) => {
       LOGGER.info("Session event received, reloading dashboard guard", e);
-      reload();
+      // Only reload if session is not already null
+      const currentSession = readStoredSession();
+      if (currentSession) reload();
     };
     window.addEventListener("babes.dashboard.session", handleSessionEvent);
 
@@ -138,6 +140,14 @@ const DashboardRouteGuard = ({
 
         if (!activeSession || !activeSession.token) {
           if (!isMounted) return;
+          // Prevent redundant state updates if already unauthenticated and session is null
+          if (status === "unauthenticated" && session === null) {
+            LOGGER.info(
+              "Already unauthenticated and no session, skipping state update"
+            );
+            setLoadingPhase(null);
+            return;
+          }
           LOGGER.info("No active session, setting unauthenticated");
           setSession(null);
           setUser(undefined);
