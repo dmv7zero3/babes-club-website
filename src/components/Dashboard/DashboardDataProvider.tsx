@@ -159,10 +159,14 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
 
   const updateProfile = useCallback(
     async (fields: UpdateableProfileFields) => {
-      // Debug: Log updateProfile call
+      // Debug: Log updateProfile call and headers
       console.log("[DashboardDataProvider] updateProfile called", {
         token,
         fields,
+      });
+      console.log("[DashboardDataProvider] updateProfile headers", {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       });
       if (!token) {
         console.error(
@@ -187,7 +191,29 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
           };
         });
       } catch (err) {
-        console.error("[DashboardDataProvider] updateProfile error", err);
+        // Enhanced error logging with type guard for AxiosError
+        if (
+          err &&
+          typeof err === "object" &&
+          "isAxiosError" in err &&
+          (err as any).isAxiosError === true
+        ) {
+          const axiosErr = err as import("axios").AxiosError;
+          console.error("[DashboardDataProvider] updateProfile error", {
+            message: axiosErr.message,
+            code: axiosErr.code,
+            response: axiosErr.response,
+            config: axiosErr.config,
+          });
+          if (axiosErr.response) {
+            console.error(
+              "[DashboardDataProvider] API error response",
+              axiosErr.response.data
+            );
+          }
+        } else {
+          console.error("[DashboardDataProvider] updateProfile error", err);
+        }
         throw err;
       }
     },

@@ -21,6 +21,9 @@ from shared_commerce import (
     resolve_origin,
 )
 
+# Import JWT utility from shared layer
+from shared_commerce.jwt_utils import create_jwt
+
 def get_password_pepper(optional: bool = False) -> str:
     """Get password pepper from environment"""
     pepper = os.environ.get("PASSWORD_PEPPER") or os.environ.get("AUTH_PASSWORD_PEPPER") or ""
@@ -161,58 +164,36 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
         "setAt": issued_at
     }
 
-    # Create session (auto-login)
-    session_id = uuid.uuid4().hex
-    session_ttl_minutes = get_env_int("SESSION_TTL_MINUTES", 12 * 60)
-    max_session_days = 30
-    inactivity_expire = int(time.time()) + (session_ttl_minutes * 60)
-    absolute_expire = int(time.time()) + (max_session_days * 24 * 3600)
-    expires_at = min(inactivity_expire, absolute_expire)
+    # Write user and email lookup in transaction using DynamoDB client
+    import boto3
+    dynamodb_client = boto3.client('dynamodb')
 
-    session_item = {
-        "PK": f"SESSION#{session_id}",
-        "SK": "METADATA",
-        "sessionId": session_id,
-        "userId": user_id,
-        "status": "active",
-        "email": email,
-        "emailLower": email_lower,
-        "roles": ["member"],
-        "issuedAt": issued_at,
-        "expiresAt": expires_at,
-        "lastAccessedAt": issued_at,
-        "ip": ip,
-        "userAgent": agent,
-        "ttl": expires_at
-    }
+    def to_ddb(item):
+        # Convert dict to DynamoDB format
+        def wrap(v):
+            if isinstance(v, str): return {'S': v}
+            if isinstance(v, bool): return {'BOOL': v}
+            if isinstance(v, int): return {'N': str(v)}
+            if isinstance(v, float): return {'N': str(v)}
+            if isinstance(v, dict): return {'M': {k: wrap(val) for k, val in v.items()}}
+            if isinstance(v, list):
+                # List of strings/numbers/dicts
+                return {'L': [wrap(val) for val in v]}
+            if v is None: return {'NULL': True}
+            return {'S': str(v)}
+        return {k: wrap(val) for k, val in item.items()}
 
-    session_index = {
-        "PK": f"USER#{user_id}",
-        "SK": f"SESSION#{session_id}",
-        "sessionId": session_id,
-        "status": "active",
-        "issuedAt": issued_at,
-        "expiresAt": expires_at,
-        "lastAccessedAt": issued_at,
-        "ip": ip,
-        "userAgent": agent,
-        "ttl": expires_at
-    }
-
-    # Write all in transaction
     try:
-        table.transact_write_items(
+        dynamodb_client.transact_write_items(
             TransactItems=[
-                {"Put": {"TableName": table.table_name, "Item": user_profile}},
+                {"Put": {"TableName": table.table_name, "Item": to_ddb(user_profile)}},
                 {
                     "Put": {
                         "TableName": table.table_name,
-                        "Item": email_lookup,
+                        "Item": to_ddb(email_lookup),
                         "ConditionExpression": "attribute_not_exists(PK)"
                     }
-                },
-                {"Put": {"TableName": table.table_name, "Item": session_item}},
-                {"Put": {"TableName": table.table_name, "Item": session_index}},
+                }
             ]
         )
         logger.info(f"Created user: {user_id} ({email})")
@@ -222,12 +203,21 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
         logger.exception(f"Failed to create user: {exc}")
         return _error(500, "Unable to create account", cors_origin)
 
+    # Issue JWT for auto-login
+    jwt_payload = {
+        "userId": user_id,
+        "email": email,
+        "role": "customer",
+        "displayName": user_profile["displayName"]
+    }
+    access_token = create_jwt(jwt_payload)
+
     return _build_response(201, {
-        "token": session_id,
-        "expiresAt": expires_at,
+        "accessToken": access_token,
         "user": {
             "userId": user_id,
             "email": email,
-            "displayName": user_profile["displayName"]
+            "displayName": user_profile["displayName"],
+            "role": "customer"
         }
     }, cors_origin)

@@ -26,6 +26,58 @@ const apiClient: AxiosInstance = axios.create({
   },
 });
 
+// Add request logging
+apiClient.interceptors.request.use(
+  (config) => {
+    console.log("[apiClient] Request", {
+      method: config.method,
+      url: config.url,
+      headers: config.headers,
+      data: config.data,
+    });
+    return config;
+  },
+  (error) => {
+    console.error("[apiClient] Request error", error);
+    return Promise.reject(error);
+  }
+);
+
+// Add response logging
+apiClient.interceptors.response.use(
+  (response) => {
+    console.log("[apiClient] Response", {
+      status: response.status,
+      url: response.config.url,
+      data: response.data,
+    });
+    return response;
+  },
+  async (error) => {
+    console.error("[apiClient] Response error", {
+      message: error.message,
+      code: error.code,
+      response: error.response,
+      config: error.config,
+    });
+    const originalRequest = error.config;
+
+    // Only retry if we haven't reached MAX_RETRIES
+    if (retries < MAX_RETRIES && error.response?.status >= 500) {
+      retries++;
+      // Exponential backoff
+      const delay = 1000 * Math.pow(2, retries - 1);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      return apiClient(originalRequest);
+    }
+
+    // Reset retries for next request
+    retries = 0;
+
+    return Promise.reject(error);
+  }
+);
+
 // Add request interceptor for handling retries
 let retries = 0;
 apiClient.interceptors.response.use(

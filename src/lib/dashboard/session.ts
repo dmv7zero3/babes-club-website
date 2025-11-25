@@ -4,7 +4,7 @@ export const DASHBOARD_SESSION_STORAGE_KEY = "babes.dashboard.session";
 
 export interface StoredDashboardSession {
   token: string;
-  expiresAt: number;
+  expiresAt?: number;
   user?: Pick<DashboardUserData["profile"], "userId" | "email" | "displayName">;
 }
 

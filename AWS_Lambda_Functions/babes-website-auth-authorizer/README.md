@@ -19,6 +19,26 @@ Custom Lambda authorizer placeholder for validating Babes Club dashboard/interna
 
 ## TODO
 
+## Debugging & Logging
+
+- The authorizer now includes detailed logging for:
+  - JWT extraction and decoding
+  - JWT payload, expiry (`exp`), and claims (`userId`, etc.)
+  - Validation errors and reasons for Deny policies
+  - Allow/Deny decisions with context
+
+### Troubleshooting Steps
+
+1. Check CloudWatch logs for `babes-website-auth-authorizer` for details on JWT validation failures.
+2. Look for log entries:
+   - `JWT payload: ...` (shows decoded claims)
+   - `JWT exp: ...` (shows expiry)
+   - `JWT verification error: ...` (shows validation errors)
+   - `Authorizer returning Allow for userId: ...` (shows successful validation)
+3. Use these logs to diagnose issues with token expiry, signature, or claim mismatches.
+
+## TODO
+
 1. Implement JWT verification (PyJWT or custom HMAC validation).
 2. Populate context fields (userId, email, roles) for downstream Lambdas.
 3. Add caching headers for API Gateway authorizer caching.

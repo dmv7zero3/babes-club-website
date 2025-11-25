@@ -89,7 +89,7 @@ const ProfileEditForm = () => {
     setError(null);
 
     try {
-      await updateProfile({
+      const payload = {
         displayName: formState.displayName.trim(),
         email: formState.email.trim(),
         preferredWallet: formState.preferredWallet.trim() || undefined,
@@ -101,7 +101,9 @@ const ProfileEditForm = () => {
           postalCode: formState.shippingPostalCode.trim(),
           country: formState.shippingCountry.trim(),
         },
-      });
+      };
+      console.log("[ProfileEditForm] updateProfile payload:", payload);
+      await updateProfile(payload);
 
       setFeedback(
         "Profile saved. Changes are stored locally until the API is ready."

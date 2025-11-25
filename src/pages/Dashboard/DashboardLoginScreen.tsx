@@ -70,10 +70,22 @@ const DashboardLoginScreen = () => {
       setIsSubmitting(true);
 
       const response = await login(email.trim(), password);
+      console.log("[Login] API response:", response);
 
-      persistSession({
-        token: response.token,
-        expiresAt: response.expiresAt,
+      // Use accessToken for token
+      let expiresAt = response.expiresAt;
+      if (!expiresAt && response.accessToken) {
+        try {
+          const payload = JSON.parse(atob(response.accessToken.split(".")[1]));
+          // exp is in seconds since epoch
+          expiresAt = payload.exp;
+        } catch (e) {
+          console.warn("[Login] Failed to parse JWT for expiresAt", e);
+        }
+      }
+      const sessionObj = {
+        token: response.accessToken,
+        expiresAt,
         user: {
           userId: response.user?.userId ?? email.trim().toLowerCase(),
           email: response.user?.email ?? email.trim(),
@@ -82,9 +94,11 @@ const DashboardLoginScreen = () => {
             email.trim().split("@")[0] ??
             "Member",
         },
-      });
+      };
+      console.log("[Login] Persisting session:", sessionObj);
+      persistSession(sessionObj);
 
-      // Fix 1.1: Remove race condition - direct navigation
+      console.log("[Login] Navigating to /dashboard");
       navigate("/dashboard", { replace: true });
     } catch (error) {
       setSubmitError(getErrorMessage(error));

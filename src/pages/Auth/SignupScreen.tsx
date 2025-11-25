@@ -46,10 +46,21 @@ const SignupScreen = ({ onSuccess }: { onSuccess?: () => void }) => {
         password,
         displayName.trim() || undefined
       );
+      console.log("[Signup] API response:", response);
 
-      persistSession({
-        token: response.token,
-        expiresAt: response.expiresAt,
+      // Use accessToken for token
+      let expiresAt = response.expiresAt;
+      if (!expiresAt && response.accessToken) {
+        try {
+          const payload = JSON.parse(atob(response.accessToken.split(".")[1]));
+          expiresAt = payload.exp;
+        } catch (e) {
+          console.warn("[Signup] Failed to parse JWT for expiresAt", e);
+        }
+      }
+      const sessionObj = {
+        token: response.accessToken,
+        expiresAt,
         user: {
           userId: response.user?.userId ?? email.trim().toLowerCase(),
           email: response.user?.email ?? email.trim(),
@@ -58,9 +69,12 @@ const SignupScreen = ({ onSuccess }: { onSuccess?: () => void }) => {
             (displayName.trim() || email.trim().split("@")[0]) ??
             "Member",
         },
-      });
+      };
+      console.log("[Signup] Persisting session:", sessionObj);
+      persistSession(sessionObj);
 
       if (onSuccess) {
+        console.log("[Signup] Calling onSuccess callback");
         onSuccess();
       }
     } catch (error) {

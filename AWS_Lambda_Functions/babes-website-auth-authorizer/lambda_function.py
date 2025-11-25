@@ -17,21 +17,9 @@ import logging
 from typing import Any, Dict, Optional
 
 import os
-import boto3
 
-# Use DynamoDB directly here instead of relying on the shared layer so the
-# authorizer can be deployed independently. The table name falls back to the
-# shared default used elsewhere in the project.
-COMMERCE_TABLE = os.getenv("COMMERCE_TABLE") or "babesclub-commerce"
-_dynamodb = boto3.resource("dynamodb")
-
-
-def get_session_pointer(session_id: str) -> dict | None:
-    table = _dynamodb.Table(COMMERCE_TABLE)
-    # Use a strongly-consistent read so immediately-after-signup reads
-    # reliably see the newly-created session item.
-    resp = table.get_item(Key={"PK": f"SESSION#{session_id}", "SK": "METADATA"}, ConsistentRead=True)
-    return resp.get("Item")
+# Import JWT utility from shared layer
+from shared_commerce.jwt_utils import verify_jwt
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
@@ -85,6 +73,7 @@ def _generate_policy(principal_id: str, effect: str, method_arn: str, context: D
 
 
 def lambda_handler(event: Dict[str, Any], _context) -> Dict[str, Any]:
+
     LOGGER.debug("Authorizer invoked: %s", json.dumps({"methodArn": event.get("methodArn"), "headers": event.get('headers')}))
     LOGGER.info("Authorizer event: %s", json.dumps(event))
     LOGGER.info("Authorizer context: %s", str(_context))
@@ -95,48 +84,38 @@ def lambda_handler(event: Dict[str, Any], _context) -> Dict[str, Any]:
         LOGGER.info("No authorization token provided")
         raise Exception("Unauthorized")
 
-    # Resolve session metadata
+    # Validate JWT
+    payload = None
     try:
-        session = get_session_pointer(token)
+        payload = verify_jwt(token)
+        LOGGER.info("JWT payload: %s", json.dumps(payload))
+        # Log expiry and claims
+        exp = payload.get("exp")
+        user_id = payload.get("userId")
+        LOGGER.info(f"JWT exp: {exp}, userId: {user_id}")
     except Exception as exc:
-        LOGGER.exception("Failed to read session for token: %s", exc)
-        # Internal issue while reading session -> signal unauthorized (401)
-        raise Exception("Unauthorized")
+        LOGGER.error("JWT verification error: %s", exc)
+        LOGGER.info("JWT validation failed: %s", str(exc))
+        return _generate_policy(principal_id=(token or "unknown"), effect="Deny", method_arn=event["methodArn"], context={"reason": f"jwt_error:{str(exc)}"})
 
-    if not session:
-        LOGGER.info("Session not found for token")
-        # Explicit Deny -> API Gateway will return 403 Forbidden
-        return _generate_policy(principal_id=(token or "unknown"), effect="Deny", method_arn=event["methodArn"], context={"reason": "session_not_found"})
+    if not payload:
+        LOGGER.info("JWT not valid or expired")
+        return _generate_policy(principal_id=(token or "unknown"), effect="Deny", method_arn=event["methodArn"], context={"reason": "jwt_invalid"})
 
-    # Fix 1.3: Token expiry check
-    expires_at = session.get("expiresAt", 0)
-    if expires_at > 0:
-        import time
-        current_time = int(time.time())
-        if expires_at <= current_time:
-            LOGGER.info("Session expired for token (expiresAt: %d, now: %d)", expires_at, current_time)
-            return _generate_policy(
-                principal_id=(token or "unknown"),
-                effect="Deny",
-                method_arn=event["methodArn"],
-                context={"reason": "session_expired", "expiresAt": str(expires_at)}
-            )
-
-    # Expect session to include a `status` and `userId` (or userPk)
-    status = session.get("status") or session.get("state") or ""
-    if status != "active":
-        LOGGER.info("Session not active: %s", status)
-        # Inactive session -> explicit Deny (403)
-        return _generate_policy(principal_id=(token or "unknown"), effect="Deny", method_arn=event["methodArn"], context={"reason": "session_inactive", "status": str(status)})
-
-    user_id = session.get("userId") or session.get("userPk") or session.get("userIdHash")
-    if not user_id:
-        LOGGER.info("Session missing userId")
-        # Malformed session -> explicit Deny (403)
-        return _generate_policy(principal_id=(token or "unknown"), effect="Deny", method_arn=event["methodArn"], context={"reason": "missing_userId"})
+    # Extract user info from JWT
+    user_id = payload.get("userId")
+    role = payload.get("role", "customer")
+    email = payload.get("email", "")
+    display_name = payload.get("displayName", "")
 
     # API Gateway expects context values to be strings
-    context = {"userId": str(user_id)}
+    context = {
+        "userId": str(user_id),
+        "role": str(role),
+        "email": str(email),
+        "displayName": str(display_name)
+    }
 
+    LOGGER.info(f"Authorizer returning Allow for userId: {user_id}, role: {role}")
     return _generate_policy(principal_id=token, effect="Allow", method_arn=event["methodArn"], context=context)
 

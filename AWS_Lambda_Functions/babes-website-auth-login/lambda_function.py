@@ -21,6 +21,9 @@ from shared_commerce import (
     resolve_origin,
 )
 
+# Import JWT utility from shared layer
+from shared_commerce.jwt_utils import create_jwt
+
 def get_password_pepper(optional: bool = False) -> str:
     """Get password pepper from environment"""
     import os
@@ -170,176 +173,22 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
     
     logger.info("Password verified successfully!")
 
-    # 5. Check session count (max 5)
-    try:
-        current_time = int(time.time())
-        sessions_response = table.query(
-            KeyConditionExpression="PK = :pk AND begins_with(SK, :sk_prefix)",
-            FilterExpression="#status = :status AND expiresAt > :now",
-            ExpressionAttributeNames={"#status": "status"},
-            ExpressionAttributeValues={
-                ":pk": f"USER#{user_id}",
-                ":sk_prefix": "SESSION#",
-                ":status": "active",
-                ":now": current_time
-            }
-        )
-        active_sessions = sessions_response.get("Items", [])
-        
-        if len(active_sessions) >= 5:
-            oldest = min(active_sessions, key=lambda s: s.get("issuedAt", ""))
-            oldest_id = oldest["sessionId"]
-            logger.info(f"Revoking oldest session: {oldest_id}")
-            table.transact_write_items(
-                TransactItems=[
-                    {
-                        "Update": {
-                            "TableName": table.table_name,
-                            "Key": {"PK": f"SESSION#{oldest_id}", "SK": "METADATA"},
-                            "UpdateExpression": "SET #status = :status, revokedAt = :now, revokedReason = :reason",
-                            "ExpressionAttributeNames": {"#status": "status"},
-                            "ExpressionAttributeValues": {
-                                ":status": "revoked",
-                                ":now": issued_at,
-                                ":reason": "session_limit_exceeded"
-                            }
-                        }
-                    },
-                    {
-                        "Update": {
-                            "TableName": table.table_name,
-                            "Key": {"PK": f"USER#{user_id}", "SK": f"SESSION#{oldest_id}"},
-                            "UpdateExpression": "SET #status = :status",
-                            "ExpressionAttributeNames": {"#status": "status"},
-                            "ExpressionAttributeValues": {":status": "revoked"}
-                        }
-                    }
-                ]
-            )
-    except Exception as exc:
-        logger.warning(f"Failed to check sessions: {exc}")
-
-    # 6. Create new session
-    session_id = uuid.uuid4().hex
-    session_ttl_minutes = get_env_int("SESSION_TTL_MINUTES", 12 * 60)
-    max_session_days = 30
-    inactivity_expire = int(time.time()) + (session_ttl_minutes * 60)
-    absolute_expire = int(time.time()) + (max_session_days * 24 * 3600)
-    expires_at = min(inactivity_expire, absolute_expire)
-
-    # Get roles from profile (handle Decimal/list conversion)
-    roles = profile.get("roles", ["member"])
-    if isinstance(roles, list):
-        roles = [str(r) for r in roles]
-    else:
-        roles = ["member"]
-
-    session_item = {
-        "PK": f"SESSION#{session_id}",
-        "SK": "METADATA",
-        "sessionId": session_id,
+    # 5. Issue JWT token
+    jwt_payload = {
         "userId": user_id,
-        "status": "active",
         "email": str(profile.get("email", "")),
-        "emailLower": str(profile.get("emailLower", "")),
-        "roles": roles,
-        "issuedAt": issued_at,
-        "expiresAt": expires_at,
-        "lastAccessedAt": issued_at,
-        "ip": str(ip),
-        "userAgent": str(agent),
-        "ttl": expires_at
+        "role": "customer",
+        "displayName": str(profile.get("displayName", "")),
     }
-
-    session_index = {
-        "PK": f"USER#{user_id}",
-        "SK": f"SESSION#{session_id}",
-        "sessionId": session_id,
-        "status": "active",
-        "issuedAt": issued_at,
-        "expiresAt": expires_at,
-        "lastAccessedAt": issued_at,
-        "ip": str(ip),
-        "userAgent": str(agent),
-        "ttl": expires_at
-    }
-
-    # 7. Write session + update lastLoginAt
-    try:
-        logger.info("Creating session transaction...")
-        
-        # Use client for transactions (table resource doesn't support transact_write_items)
-        import boto3
-        dynamodb_client = boto3.client('dynamodb')
-        table_name = table.table_name
-        
-        dynamodb_client.transact_write_items(
-            TransactItems=[
-                {
-                    "Put": {
-                        "TableName": table_name,
-                        "Item": {
-                            "PK": {"S": f"SESSION#{session_id}"},
-                            "SK": {"S": "METADATA"},
-                            "sessionId": {"S": session_id},
-                            "userId": {"S": user_id},
-                            "status": {"S": "active"},
-                            "email": {"S": str(profile.get("email", ""))},
-                            "emailLower": {"S": str(profile.get("emailLower", ""))},
-                            "roles": {"L": [{"S": r} for r in roles]},
-                            "issuedAt": {"S": issued_at},
-                            "expiresAt": {"N": str(expires_at)},
-                            "lastAccessedAt": {"S": issued_at},
-                            "ip": {"S": str(ip)},
-                            "userAgent": {"S": str(agent)},
-                            "ttl": {"N": str(expires_at)}
-                        }
-                    }
-                },
-                {
-                    "Put": {
-                        "TableName": table_name,
-                        "Item": {
-                            "PK": {"S": f"USER#{user_id}"},
-                            "SK": {"S": f"SESSION#{session_id}"},
-                            "sessionId": {"S": session_id},
-                            "status": {"S": "active"},
-                            "issuedAt": {"S": issued_at},
-                            "expiresAt": {"N": str(expires_at)},
-                            "lastAccessedAt": {"S": issued_at},
-                            "ip": {"S": str(ip)},
-                            "userAgent": {"S": str(agent)},
-                            "ttl": {"N": str(expires_at)}
-                        }
-                    }
-                },
-                {
-                    "Update": {
-                        "TableName": table_name,
-                        "Key": {
-                            "PK": {"S": f"USER#{user_id}"},
-                            "SK": {"S": "PROFILE"}
-                        },
-                        "UpdateExpression": "SET lastLoginAt = :login, updatedAt = :login",
-                        "ExpressionAttributeValues": {
-                            ":login": {"S": issued_at}
-                        }
-                    }
-                }
-            ]
-        )
-        logger.info(f"Successfully logged in user: {user_id} ({email})")
-    except Exception as exc:
-        logger.exception(f"Failed to create session: {exc}")
-        return _error(500, "Unable to create session", cors_origin)
+    access_token = create_jwt(jwt_payload)
 
     return _build_response(200, {
-        "token": session_id,
-        "expiresAt": expires_at,
+        "accessToken": access_token,
         "user": {
             "userId": user_id,
             "email": str(profile.get("email", "")),
             "displayName": str(profile.get("displayName", "")),
+            "role": "customer",
             "lastLoginAt": issued_at
         }
     }, cors_origin)

@@ -8,8 +8,8 @@ import type {
 } from "@/lib/types/dashboard";
 
 export interface AuthLoginResponse {
-  token: string;
-  expiresAt: number;
+  accessToken: string;
+  expiresAt?: number;
   user?: {
     userId?: string;
     email?: string;
