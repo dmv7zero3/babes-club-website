@@ -1,3 +1,18 @@
+# AWS_Lambda_Functions Folder Overview
+
+This folder contains all Python handler code and supporting modules for AWS Lambda functions powering the Babes Club backend APIs. Each subdirectory represents a distinct Lambda function or integration point, mapped to an API Gateway route or backend job. The folder structure and packaging conventions ensure that each Lambda is self-contained, easily deployable, and can be updated independently.
+
+**How it works:**
+
+- Each subfolder (e.g., `cart-quote/`, `checkout-create-session/`, `stripe-webhook/`) contains the code for a single Lambda function, including its main handler (usually `app.py` or `lambda_function.py`) and any required helper modules.
+- Shared business logic (such as DynamoDB access, JWT utilities, CORS handling) is either copied into each handler directory or provided via a Lambda Layer for code reuse and consistency.
+- When deploying, each handler directory is zipped and uploaded to AWS Lambda as the function code. The deployment process ensures only the necessary files are included, and dependencies are bundled if needed.
+- After uploading new code, the corresponding API Gateway stage is redeployed to activate the latest Lambda integration for frontend and external clients.
+- Environment variables and IAM permissions are managed per Lambda, allowing secure access to resources like DynamoDB, Stripe, and email providers.
+- This folder is the canonical source for all backend logic exposed via the Babes Club API, including authentication, cart quoting, checkout, Stripe webhooks, and future integrations.
+
+See below for specific handler descriptions, environment variable requirements, and deployment instructions.
+
 # AWS Lambda Handlers
 
 Python 3.12 Lambda handlers that back the cart quote, checkout session, and Stripe webhook APIs.
