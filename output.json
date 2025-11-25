@@ -1,1 +1,1 @@
-{"statusCode": 200, "body": "{\"status\": \"already-processed\"}"}
+{"statusCode": 404, "headers": {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type", "Access-Control-Allow-Methods": "POST,OPTIONS", "Vary": "Origin"}, "body": "{\"error\": \"Quote cache not found\"}"}

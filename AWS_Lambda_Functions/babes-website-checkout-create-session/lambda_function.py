@@ -9,7 +9,17 @@ import re
 import time
 from typing import Any, Dict, Iterable, List, Optional
 
+
 import stripe  # type: ignore[attr-defined]
+import boto3
+import uuid
+
+# Try to import Stripe customer manager from Lambda layer
+try:
+    from stripe_customer_manager import create_customer_for_checkout
+except ImportError:
+    create_customer_for_checkout = None  # Fallback if layer not present
+
 from shared_commerce import (  # type: ignore  # pylint: disable=import-error
     CORS_ALLOW_ORIGIN_ENV,
     SESSION_TTL_ENV,
@@ -359,6 +369,7 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
     if automatic_tax_override is not None:
         automatic_tax_enabled = automatic_tax_override
 
+
     customer_email = payload.get("customerEmail")
     if not isinstance(customer_email, str) or not customer_email.strip():
         customer_email = None
@@ -370,6 +381,26 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
         customer_id = None
     else:
         customer_id = customer_id.strip()
+
+    # If customerId is not provided, create/fetch Stripe customer using email and user context
+    if not customer_id and customer_email and create_customer_for_checkout:
+        # Extract userId from authorizer context if available
+        request_context = event.get("requestContext", {})
+        authorizer = request_context.get("authorizer", {})
+        user_id = authorizer.get("userId")
+        if user_id:
+            try:
+                customer_id = create_customer_for_checkout(
+                    user_id=user_id,
+                    email=customer_email,
+                    request_context=request_context
+                )
+                if customer_id:
+                    logger.info(f"Stripe customer created/fetched: {customer_id} for user {user_id}")
+            except Exception as e:
+                logger.warning(f"Stripe customer creation failed for user {user_id}: {e}")
+        else:
+            logger.warning("No userId in authorizer context; cannot create Stripe customer.")
 
     metadata = _sanitize_metadata(payload.get("metadata"))
     metadata.setdefault("quoteSignature", quote_signature)
