@@ -11,3 +11,8 @@ git push origin main
 or
 
 git push origin main --force
+
+---
+
+npm run git:commit
+git push origin jwt-auth-debug
