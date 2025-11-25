@@ -1,3 +1,4 @@
+// src/components/Dashboard/DashboardRouteGuard.tsx
 import React, {
   createContext,
   useCallback,
@@ -92,8 +93,10 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = (props) => {
   useEffect(() => {
     navigateRef.current = navigate;
   }, [navigate]);
-  // Prevent multiple simultaneous auth checks
+  // Prevent multiple simultaneous and repeated auth checks
   const isCheckingAuth = React.useRef(false);
+  // Prevent repeated state updates after logout
+  const hasCheckedRef = React.useRef(false);
   const [status, setStatus] = useState<DashboardAuthStatus>("loading");
   const [user, setUser] = useState<DashboardUserData | undefined>();
   const [error, setError] = useState<Error | undefined>();
@@ -139,7 +142,10 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = (props) => {
     window.addEventListener(SESSION_EVENTS.CLEARED, handleSessionUpdate);
 
     const loadUser = async (attempt = 1): Promise<void> => {
-      if (isCheckingAuth.current) return;
+      if (isCheckingAuth.current || hasCheckedRef.current) {
+        LOGGER.info("Skipping loadUser - already checking or checked");
+        return;
+      }
       isCheckingAuth.current = true;
       const MAX_RETRIES = 3;
       LOGGER.info("loadUser called", { attempt });
@@ -147,8 +153,6 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = (props) => {
         setLoadingPhase("session");
         setStatus("loading");
         setError(undefined);
-        isCheckingAuth.current = false;
-
         // Always re-read session from storage for latest value
         const activeSession = readStoredSession();
         LOGGER.info("activeSession", activeSession);
@@ -161,6 +165,8 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = (props) => {
               "Already unauthenticated and no session, skipping state update"
             );
             setLoadingPhase(null);
+            hasCheckedRef.current = true;
+            isCheckingAuth.current = false;
             return;
           }
           LOGGER.info("No active session, setting unauthenticated");
@@ -170,6 +176,8 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = (props) => {
             prev === "unauthenticated" ? prev : "unauthenticated"
           );
           setLoadingPhase(null);
+          hasCheckedRef.current = true;
+          isCheckingAuth.current = false;
           return;
         }
 
@@ -185,6 +193,8 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = (props) => {
         setStatus("authenticated");
         setLoadingPhase(null);
         LOGGER.info("Authenticated, user set");
+        hasCheckedRef.current = true;
+        isCheckingAuth.current = false;
       } catch (err) {
         setLoadingPhase(null);
         if (!isMounted) return;
@@ -193,6 +203,8 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = (props) => {
           LOGGER.warn("Authentication error during profile fetch", err);
           LOGGER.info("Auth error, calling logout");
           logout();
+          hasCheckedRef.current = true;
+          isCheckingAuth.current = false;
           return;
         }
         // Retryable errors - try again with exponential backoff
@@ -202,6 +214,7 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = (props) => {
             `Profile fetch failed (attempt ${attempt}/${MAX_RETRIES}), retrying in ${backoffMs}ms...`
           );
           await delay(backoffMs);
+          isCheckingAuth.current = false;
           return loadUser(attempt + 1);
         }
         // Other errors or max retries exceeded
@@ -213,6 +226,8 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = (props) => {
             : new Error("Unable to load dashboard. Please refresh the page.")
         );
         LOGGER.error("Error, set unauthenticated", err);
+        hasCheckedRef.current = true;
+        isCheckingAuth.current = false;
       }
     };
     void loadUser();

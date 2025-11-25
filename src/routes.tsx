@@ -1,6 +1,8 @@
 import { Navigate, RouteObject } from "react-router-dom";
+import DashboardRouteGuard from "@/components/Dashboard/DashboardRouteGuard";
 
 import NotFoundPage from "@/error/NotFoundPage";
+import DashboardLoginPage from "@/pages/Dashboard/DashboardLoginPage";
 import HomePage from "@/pages/HomePage";
 import ShopPage from "@/pages/ShopPage";
 import EarringsPage from "@/pages/Products/EarringsPage";
@@ -58,11 +60,7 @@ const routes: RouteObject[] = [
   },
   {
     path: "/login",
-    element: (
-      <PublicOnlyRoute>
-        <LoginPage />
-      </PublicOnlyRoute>
-    ),
+    element: <DashboardLoginPage />,
   },
   {
     path: "/signup",

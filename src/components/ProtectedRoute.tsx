@@ -27,8 +27,13 @@ export const PublicOnlyRoute: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const { isAuthenticated, isLoading } = useAuth();
+  // Show loading spinner while checking auth status
   if (isLoading) return <LoadingSpinner />;
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  // Only redirect if definitely authenticated
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  // Not authenticated or still checking - show the public page
   return <>{children}</>;
 };
 
