@@ -41,7 +41,10 @@ This Lambda handles authenticated profile updates from the React dashboard, with
 - **Entry point:** `lambda_function.lambda_handler`
 - **Event source:** API Gateway REST path `/dashboard/update-profile` (POST) with JWT authorizer attached
 - **Request body:** Partial profile payload (name, email, shipping, wallet, avatar, etc.)
-- **Response:** Updated profile document
+- **Response:**
+  - On normal update: `{ "profile": { ... } }`
+  - On email change: `{ "profile": { ... }, "accessToken": "...", "refreshToken": "...", "expiresAt": 1234567890, "emailChanged": true }`
+  - If token issuance fails: `{ "profile": { ... }, "emailChanged": true, "tokenError": "..." }`
 
 ## 🔑 Environment Variables
 
@@ -59,6 +62,31 @@ This Lambda handles authenticated profile updates from the React dashboard, with
 - Sensitive field filtering
 - OPTIONS preflight and CORS headers on all responses
 - Full execution trace in CloudWatch logs
+
+## 🖥️ Frontend Integration
+
+**Key changes for frontend:**
+
+- Use the new `updateProfile` API function to POST profile/email changes.
+- If the response includes `emailChanged: true` and new tokens, call `updateSessionTokens` to atomically update session tokens and user info.
+- If `tokenError` is present, prompt user to re-login.
+- See `frontend_integration_guide.ts.md` for full code examples (hook, session helper, and form component).
+
+**Session update logic:**
+
+```typescript
+if (
+  data.emailChanged &&
+  data.accessToken &&
+  data.refreshToken &&
+  data.expiresAt
+) {
+  updateSessionTokens(data.accessToken, data.refreshToken, data.expiresAt, {
+    email: data.profile.email,
+    displayName: data.profile.displayName,
+  });
+}
+```
 
 ## 🧪 Testing Scenarios
 
@@ -82,6 +110,16 @@ This Lambda handles authenticated profile updates from the React dashboard, with
    ```json
    { "email": "newemail@example.com" }
    ```
+   **Expected response:**
+   ```json
+   {
+     "profile": { ... },
+     "accessToken": "...",
+     "refreshToken": "...",
+     "expiresAt": 1234567890,
+     "emailChanged": true
+   }
+   ```
 4. **Email Change (No Rate Limit)**
    (change email as often as needed)
    **Expected:** 200 OK if available, 409 Conflict if already in use
@@ -100,6 +138,10 @@ This Lambda handles authenticated profile updates from the React dashboard, with
 - **No logs?** Check IAM role for CloudWatch permissions, increase Lambda timeout.
 - **Profile not found?** Verify user exists in DynamoDB and authorizer passes `userId`.
 
+- **Frontend session not updating after email change?**
+  - Ensure you are handling the new response format and calling `updateSessionTokens`.
+  - See `frontend_integration_guide.ts.md` for reference implementation.
+
 ## ✅ Verification Checklist
 
 - [ ] Lambda code deployed
@@ -111,6 +153,8 @@ This Lambda handles authenticated profile updates from the React dashboard, with
 - [ ] CloudWatch logs show "LAMBDA INVOCATION START"
 - [ ] Profile updates successfully in DynamoDB
 - [ ] UI updates with new profile data
+- [ ] Session tokens update after email change
+- [ ] User remains authenticated after email change
 - [ ] Error cases show meaningful messages
 
 ## 🔒 Required API Gateway & Auth Setup

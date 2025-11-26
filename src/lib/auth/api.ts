@@ -1,7 +1,7 @@
-import { updateStoredEmail } from "./session";
+import { updateSessionTokens } from "./session";
 /**
  * Update user profile (including email change)
- * Calls backend and updates session email if changed.
+ * Calls backend and updates session tokens if email changed.
  */
 export const updateUserProfile = async (
   token: string,
@@ -13,10 +13,23 @@ export const updateUserProfile = async (
       updates,
       { headers: { Authorization: `Bearer ${token}` } }
     );
-    const updatedProfile = response.data?.profile as AuthUser;
-    // If email changed, update session
-    if (updates.email && updatedProfile.email === updates.email) {
-      updateStoredEmail(updatedProfile.email, updatedProfile.displayName);
+    const data = response.data;
+    const updatedProfile = data?.profile as AuthUser;
+    // If email changed and new tokens issued, update session
+    if (
+      data.emailChanged &&
+      data.accessToken &&
+      data.refreshToken &&
+      data.expiresAt
+    ) {
+      updateSessionTokens(data.accessToken, data.refreshToken, data.expiresAt, {
+        email: updatedProfile.email,
+        displayName: updatedProfile.displayName,
+      });
+    } else if (data.emailChanged && data.tokenError) {
+      // Token issuance failed - user needs to re-login
+      console.warn("Email changed but token refresh failed:", data.tokenError);
+      // Optionally show a toast/alert to the user
     }
     return updatedProfile;
   } catch (error) {

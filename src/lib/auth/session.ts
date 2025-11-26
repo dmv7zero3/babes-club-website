@@ -1,29 +1,43 @@
 /**
- * Update the stored session's email and displayName after a profile update.
- * Call this after a successful profile update that changes the user's email.
+ * Updates only the tokens in the session without clearing other data.
+ * Used after email change when new tokens are issued.
  */
-export const updateStoredEmail = (
-  newEmail: string,
-  newDisplayName?: string
+export const updateSessionTokens = (
+  accessToken: string,
+  refreshToken: string,
+  expiresAt: number,
+  updatedUser?: { email?: string; displayName?: string }
 ): void => {
-  const session = readStoredSession();
-  if (!session) return;
-  const updatedSession: StoredSession = {
-    ...session,
+  const existing = readStoredSession();
+  if (!existing) {
+    log.warn("[session.ts] Cannot update tokens - no existing session");
+    return;
+  }
+
+  const updatedSession = {
+    ...existing,
+    token: accessToken,
+    refreshToken: refreshToken,
+    expiresAt: expiresAt,
     user: {
-      ...session.user,
-      email: newEmail,
-      displayName: newDisplayName ?? session.user.displayName,
+      ...existing.user,
+      ...(updatedUser?.email && { email: updatedUser.email }),
+      ...(updatedUser?.displayName && { displayName: updatedUser.displayName }),
     },
+    storedAt: Date.now(),
   };
-  const sessionStorage = getStorage(false);
-  if (sessionStorage) {
-    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(updatedSession));
+
+  // Save to sessionStorage (and localStorage if remember me was enabled)
+  sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(updatedSession));
+  const localSession = localStorage.getItem(SESSION_STORAGE_KEY);
+  if (localSession) {
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(updatedSession));
   }
-  const localStorage = getStorage(true);
-  if (localStorage && localStorage.getItem(LOCAL_STORAGE_KEY)) {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedSession));
-  }
+
+  log.debug("[session.ts] Session tokens updated", {
+    email: updatedSession.user.email,
+    expiresAt: new Date(expiresAt * 1000).toISOString(),
+  });
   window.dispatchEvent(
     new CustomEvent(SESSION_EVENTS.UPDATED, { detail: updatedSession })
   );

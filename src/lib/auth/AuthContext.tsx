@@ -1,3 +1,124 @@
+// ...existing imports...
+import { updateProfile } from "@/lib/api/updateProfile";
+import { updateSessionTokens } from "./session";
+import { useState } from "react";
+// =============================================================================
+// PART 4: useProfileUpdate hook for profile update and session refresh
+// =============================================================================
+
+export const useProfileUpdate = () => {
+  const { token, user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleUpdateProfile = async (updates: {
+    displayName?: string;
+    email?: string;
+    shippingAddress?: any;
+    phone?: string;
+    dashboardSettings?: Record<string, boolean>;
+    preferredWallet?: string;
+  }) => {
+    if (!token) {
+      setError("Not authenticated");
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await updateProfile(token, updates);
+      // If new tokens were issued, update session
+      if (
+        result.emailChanged &&
+        result.accessToken &&
+        result.refreshToken &&
+        result.expiresAt
+      ) {
+        updateSessionTokens(
+          result.accessToken,
+          result.refreshToken,
+          result.expiresAt,
+          {
+            email: result.profile.email,
+            displayName: result.profile.displayName,
+          }
+        );
+      } else if (result.emailChanged && result.tokenError) {
+        alert(
+          "Your email was updated, but we could not refresh your session. Please log out and log back in."
+        );
+      }
+      return result;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Update failed";
+      setError(message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    handleUpdateProfile,
+    isLoading,
+    error,
+  };
+};
+
+// =============================================================================
+// PART 5: Example ProfileForm component
+// =============================================================================
+
+export const ProfileForm: React.FC = () => {
+  const { user } = useAuth();
+  const { handleUpdateProfile, isLoading, error } = useProfileUpdate();
+  const [formData, setFormData] = useState({
+    displayName: user?.displayName || "",
+    email: user?.email || "",
+  });
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSuccessMessage(null);
+    try {
+      const result = await handleUpdateProfile(formData);
+      if (result?.emailChanged) {
+        setSuccessMessage(
+          "Profile and email updated successfully! Your session has been refreshed."
+        );
+      } else {
+        setSuccessMessage("Profile updated successfully!");
+      }
+    } catch {
+      // Error handled by hook
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {error && <div className="error">{error}</div>}
+      {successMessage && <div className="success">{successMessage}</div>}
+      <input
+        type="text"
+        value={formData.displayName}
+        onChange={(e) =>
+          setFormData({ ...formData, displayName: e.target.value })
+        }
+        placeholder="Display Name"
+      />
+      <input
+        type="email"
+        value={formData.email}
+        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+        placeholder="Email"
+      />
+      <button type="submit" disabled={isLoading}>
+        {isLoading ? "Saving..." : "Save Changes"}
+      </button>
+    </form>
+  );
+};
 import React, {
   createContext,
   useContext,
