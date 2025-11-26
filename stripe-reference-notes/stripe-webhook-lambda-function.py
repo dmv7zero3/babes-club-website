@@ -1,13 +1,12 @@
 """Babes Club Stripe webhook Lambda entrypoint (commerce shared layer integration).
 
 Updated: 2025-11-26 - Added order snapshot creation on checkout.session.completed
-Reviewed: 2025-11-26 - Production readiness review completed
 
 This Lambda:
 1. Verifies Stripe webhook signatures
 2. Records idempotent event markers in DynamoDB
 3. Updates session status for checkout events
-4. Creates OrderSnapshot records for completed checkouts
+4. Creates OrderSnapshot records for completed checkouts (NEW)
 """
 
 from __future__ import annotations
@@ -58,12 +57,9 @@ COMPLETION_EVENTS = {
     "checkout.session.async_payment_succeeded",
 }
 
-# Maximum time to spend on webhook processing (leave buffer for Lambda timeout)
-MAX_PROCESSING_TIME_SECONDS = 25
-
 
 # =============================================================================
-# Helper Functions
+# Helper Functions (existing)
 # =============================================================================
 
 def _redact_event(event: Dict[str, Any]) -> Dict[str, Any]:
@@ -180,9 +176,6 @@ def _extract_signature_header(event: Dict[str, Any]) -> str | None:
 
 
 def _to_plain_dict(value: Any) -> Dict[str, Any]:
-    """Safely convert Stripe objects or mappings to plain dictionaries."""
-    if value is None:
-        return {}
     if hasattr(value, "to_dict_recursive"):
         return value.to_dict_recursive()  # type: ignore[no-any-return]
     if isinstance(value, dict):
@@ -196,7 +189,6 @@ def _to_plain_dict(value: Any) -> Dict[str, Any]:
 
 
 def _summarize_event_object(data_object: Dict[str, Any]) -> Dict[str, Any]:
-    """Create a summary of the Stripe event object for logging/storage."""
     metadata_raw = data_object.get("metadata")
     metadata_summary: Dict[str, Any] = {}
     if isinstance(metadata_raw, dict):
@@ -225,7 +217,7 @@ def _summarize_event_object(data_object: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # =============================================================================
-# Order Snapshot Creation
+# NEW: Order Snapshot Creation
 # =============================================================================
 
 def _generate_order_number(stripe_session_id: str) -> str:
@@ -240,9 +232,6 @@ def _generate_order_number(stripe_session_id: str) -> str:
     suffix = stripe_session_id[-8:].upper()
     # Remove any non-alphanumeric characters
     suffix = re.sub(r"[^A-Z0-9]", "", suffix)
-    # Ensure we have at least some characters
-    if not suffix:
-        suffix = str(int(time.time()))[-8:]
     return f"BC-{suffix}"
 
 
@@ -349,25 +338,14 @@ def _create_order_snapshot(
             logger.warning("Cannot create order snapshot: no userId or customer email available")
             return None
     
-    # Sanitize user_id to prevent injection (remove special characters except @ . - _)
-    user_id = re.sub(r"[^a-zA-Z0-9@.\-_]", "", str(user_id))[:256]
-    if not user_id:
-        logger.warning("Cannot create order snapshot: user_id is empty after sanitization")
-        return None
-    
     # Generate order number
     order_number = _generate_order_number(stripe_session_id)
     
     # Fetch line items from Stripe
     line_items = _fetch_line_items_from_stripe(stripe_session_id)
     
-    # Get quote data for enrichment (non-blocking if fails)
-    quote_data = None
-    if quote_signature:
-        try:
-            quote_data = _get_quote_data(quote_signature, table)
-        except Exception as exc:
-            logger.debug("Quote data fetch failed (non-critical): %s", exc)
+    # Get quote data for enrichment
+    quote_data = _get_quote_data(quote_signature, table) if quote_signature else None
     
     # Extract pricing from quote or Stripe data
     pricing_summary = {}
@@ -385,8 +363,8 @@ def _create_order_snapshot(
         "orderNumber": order_number,
         "userId": user_id,
         "status": "completed",
-        "amount": data_object.get("amount_total") or 0,
-        "amountSubtotal": data_object.get("amount_subtotal") or 0,
+        "amount": data_object.get("amount_total", 0),
+        "amountSubtotal": data_object.get("amount_subtotal", 0),
         "currency": (data_object.get("currency") or "usd").lower(),
         "items": line_items,
         "itemCount": len(line_items),
@@ -421,7 +399,7 @@ def _create_order_snapshot(
     # Add customer phone if available
     customer_phone = customer_details.get("phone") or data_object.get("customer_phone")
     if customer_phone:
-        order_item["customerPhone"] = str(customer_phone)[:20]  # Limit phone length
+        order_item["customerPhone"] = customer_phone
     
     # Add quote reference and enrichment
     if quote_signature:
@@ -432,7 +410,7 @@ def _create_order_snapshot(
         
         # Include discount info if available
         discounts = pricing_summary.get("discounts")
-        if discounts and isinstance(discounts, list):
+        if discounts:
             total_discount = sum(
                 d.get("discountCents", 0) for d in discounts
                 if isinstance(d, dict)
@@ -475,15 +453,6 @@ def _create_order_snapshot(
 # =============================================================================
 
 def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
-    """
-    Main Lambda handler for Stripe webhook events.
-    
-    Stripe expects a 2xx response within 20 seconds, or it will retry.
-    We should return success as soon as the event is recorded to avoid
-    duplicate processing on retries.
-    """
-    start_time = time.time()
-    
     try:
         logger.debug("stripe-webhook event (redacted): %s", json.dumps(_redact_event(event)))
     except Exception:  # pragma: no cover - defensive logging only
@@ -543,15 +512,10 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
 
     table = get_commerce_table()
 
-    # Check for duplicate event (idempotency) - MUST happen early
-    try:
-        existing = table.get_item(Key={"PK": f"EVENT#{event_id}", "SK": "METADATA"}).get("Item")
-        if existing:
-            logger.info("Event %s already processed, returning cached status", event_id)
-            return _build_response(200, {"status": existing.get("status", "already-processed")}, cors_origin)
-    except Exception as exc:
-        # If we can't check idempotency, log but continue (risk of duplicate vs. lost event)
-        logger.warning("Idempotency check failed: %s", exc)
+    # Check for duplicate event (idempotency)
+    existing = table.get_item(Key={"PK": f"EVENT#{event_id}", "SK": "METADATA"}).get("Item")
+    if existing:
+        return _build_response(200, {"status": existing.get("status", "already-processed")}, cors_origin)
 
     data_object_raw = ((event_dict.get("data") or {}).get("object") or {})
     data_object = _to_plain_dict(data_object_raw)
@@ -577,14 +541,11 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
     quote_signature: str | None = None
     session_pointer: Dict[str, Any] | None = None
     if session_id:
-        try:
-            session_pointer = get_session_pointer(session_id, table=table)
-            if session_pointer:
-                quote_signature_raw = session_pointer.get("quoteSignature")
-                if isinstance(quote_signature_raw, str) and quote_signature_raw:
-                    quote_signature = quote_signature_raw
-        except Exception as exc:
-            logger.debug("Session pointer lookup failed: %s", exc)
+        session_pointer = get_session_pointer(session_id, table=table)
+        if session_pointer:
+            quote_signature_raw = session_pointer.get("quoteSignature")
+            if isinstance(quote_signature_raw, str) and quote_signature_raw:
+                quote_signature = quote_signature_raw
 
     metadata_from_event = _to_plain_dict(data_object.get("metadata")) if data_object.get("metadata") else {}
     if not quote_signature:
@@ -592,10 +553,9 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
         if isinstance(meta_quote_signature, str) and meta_quote_signature:
             quote_signature = meta_quote_signature
 
-    # Fetch additional session data from Stripe if needed (but check time)
+    # Fetch additional session data from Stripe if needed
     remote_session_data: Dict[str, Any] | None = None
-    elapsed = time.time() - start_time
-    if session_id and elapsed < MAX_PROCESSING_TIME_SECONDS and (not quote_signature or not metadata_from_event):
+    if session_id and (not quote_signature or not metadata_from_event):
         if _initialize_stripe_if_needed():
             try:
                 remote_session_obj = stripe.checkout.Session.retrieve(
@@ -649,52 +609,41 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
 
     cleaned_status_attributes = {k: v for k, v in status_attributes.items() if v is not None}
 
-    # Update session status (non-blocking)
+    # Update session status
     if quote_signature and session_id:
-        try:
-            update_session_status(
-                quote_signature,
-                session_id,
-                derived_status,
-                processed_at,
-                table=table,
-                extra_session_attributes=ensure_decimal(cleaned_status_attributes) if cleaned_status_attributes else None,
-            )
-        except Exception as exc:
-            logger.warning("Session status update failed: %s", exc)
+        update_session_status(
+            quote_signature,
+            session_id,
+            derived_status,
+            processed_at,
+            table=table,
+            extra_session_attributes=ensure_decimal(cleaned_status_attributes) if cleaned_status_attributes else None,
+        )
 
     # ==========================================================================
-    # Create order snapshot for completed checkouts
+    # NEW: Create order snapshot for completed checkouts
     # ==========================================================================
     order_snapshot = None
     if event_type in COMPLETION_EVENTS and session_id:
-        elapsed = time.time() - start_time
-        if elapsed < MAX_PROCESSING_TIME_SECONDS:
-            logger.info("Processing checkout completion for session: %s", session_id)
-            order_snapshot = _create_order_snapshot(
-                stripe_session_id=session_id,
-                data_object=data_object,
-                metadata=metadata_from_event,
-                quote_signature=quote_signature,
-                processed_at=processed_at,
-                table=table,
+        logger.info("Processing checkout completion for session: %s", session_id)
+        order_snapshot = _create_order_snapshot(
+            stripe_session_id=session_id,
+            data_object=data_object,
+            metadata=metadata_from_event,
+            quote_signature=quote_signature,
+            processed_at=processed_at,
+            table=table,
+        )
+        if order_snapshot:
+            logger.info(
+                "Order snapshot created successfully: orderNumber=%s orderId=%s",
+                order_snapshot.get("orderNumber"),
+                order_snapshot.get("orderId")
             )
-            if order_snapshot:
-                logger.info(
-                    "Order snapshot created successfully: orderNumber=%s orderId=%s",
-                    order_snapshot.get("orderNumber"),
-                    order_snapshot.get("orderId")
-                )
-            else:
-                logger.warning("Failed to create order snapshot for session: %s", session_id)
         else:
-            logger.warning(
-                "Skipping order snapshot due to time constraints: elapsed=%.2fs, session=%s",
-                elapsed,
-                session_id
-            )
+            logger.warning("Failed to create order snapshot for session: %s", session_id)
 
-    # Record event for idempotency (MUST succeed for proper idempotency)
+    # Record event for idempotency
     event_item = ensure_decimal(
         {
             "PK": f"EVENT#{event_id}",
@@ -707,19 +656,13 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
             "expiresAt": expires_at,
             "stripeSummary": _summarize_event_object(data_object),
             "signatureVerified": True,
-            # Track order creation
+            # NEW: Track order creation
             "orderCreated": order_snapshot is not None,
             "orderNumber": order_snapshot.get("orderNumber") if order_snapshot else None,
         }
     )
 
-    try:
-        record_event(event_item, table=table)
-    except Exception as exc:
-        # Critical: If we can't record the event, we risk duplicate processing
-        logger.error("CRITICAL: Failed to record event %s: %s", event_id, exc)
-        # Still return 200 to prevent Stripe retries, but log prominently
-        # The nightly sync will catch any missed orders
+    record_event(event_item, table=table)
 
     # Build response
     response_payload: Dict[str, Any] = {
@@ -732,14 +675,5 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
     if order_snapshot:
         response_payload["orderNumber"] = order_snapshot.get("orderNumber")
         response_payload["orderId"] = order_snapshot.get("orderId")
-
-    elapsed_total = time.time() - start_time
-    logger.info(
-        "Webhook processed: eventId=%s type=%s status=%s elapsed=%.2fs",
-        event_id,
-        event_type,
-        derived_status,
-        elapsed_total
-    )
 
     return _build_response(200, response_payload, cors_origin)
