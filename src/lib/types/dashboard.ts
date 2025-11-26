@@ -14,12 +14,23 @@ export interface DashboardProfile {
   displayName: string;
   email: string;
   shippingAddress: DashboardAddress;
+  billingAddress?: DashboardAddress;
   preferredWallet?: string;
   avatarUrl?: string;
   stripeCustomerId?: string;
   dashboardSettings?: Record<string, unknown>;
   updatedAt: string;
   category: DashboardUserCategory;
+}
+
+export interface ProfileUpdatePayload {
+  displayName?: string;
+  email?: string;
+  phone?: string;
+  shippingAddress?: DashboardAddress;
+  billingAddress?: DashboardAddress;
+  dashboardSettings?: Record<string, unknown>;
+  preferredWallet?: string;
 }
 
 export interface DashboardOrderItem {

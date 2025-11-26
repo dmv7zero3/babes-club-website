@@ -39,31 +39,63 @@ const buildAuthHeaders = (token: string) => ({
   },
 });
 
-const normalizeAddress = (
-  address?: Partial<DashboardAddress>
-): DashboardAddress => ({
-  line1: address?.line1 ?? "",
-  city: address?.city ?? "",
-  state: address?.state ?? "",
-  postalCode: address?.postalCode ?? "",
-  country: address?.country ?? "US",
-  line2: address?.line2,
-});
+const safeString = (value: unknown, fallback = ""): string => {
+  if (typeof value === "string") return value;
+  if (typeof value === "number") return String(value);
+  if (value === null || value === undefined) return fallback;
+  return fallback;
+};
+
+const isAddressObject = (value: unknown): value is Record<string, unknown> => {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+};
+
+const normalizeAddress = (address?: unknown): DashboardAddress => {
+  if (!isAddressObject(address)) {
+    return {
+      line1: "",
+      city: "",
+      state: "",
+      postalCode: "",
+      country: "",
+      line2: "",
+    };
+  }
+  return {
+    line1: safeString(address.line1, ""),
+    city: safeString(address.city, ""),
+    state: safeString(address.state, ""),
+    postalCode: safeString(address.postalCode, ""),
+    country: safeString(address.country, ""),
+    line2: safeString(address.line2, ""),
+  };
+};
 
 const normalizeProfile = (
-  profile?: Partial<DashboardProfile>
-): DashboardProfile => ({
-  userId: profile?.userId ?? "anonymous",
-  displayName: profile?.displayName ?? "Babes Club Member",
-  email: profile?.email ?? "member@example.com",
-  shippingAddress: normalizeAddress(profile?.shippingAddress),
-  preferredWallet: profile?.preferredWallet,
-  avatarUrl: profile?.avatarUrl,
-  stripeCustomerId: profile?.stripeCustomerId,
-  dashboardSettings: profile?.dashboardSettings ?? {},
-  updatedAt: profile?.updatedAt ?? new Date().toISOString(),
-  category: profile?.category ?? "Member",
-});
+  profile?: Partial<DashboardProfile> | null
+): DashboardProfile => {
+  const shippingAddress = normalizeAddress(profile?.shippingAddress);
+  let billingAddress: DashboardAddress | undefined;
+  if (
+    profile?.billingAddress !== undefined &&
+    profile?.billingAddress !== null
+  ) {
+    billingAddress = normalizeAddress(profile.billingAddress);
+  }
+  return {
+    userId: profile?.userId ?? "anonymous",
+    displayName: profile?.displayName ?? "Babes Club Member",
+    email: profile?.email ?? "member@example.com",
+    shippingAddress,
+    billingAddress,
+    preferredWallet: profile?.preferredWallet,
+    avatarUrl: profile?.avatarUrl,
+    stripeCustomerId: profile?.stripeCustomerId,
+    dashboardSettings: profile?.dashboardSettings ?? {},
+    updatedAt: profile?.updatedAt ?? new Date().toISOString(),
+    category: profile?.category ?? "Member",
+  };
+};
 
 const normalizeOrder = (
   order: Record<string, any> | undefined,
@@ -163,13 +195,22 @@ export const fetchDashboardSnapshot = async (
 
 export const updateDashboardProfile = async (
   token: string,
-  fields: Partial<DashboardProfile>
+  payload: Partial<DashboardProfile>
 ): Promise<DashboardProfile> => {
+  // Normalize payload before sending
+  const normalizedPayload = {
+    ...payload,
+    shippingAddress: payload.shippingAddress
+      ? normalizeAddress(payload.shippingAddress)
+      : undefined,
+    billingAddress: payload.billingAddress
+      ? normalizeAddress(payload.billingAddress)
+      : undefined,
+  };
   const { data } = await apiClient.post<DashboardProfileResponse>(
     "/dashboard/update-profile",
-    fields,
+    normalizedPayload,
     buildAuthHeaders(token)
   );
-
   return normalizeProfile(data.profile);
 };

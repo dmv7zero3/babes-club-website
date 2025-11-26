@@ -137,6 +137,28 @@ const ProfileOverviewCard = () => {
         <pre className="mt-2 text-sm whitespace-pre-line text-neutral-700">
           {formatAddress(profile.shippingAddress)}
         </pre>
+
+        {/* Billing Address Section */}
+        <h4 className="mt-6 text-sm font-semibold tracking-wide uppercase text-neutral-500">
+          Billing Address
+        </h4>
+        {!profile.billingAddress ||
+        (profile.billingAddress.line1 === profile.shippingAddress?.line1 &&
+          profile.billingAddress.line2 === profile.shippingAddress?.line2 &&
+          profile.billingAddress.city === profile.shippingAddress?.city &&
+          profile.billingAddress.state === profile.shippingAddress?.state &&
+          profile.billingAddress.postalCode ===
+            profile.shippingAddress?.postalCode &&
+          profile.billingAddress.country ===
+            profile.shippingAddress?.country) ? (
+          <span className="inline-flex items-center px-2 py-1 mt-2 text-xs font-semibold text-green-700 bg-green-50 rounded">
+            Same as shipping
+          </span>
+        ) : (
+          <pre className="mt-2 text-sm whitespace-pre-line text-neutral-700">
+            {formatAddress(profile.billingAddress)}
+          </pre>
+        )}
         <dl className="grid grid-cols-1 gap-4 mt-6 text-sm text-neutral-600 md:grid-cols-2">
           <div className="flex flex-col gap-1">
             <span className="text-xs tracking-wide uppercase text-neutral-400">
