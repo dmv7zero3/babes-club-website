@@ -1,3 +1,12 @@
+// Payload for updating user profile (dashboard)
+export interface ProfileUpdatePayload {
+  email?: string;
+  displayName?: string;
+  phone?: string;
+  shippingAddress?: Record<string, any>;
+  dashboardSettings?: Record<string, any>;
+  preferredWallet?: string;
+}
 // TypeScript type definitions for authentication system
 export interface AuthUser {
   userId: string;

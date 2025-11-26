@@ -54,7 +54,7 @@ This Lambda handles authenticated profile updates from the React dashboard, with
 ## 🛠️ Features
 
 - Update allowed fields: `displayName`, `phone`, `shippingAddress`, `dashboardSettings`, `preferredWallet`
-- Email change with 4-day rate limit and availability check
+- Email change with immediate update and availability check (no rate limit)
 - Atomic DynamoDB transactions
 - Sensitive field filtering
 - OPTIONS preflight and CORS headers on all responses
@@ -82,9 +82,9 @@ This Lambda handles authenticated profile updates from the React dashboard, with
    ```json
    { "email": "newemail@example.com" }
    ```
-4. **Email Change (Rate Limited)**
-   (within 4 days of previous change)
-   **Expected:** 429 Too Many Requests
+4. **Email Change (No Rate Limit)**
+   (change email as often as needed)
+   **Expected:** 200 OK if available, 409 Conflict if already in use
 5. **Email Already in Use**
    **Expected:** 409 Conflict
 6. **No Fields to Update**

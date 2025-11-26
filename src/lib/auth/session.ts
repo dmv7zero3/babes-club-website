@@ -1,3 +1,33 @@
+/**
+ * Update the stored session's email and displayName after a profile update.
+ * Call this after a successful profile update that changes the user's email.
+ */
+export const updateStoredEmail = (
+  newEmail: string,
+  newDisplayName?: string
+): void => {
+  const session = readStoredSession();
+  if (!session) return;
+  const updatedSession: StoredSession = {
+    ...session,
+    user: {
+      ...session.user,
+      email: newEmail,
+      displayName: newDisplayName ?? session.user.displayName,
+    },
+  };
+  const sessionStorage = getStorage(false);
+  if (sessionStorage) {
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(updatedSession));
+  }
+  const localStorage = getStorage(true);
+  if (localStorage && localStorage.getItem(LOCAL_STORAGE_KEY)) {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedSession));
+  }
+  window.dispatchEvent(
+    new CustomEvent(SESSION_EVENTS.UPDATED, { detail: updatedSession })
+  );
+};
 // Unified session event constants
 export const SESSION_EVENTS = {
   UPDATED: "babes.dashboard.session.updated",

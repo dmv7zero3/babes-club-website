@@ -54,13 +54,7 @@ const DashboardLayout = ({
           <p className="text-sm text-neutral-500">
             {error?.message ?? "Something went wrong loading the dashboard."}
           </p>
-          <button
-            type="button"
-            onClick={refresh}
-            className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
-          >
-            Try again
-          </button>
+          {/* Refresh button removed */}
         </div>
       );
     }
@@ -120,14 +114,7 @@ const DashboardLayout = ({
             ) : null}
           </div>
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={refresh}
-              className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
-              disabled={status === "loading"}
-            >
-              Refresh
-            </button>
+            {/* Refresh button removed */}
             {headerActions}
           </div>
         </header>

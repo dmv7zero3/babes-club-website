@@ -302,14 +302,6 @@ const ProfileEditForm = () => {
 
       <div className="flex items-center justify-end gap-3">
         <button
-          type="button"
-          onClick={() => setFormState(initialState)}
-          className="px-4 py-2 text-sm font-medium border rounded-md border-neutral-300 text-neutral-700 hover:bg-neutral-100"
-          disabled={isSaving}
-        >
-          Reset
-        </button>
-        <button
           type="submit"
           className="px-4 py-2 text-sm font-semibold text-white bg-black rounded-md hover:bg-neutral-800 disabled:opacity-60"
           disabled={isSaving}

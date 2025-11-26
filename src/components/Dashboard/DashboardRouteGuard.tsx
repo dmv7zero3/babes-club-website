@@ -348,9 +348,18 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = (props) => {
   }
 
   if (status === "unauthenticated" && error) {
+    // <DashboardErrorFallback error={error} onRetry={reload} /> is commented out to disable the Refresh button for now
     return (
       <DashboardAuthContext.Provider value={contextValue}>
-        <DashboardErrorFallback error={error} onRetry={reload} />
+        {/* <DashboardErrorFallback error={error} onRetry={reload} /> */}
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="space-y-4 text-center">
+            <div className="inline-block w-8 h-8 border-4 border-solid rounded-full animate-spin border-cotton-candy border-r-transparent"></div>
+            <p className="text-sm text-neutral-400">
+              Unable to load dashboard. Please try again later.
+            </p>
+          </div>
+        </div>
       </DashboardAuthContext.Provider>
     );
   }

@@ -1,3 +1,28 @@
+import { updateStoredEmail } from "./session";
+/**
+ * Update user profile (including email change)
+ * Calls backend and updates session email if changed.
+ */
+export const updateUserProfile = async (
+  token: string,
+  updates: Partial<AuthUser> & { email?: string; displayName?: string }
+): Promise<AuthUser> => {
+  try {
+    const response = await authClient.post(
+      "/dashboard/update-profile",
+      updates,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const updatedProfile = response.data?.profile as AuthUser;
+    // If email changed, update session
+    if (updates.email && updatedProfile.email === updates.email) {
+      updateStoredEmail(updatedProfile.email, updatedProfile.displayName);
+    }
+    return updatedProfile;
+  } catch (error) {
+    throw transformError(error);
+  }
+};
 /**
  * Authentication API Client for The Babes Club
  *
