@@ -1,4 +1,10 @@
-// src/components/Dashboard/DashboardRouteGuard.tsx
+/**
+ * Dashboard Route Guard for The Babes Club
+ *
+ * Provides authentication context and loading states for dashboard pages.
+ * Uses the branded ChronicLeafIcon loading component.
+ */
+
 import React, {
   createContext,
   useCallback,
@@ -6,68 +12,161 @@ import React, {
   useEffect,
   useMemo,
   useState,
-  ReactNode,
+  type ReactNode,
 } from "react";
-// Fix 1.4: Retry logic helpers
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const LOGGER = {
-  info: (...args: any[]) => console.info("[DashboardRouteGuard]", ...args),
-  warn: (...args: any[]) => console.warn("[DashboardRouteGuard]", ...args),
-  error: (...args: any[]) => console.error("[DashboardRouteGuard]", ...args),
-};
-
-const isRetryableError = (error: unknown): boolean => {
-  if (!error) return false;
-  const maybeAxios = error as any;
-  const status = maybeAxios?.response?.status;
-  return (
-    !maybeAxios?.response || // Network error
-    status === 408 || // Timeout
-    status === 429 || // Rate limit
-    (status >= 500 && status < 600) // Server errors
-  );
-};
-import DashboardErrorFallback from "./DashboardErrorFallback";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import type { AxiosError } from "axios";
-import { fetchDashboardSnapshot } from "@/lib/dashboard/api";
 import {
-  clearSession,
   readStoredSession,
+  clearSession,
   type StoredDashboardSession,
-  SESSION_EVENTS,
-} from "@/lib/auth/session";
-import type { DashboardUserData } from "@/lib/types/dashboard";
+} from "@/lib/dashboard/session";
+import { fetchDashboardProfile } from "@/lib/dashboard/api";
+import { ChronicLeafIcon } from "@/components/LoadingIcon";
 
-export const DASHBOARD_USER_STORAGE_KEY = "babes.dashboard.session";
+// ============================================================================
+// Types
+// ============================================================================
 
-type DashboardAuthStatus = "loading" | "authenticated" | "unauthenticated";
+export type DashboardAuthStatus =
+  | "loading"
+  | "authenticated"
+  | "unauthenticated";
 
-interface DashboardAuthContextValue {
+export interface DashboardUserData {
+  userId: string;
+  email: string;
+  displayName: string;
+  category?: string;
+}
+
+export interface DashboardAuthContextValue {
   status: DashboardAuthStatus;
   user?: DashboardUserData;
   error?: Error;
-  token?: string;
   reload: () => void;
   logout: () => void;
+  token?: string;
 }
+
+type LoadingPhase = "session" | "profile" | "data" | null;
+
+// ============================================================================
+// Context
+// ============================================================================
 
 const DashboardAuthContext = createContext<DashboardAuthContextValue | null>(
   null
 );
 
 export const useDashboardAuth = (): DashboardAuthContextValue => {
-  const context = useContext(DashboardAuthContext);
-
-  if (!context) {
+  const ctx = useContext(DashboardAuthContext);
+  if (!ctx) {
     throw new Error(
-      "useDashboardAuth must be used within a DashboardRouteGuard."
+      "useDashboardAuth must be used within a DashboardRouteGuard"
     );
   }
-
-  return context;
+  return ctx;
 };
+
+// ============================================================================
+// Loading Component
+// ============================================================================
+
+interface DashboardLoadingProps {
+  phase?: LoadingPhase;
+}
+
+/**
+ * Branded loading screen for dashboard with phase-specific messages.
+ */
+const DashboardLoading: React.FC<DashboardLoadingProps> = ({ phase }) => {
+  const getMessage = () => {
+    switch (phase) {
+      case "session":
+        return "Checking authentication...";
+      case "profile":
+        return "Loading your profile...";
+      case "data":
+        return "Fetching dashboard data...";
+      default:
+        return "Loading dashboard...";
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#0d0d0d]">
+      <ChronicLeafIcon
+        size={72}
+        label={getMessage()}
+        showLabel={true}
+        enableRotation={true}
+        enableGlow={true}
+      />
+    </div>
+  );
+};
+
+// ============================================================================
+// Error Fallback Component
+// ============================================================================
+
+interface DashboardErrorFallbackProps {
+  error: Error;
+  onRetry?: () => void;
+}
+
+const DashboardErrorFallback: React.FC<DashboardErrorFallbackProps> = ({
+  error,
+  onRetry,
+}) => (
+  <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#0d0d0d] px-4 text-center">
+    <ChronicLeafIcon
+      size={56}
+      showLabel={false}
+      enableRotation={false}
+      enableGlow={true}
+      colors={["#fca5a5", "#f87171", "#ef4444"]}
+    />
+    <div className="space-y-2">
+      <p className="text-sm text-white/70">
+        Unable to load dashboard. Please try again later.
+      </p>
+      {error.message && (
+        <p className="text-xs text-white/40">{error.message}</p>
+      )}
+    </div>
+    {onRetry && (
+      <button
+        onClick={onRetry}
+        className="px-6 py-2 text-sm font-medium text-white transition-colors rounded-lg bg-babe-pink hover:bg-babe-pink-600"
+      >
+        Try Again
+      </button>
+    )}
+  </div>
+);
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+const SESSION_CHECK_RETRIES = 3;
+const SESSION_CHECK_DELAY_MS = 100;
+const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+
+// Simple logger
+const LOGGER = {
+  info: (msg: string, data?: unknown) =>
+    console.log(`[DashboardAuth] ${msg}`, data ?? ""),
+  debug: (msg: string, data?: unknown) =>
+    console.debug(`[DashboardAuth] ${msg}`, data ?? ""),
+  error: (msg: string, data?: unknown) =>
+    console.error(`[DashboardAuth] ${msg}`, data ?? ""),
+};
+
+// ============================================================================
+// Route Guard Component
+// ============================================================================
 
 interface DashboardRouteGuardProps {
   children: ReactNode;
@@ -75,169 +174,167 @@ interface DashboardRouteGuardProps {
   loading?: ReactNode;
 }
 
-const isAuthError = (error: unknown): boolean => {
-  if (!error) {
-    return false;
-  }
-
-  const maybeAxios = error as AxiosError;
-  const status = maybeAxios?.response?.status;
-  return status === 401 || status === 403;
-};
-
-const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = (props) => {
-  const { children, fallback, loading } = props;
-  // Stable navigation ref for useEffect
-  const navigate = useNavigate();
-  const navigateRef = React.useRef(navigate);
-  useEffect(() => {
-    navigateRef.current = navigate;
-  }, [navigate]);
-  // Prevent multiple simultaneous and repeated auth checks
-  const isCheckingAuth = React.useRef(false);
-  // Prevent repeated state updates after logout
-  const hasCheckedRef = React.useRef(false);
+const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = ({
+  children,
+  fallback,
+  loading,
+}) => {
   const [status, setStatus] = useState<DashboardAuthStatus>("loading");
   const [user, setUser] = useState<DashboardUserData | undefined>();
   const [error, setError] = useState<Error | undefined>();
-  const [session, setSession] = useState<StoredDashboardSession | null>(() =>
-    readStoredSession()
-  );
-  const [loadingPhase, setLoadingPhase] = useState<
-    "session" | "profile" | "data" | null
-  >(null);
-
-  // Stable reload flag
+  const [session, setSession] = useState<StoredDashboardSession | null>(null);
+  const [loadingPhase, setLoadingPhase] = useState<LoadingPhase>("session");
   const [reloadFlag, setReloadFlag] = useState(0);
+
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const reload = useCallback(() => {
     setReloadFlag((value) => value + 1);
   }, []);
 
   const logout = useCallback(() => {
+    LOGGER.info("Logging out user");
     clearSession();
     setSession(null);
     setUser(undefined);
-    setStatus((prev) =>
-      prev === "unauthenticated" ? prev : "unauthenticated"
-    );
+    setStatus("unauthenticated");
   }, []);
 
-  useEffect(() => {
-    LOGGER.info("[DashboardRouteGuard] useEffect triggered", { reloadFlag });
-    let isMounted = true;
+  /**
+   * Read session with retry logic
+   */
+  const readSessionWithRetry =
+    useCallback(async (): Promise<StoredDashboardSession | null> => {
+      for (let attempt = 1; attempt <= SESSION_CHECK_RETRIES; attempt++) {
+        const storedSession = readStoredSession();
 
-    // Listen for custom session change events to trigger reload only if session state changed
-    const handleSessionUpdate = () => {
-      const currentSession = readStoredSession();
-      // Only reload if session changed (null <-> not null, or token changed)
-      if (
-        (!currentSession && session !== null) ||
-        (currentSession && (!session || currentSession.token !== session.token))
-      ) {
-        reload();
+        if (storedSession && storedSession.token) {
+          LOGGER.debug(`Session found on attempt ${attempt}`);
+          return storedSession;
+        }
+
+        if (attempt < SESSION_CHECK_RETRIES) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, SESSION_CHECK_DELAY_MS)
+          );
+        }
+      }
+
+      LOGGER.debug("No session found after retries");
+      return null;
+    }, []);
+
+  /**
+   * Main authentication effect
+   */
+  useEffect(() => {
+    let cancelled = false;
+
+    const authenticate = async () => {
+      try {
+        setStatus("loading");
+        setLoadingPhase("session");
+        setError(undefined);
+
+        // Step 1: Read session
+        const storedSession = await readSessionWithRetry();
+
+        if (cancelled) return;
+
+        if (!storedSession || !storedSession.token) {
+          LOGGER.info("No valid session found");
+          setStatus("unauthenticated");
+          return;
+        }
+
+        // Check token expiry
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        if (storedSession.expiresAt && storedSession.expiresAt <= nowSeconds) {
+          LOGGER.info("Session expired");
+          clearSession();
+          setStatus("unauthenticated");
+          return;
+        }
+
+        setSession(storedSession);
+        setLoadingPhase("profile");
+
+        // Step 2: Fetch profile
+        const profile = await fetchDashboardProfile(storedSession.token);
+
+        if (cancelled) return;
+
+        setUser({
+          userId: profile.userId,
+          email: profile.email,
+          displayName: profile.displayName,
+          category: profile.category,
+        });
+
+        setLoadingPhase("data");
+        setStatus("authenticated");
+        LOGGER.info("Authentication successful", { userId: profile.userId });
+      } catch (err) {
+        if (cancelled) return;
+
+        const error = err instanceof Error ? err : new Error("Unknown error");
+        LOGGER.error("Authentication failed", error);
+        setError(error);
+        setStatus("unauthenticated");
       }
     };
-    window.addEventListener(SESSION_EVENTS.UPDATED, handleSessionUpdate);
-    window.addEventListener(SESSION_EVENTS.CLEARED, handleSessionUpdate);
 
-    const loadUser = async (attempt = 1): Promise<void> => {
-      if (isCheckingAuth.current || hasCheckedRef.current) {
-        LOGGER.info("Skipping loadUser - already checking or checked");
+    authenticate();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadFlag, readSessionWithRetry]);
+
+  /**
+   * Inactivity timeout
+   */
+  useEffect(() => {
+    if (status !== "authenticated") return;
+
+    let timer: NodeJS.Timeout | undefined;
+
+    const resetTimer = () => {
+      if (timer) clearTimeout(timer);
+
+      const stored = readStoredSession();
+      const nowSeconds = Math.floor(Date.now() / 1000);
+
+      const timeUntilExpiryMs = stored?.expiresAt
+        ? (stored.expiresAt - nowSeconds) * 1000
+        : INACTIVITY_TIMEOUT_MS;
+
+      const timeout = Math.min(timeUntilExpiryMs, INACTIVITY_TIMEOUT_MS);
+
+      if (timeout <= 0) {
+        LOGGER.info("Session expired, logging out");
+        logout();
         return;
       }
-      isCheckingAuth.current = true;
-      const MAX_RETRIES = 3;
-      LOGGER.info("loadUser called", { attempt });
-      try {
-        setLoadingPhase("session");
-        setStatus("loading");
-        setError(undefined);
-        // Always re-read session from storage for latest value
-        const activeSession = readStoredSession();
-        LOGGER.info("activeSession", activeSession);
 
-        if (!activeSession || !activeSession.token) {
-          if (!isMounted) return;
-          // Prevent redundant state updates if already unauthenticated and session is null
-          if (status === "unauthenticated" && session === null) {
-            LOGGER.info(
-              "Already unauthenticated and no session, skipping state update"
-            );
-            setLoadingPhase(null);
-            hasCheckedRef.current = true;
-            isCheckingAuth.current = false;
-            return;
-          }
-          LOGGER.info("No active session, setting unauthenticated");
-          setSession(null);
-          setUser(undefined);
-          setStatus((prev) =>
-            prev === "unauthenticated" ? prev : "unauthenticated"
-          );
-          setLoadingPhase(null);
-          hasCheckedRef.current = true;
-          isCheckingAuth.current = false;
-          return;
-        }
-
-        if (!isMounted) return;
-        setSession(activeSession);
-        setLoadingPhase("profile");
-        // Fetch dashboard snapshot with retry logic
-        const snapshot = await fetchDashboardSnapshot(activeSession.token);
-        LOGGER.info("dashboard snapshot", snapshot);
-        if (!isMounted) return;
-        setLoadingPhase("data");
-        setUser(snapshot);
-        setStatus("authenticated");
-        setLoadingPhase(null);
-        LOGGER.info("Authenticated, user set");
-        hasCheckedRef.current = true;
-        isCheckingAuth.current = false;
-      } catch (err) {
-        setLoadingPhase(null);
-        if (!isMounted) return;
-        // Auth errors (401/403) - logout immediately
-        if (isAuthError(err)) {
-          LOGGER.warn("Authentication error during profile fetch", err);
-          LOGGER.info("Auth error, calling logout");
-          logout();
-          hasCheckedRef.current = true;
-          isCheckingAuth.current = false;
-          return;
-        }
-        // Retryable errors - try again with exponential backoff
-        if (isRetryableError(err) && attempt < MAX_RETRIES) {
-          const backoffMs = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
-          LOGGER.info(
-            `Profile fetch failed (attempt ${attempt}/${MAX_RETRIES}), retrying in ${backoffMs}ms...`
-          );
-          await delay(backoffMs);
-          isCheckingAuth.current = false;
-          return loadUser(attempt + 1);
-        }
-        // Other errors or max retries exceeded
-        setStatus("unauthenticated");
-        setUser(undefined);
-        setError(
-          err instanceof Error
-            ? err
-            : new Error("Unable to load dashboard. Please refresh the page.")
-        );
-        LOGGER.error("Error, set unauthenticated", err);
-        hasCheckedRef.current = true;
-        isCheckingAuth.current = false;
-      }
+      timer = setTimeout(() => {
+        LOGGER.info("Inactivity timeout reached, logging out");
+        logout();
+      }, timeout);
     };
-    void loadUser();
+
+    const events = ["mousedown", "keydown", "scroll", "touchstart"];
+    events.forEach((event) => window.addEventListener(event, resetTimer));
+    resetTimer();
+
     return () => {
-      isMounted = false;
-      window.removeEventListener(SESSION_EVENTS.UPDATED, handleSessionUpdate);
-      window.removeEventListener(SESSION_EVENTS.CLEARED, handleSessionUpdate);
+      if (timer) clearTimeout(timer);
+      events.forEach((event) => window.removeEventListener(event, resetTimer));
     };
-  }, [reloadFlag]);
+  }, [status, logout]);
 
+  // Context value
   const contextValue = useMemo<DashboardAuthContextValue>(
     () => ({
       status,
@@ -249,93 +346,13 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = (props) => {
     }),
     [status, user, error, reload, logout, session?.token]
   );
-  // Auto-logout after a period of inactivity (client-side). This is a UX
-  // convenience; for strict security you should also revoke sessions server-side.
-  const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
-  useEffect(() => {
-    if (status !== "authenticated") {
-      return undefined;
-    }
-
-    let timer: ReturnType<typeof setTimeout> | null = null;
-
-    const resetTimer = () => {
-      if (timer) {
-        clearTimeout(timer);
-      }
-
-      // Calculate timeout considering both inactivity AND token expiry
-      const stored = readStoredSession();
-      if (!stored) {
-        logout();
-        return;
-      }
-
-      const nowSeconds = Math.floor(Date.now() / 1000);
-      const timeUntilExpiryMs = stored.expiresAt
-        ? Math.max(0, (stored.expiresAt - nowSeconds) * 1000)
-        : INACTIVITY_TIMEOUT_MS;
-
-      // Use the shorter of: inactivity timeout or time until token expires
-      const actualTimeoutMs = Math.min(
-        INACTIVITY_TIMEOUT_MS,
-        timeUntilExpiryMs
-      );
-
-      if (actualTimeoutMs <= 0) {
-        // Token already expired
-        logout();
-        try {
-          navigateRef.current("/login", { replace: true });
-        } catch (e) {
-          // ignore navigation errors
-        }
-        return;
-      }
-
-      LOGGER.info(`Setting inactivity timer for ${actualTimeoutMs}ms`);
-
-      timer = setTimeout(() => {
-        LOGGER.info("Inactivity timeout or token expiry reached - logging out");
-        logout();
-        try {
-          navigateRef.current("/login", { replace: true });
-        } catch (e) {
-          // ignore navigation errors
-        }
-      }, actualTimeoutMs);
-    };
-
-    const events = ["mousemove", "keydown", "click", "touchstart"];
-    events.forEach((ev) => window.addEventListener(ev, resetTimer));
-
-    resetTimer();
-
-    return () => {
-      if (timer) {
-        clearTimeout(timer);
-      }
-      events.forEach((ev) => window.removeEventListener(ev, resetTimer));
-    };
-  }, [status, logout]);
-
-  const location = useLocation();
+  // ============================================================================
+  // Render Logic
+  // ============================================================================
 
   if (status === "loading") {
-    const loadingContent = loading ?? (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="space-y-4 text-center">
-          <div className="inline-block w-8 h-8 border-4 border-solid rounded-full animate-spin border-cotton-candy border-r-transparent"></div>
-          <p className="text-sm text-neutral-400">
-            {loadingPhase === "session" && "Checking authentication..."}
-            {loadingPhase === "profile" && "Loading your profile..."}
-            {loadingPhase === "data" && "Fetching dashboard data..."}
-            {!loadingPhase && "Loading dashboard..."}
-          </p>
-        </div>
-      </div>
-    );
+    const loadingContent = loading ?? <DashboardLoading phase={loadingPhase} />;
     return <>{loadingContent}</>;
   }
 
@@ -348,33 +365,29 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = (props) => {
   }
 
   if (status === "unauthenticated" && error) {
-    // <DashboardErrorFallback error={error} onRetry={reload} /> is commented out to disable the Refresh button for now
     return (
       <DashboardAuthContext.Provider value={contextValue}>
-        {/* <DashboardErrorFallback error={error} onRetry={reload} /> */}
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="space-y-4 text-center">
-            <div className="inline-block w-8 h-8 border-4 border-solid rounded-full animate-spin border-cotton-candy border-r-transparent"></div>
-            <p className="text-sm text-neutral-400">
-              Unable to load dashboard. Please try again later.
-            </p>
-          </div>
-        </div>
+        <DashboardErrorFallback error={error} onRetry={reload} />
       </DashboardAuthContext.Provider>
     );
   }
 
-  // Allow the login page to render the fallback (login form) without
-  // redirecting back to `/login` (which would cause a loop). For any other
-  // path, redirect unauthenticated users to `/login`.
+  // For login page, render fallback (login form) without redirect
   if (location.pathname === "/login") {
     return (
       <DashboardAuthContext.Provider value={contextValue}>
-        {fallback ?? <div>Unable to load dashboard user.</div>}
+        {fallback ?? (
+          <div className="flex items-center justify-center min-h-screen">
+            <p className="text-sm text-neutral-400">
+              Unable to load dashboard user.
+            </p>
+          </div>
+        )}
       </DashboardAuthContext.Provider>
     );
   }
 
+  // Redirect unauthenticated users to login
   return (
     <DashboardAuthContext.Provider value={contextValue}>
       <Navigate to="/login" replace />
