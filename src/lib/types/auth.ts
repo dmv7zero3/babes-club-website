@@ -119,4 +119,5 @@ export type AuthErrorCode =
   | "RATE_LIMITED"
   | "NETWORK_ERROR"
   | "SERVER_ERROR"
-  | "UNKNOWN_ERROR";
+  | "UNKNOWN_ERROR"
+  | string;

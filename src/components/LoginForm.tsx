@@ -2,31 +2,36 @@
  * Login Form Component for The Babes Club
  *
  * A polished, branded login interface with form validation,
- * loading states, and error handling.
+ * password visibility toggle, loading states, and error handling.
  */
 
-import React, { useState, useCallback, useMemo, type FormEvent } from "react";
+import React, {
+  useState,
+  useCallback,
+  type FormEvent,
+  type CSSProperties,
+} from "react";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useAuth, isValidEmail } from "../lib/auth";
-import { InlineSpinner } from "./LoadingIcon";
 
 // ============================================================================
 // Styles
 // ============================================================================
 
-const styles = {
+const styles: Record<string, CSSProperties> = {
   container: {
     minHeight: "100vh",
     display: "flex",
-    flexDirection: "column" as const,
+    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    padding: "2rem 1rem",
+    padding: "3rem 1rem",
     background:
       "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0d0d0d 100%)",
   },
   card: {
     width: "100%",
-    maxWidth: "400px",
+    maxWidth: "420px",
     padding: "2.5rem",
     borderRadius: "24px",
     background: "rgba(26, 26, 26, 0.8)",
@@ -35,19 +40,19 @@ const styles = {
     boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
   },
   header: {
-    textAlign: "center" as const,
+    textAlign: "center",
     marginBottom: "2rem",
   },
   brand: {
     fontSize: "0.7rem",
     letterSpacing: "0.35em",
-    textTransform: "uppercase" as const,
+    textTransform: "uppercase",
     color: "#FFB6C1",
     marginBottom: "0.75rem",
     fontWeight: 500,
   },
   title: {
-    fontSize: "1.75rem",
+    fontSize: "1.875rem",
     fontWeight: 600,
     color: "#ffffff",
     margin: 0,
@@ -56,16 +61,16 @@ const styles = {
   subtitle: {
     fontSize: "0.875rem",
     color: "rgba(255, 255, 255, 0.5)",
-    marginTop: "0.5rem",
+    marginTop: "0.75rem",
   },
   form: {
     display: "flex",
-    flexDirection: "column" as const,
+    flexDirection: "column",
     gap: "1.25rem",
   },
   fieldGroup: {
     display: "flex",
-    flexDirection: "column" as const,
+    flexDirection: "column",
     gap: "0.5rem",
   },
   label: {
@@ -75,60 +80,99 @@ const styles = {
     letterSpacing: "0.025em",
   },
   input: {
+    width: "100%",
     padding: "0.875rem 1rem",
-    borderRadius: "12px",
-    border: "1px solid rgba(255, 255, 255, 0.1)",
-    background: "rgba(255, 255, 255, 0.05)",
-    color: "#ffffff",
     fontSize: "0.95rem",
+    color: "#ffffff",
+    background: "rgba(255, 255, 255, 0.05)",
+    border: "1px solid rgba(255, 255, 255, 0.1)",
+    borderRadius: "12px",
     outline: "none",
     transition: "all 0.2s ease",
+    boxSizing: "border-box",
   },
   inputFocus: {
-    borderColor: "#FFB6C1",
-    boxShadow: "0 0 0 3px rgba(255, 182, 193, 0.15)",
+    borderColor: "rgba(255, 182, 193, 0.5)",
+    background: "rgba(255, 255, 255, 0.08)",
+    boxShadow: "0 0 0 3px rgba(255, 182, 193, 0.1)",
   },
   inputError: {
-    borderColor: "#f87171",
-    boxShadow: "0 0 0 3px rgba(248, 113, 113, 0.15)",
+    borderColor: "rgba(239, 68, 68, 0.5)",
   },
-  fieldError: {
-    fontSize: "0.75rem",
-    color: "#f87171",
-    marginTop: "0.25rem",
+  passwordInputWrapper: {
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
   },
-  alert: {
-    padding: "0.875rem 1rem",
+  passwordInput: {
+    width: "100%",
+    padding: "0.875rem 3rem 0.875rem 1rem",
+    fontSize: "0.95rem",
+    color: "#ffffff",
+    background: "rgba(255, 255, 255, 0.05)",
+    border: "1px solid rgba(255, 255, 255, 0.1)",
     borderRadius: "12px",
-    background: "rgba(248, 113, 113, 0.1)",
-    border: "1px solid rgba(248, 113, 113, 0.3)",
-    color: "#fca5a5",
-    fontSize: "0.85rem",
+    outline: "none",
+    transition: "all 0.2s ease",
+    boxSizing: "border-box",
   },
-  forgotLink: {
-    alignSelf: "flex-end",
-    fontSize: "0.8rem",
-    color: "rgba(255, 255, 255, 0.5)",
+  eyeButton: {
+    position: "absolute",
+    right: "0.75rem",
+    top: "50%",
+    transform: "translateY(-50%)",
     background: "none",
     border: "none",
+    padding: "0.375rem",
     cursor: "pointer",
-    transition: "color 0.2s ease",
-  },
-  button: {
+    color: "rgba(255, 255, 255, 0.5)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: "0.5rem",
-    padding: "0.875rem 1.5rem",
+    borderRadius: "6px",
+    transition: "color 0.2s ease, background 0.2s ease",
+  },
+  eyeButtonHover: {
+    color: "rgba(255, 255, 255, 0.8)",
+    background: "rgba(255, 255, 255, 0.1)",
+  },
+  fieldError: {
+    fontSize: "0.75rem",
+    color: "#fca5a5",
+    marginTop: "0.25rem",
+  },
+  errorBox: {
+    padding: "1rem",
+    borderRadius: "12px",
+    background: "rgba(239, 68, 68, 0.1)",
+    border: "1px solid rgba(239, 68, 68, 0.2)",
+    color: "#fca5a5",
+    fontSize: "0.875rem",
+    textAlign: "center",
+    marginBottom: "1rem",
+  },
+  forgotPassword: {
+    fontSize: "0.8rem",
+    color: "rgba(255, 255, 255, 0.5)",
+    textAlign: "right",
+    marginTop: "-0.5rem",
+  },
+  button: {
+    width: "100%",
+    padding: "1rem",
     fontSize: "0.95rem",
     fontWeight: 600,
-    color: "#ffffff",
+    color: "#0a0a0a",
     background: "linear-gradient(135deg, #FFB6C1 0%, #FFC0CB 100%)",
     border: "none",
     borderRadius: "12px",
     cursor: "pointer",
     transition: "all 0.2s ease",
     marginTop: "0.5rem",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "0.5rem",
   },
   buttonHover: {
     transform: "translateY(-1px)",
@@ -146,18 +190,18 @@ const styles = {
     margin: "1.5rem 0",
     color: "rgba(255, 255, 255, 0.3)",
     fontSize: "0.8rem",
-  } as React.CSSProperties,
+  },
   dividerLine: {
     flex: 1,
     height: "1px",
     background: "rgba(255, 255, 255, 0.1)",
   },
   footer: {
-    textAlign: "center" as React.CSSProperties["textAlign"],
+    textAlign: "center",
     marginTop: "1.5rem",
     fontSize: "0.875rem",
     color: "rgba(255, 255, 255, 0.5)",
-  } as React.CSSProperties,
+  },
   link: {
     color: "#FFB6C1",
     textDecoration: "none",
@@ -165,7 +209,24 @@ const styles = {
     cursor: "pointer",
     transition: "color 0.2s ease",
   },
+  spinner: {
+    display: "inline-block",
+    width: "18px",
+    height: "18px",
+    border: "2px solid transparent",
+    borderTopColor: "currentColor",
+    borderRadius: "50%",
+    animation: "spin 0.8s linear infinite",
+    marginRight: "0.5rem",
+    verticalAlign: "middle",
+  },
 };
+
+const spinnerKeyframes = `
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+`;
 
 // ============================================================================
 // Component
@@ -204,6 +265,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
 
+  // Password visibility state
+  const [showPassword, setShowPassword] = useState(false);
+  const [eyeHovered, setEyeHovered] = useState(false);
+
   // Validation
   const emailError =
     touched.email && !isValidEmail(email)
@@ -218,6 +283,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     async (e: FormEvent) => {
       e.preventDefault();
 
+      // Mark all fields as touched
+      setTouched({ email: true, password: true });
+
       if (!isFormValid || isSubmitting) return;
 
       setIsSubmitting(true);
@@ -227,7 +295,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         await login(email, password);
         onSuccess?.();
       } catch {
-        // Error is handled by auth context
+        // Error is handled by context
       } finally {
         setIsSubmitting(false);
       }
@@ -235,160 +303,180 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     [email, password, isFormValid, isSubmitting, login, clearError, onSuccess]
   );
 
-  const handleBlur = (field: "email" | "password") => {
+  const handleBlur = (field: string) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
     setFocusedField(null);
   };
 
-  // Dynamic styles
-  const getInputStyle = (field: "email" | "password", hasError: boolean) => ({
+  const getInputStyle = (field: string, hasError: boolean): CSSProperties => ({
     ...styles.input,
-    ...(focusedField === field && !hasError ? styles.inputFocus : {}),
+    ...(focusedField === field ? styles.inputFocus : {}),
     ...(hasError ? styles.inputError : {}),
   });
 
-  const buttonStyle = useMemo(
-    () => ({
-      ...styles.button,
-      ...(isHovered && isFormValid && !isSubmitting ? styles.buttonHover : {}),
-      ...(!isFormValid || isSubmitting ? styles.buttonDisabled : {}),
-    }),
-    [isHovered, isFormValid, isSubmitting]
-  );
+  const getPasswordInputStyle = (hasError: boolean): CSSProperties => ({
+    ...styles.passwordInput,
+    ...(focusedField === "password" ? styles.inputFocus : {}),
+    ...(hasError ? styles.inputError : {}),
+  });
+
+  const buttonStyle: CSSProperties = {
+    ...styles.button,
+    ...(isHovered && !isSubmitting && isFormValid ? styles.buttonHover : {}),
+    ...(!isFormValid || isSubmitting ? styles.buttonDisabled : {}),
+  };
 
   return (
-    <div style={styles.container} className={className}>
-      <div style={styles.card}>
-        {/* Header */}
-        <div style={styles.header}>
-          <p style={styles.brand}>The Babes Club</p>
-          <h1 style={styles.title}>Welcome Back</h1>
-          <p style={styles.subtitle}>Sign in to your account</p>
-        </div>
-
-        {/* Error Alert */}
-        {error && (
-          <div style={styles.alert} role="alert">
-            {error.message || "An error occurred. Please try again."}
-          </div>
-        )}
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} style={styles.form}>
-          {/* Email Field */}
-          <div style={styles.fieldGroup}>
-            <label htmlFor="login-email" style={styles.label}>
-              Email
-            </label>
-            <input
-              id="login-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onFocus={() => setFocusedField("email")}
-              onBlur={() => handleBlur("email")}
-              placeholder="you@example.com"
-              disabled={isSubmitting}
-              style={getInputStyle("email", !!emailError)}
-              autoComplete="email"
-              aria-describedby={emailError ? "email-error" : undefined}
-              aria-invalid={!!emailError}
-            />
-            {emailError && (
-              <span id="email-error" style={styles.fieldError}>
-                {emailError}
-              </span>
-            )}
+    <>
+      <style>{spinnerKeyframes}</style>
+      <div style={styles.container} className={className}>
+        <div style={styles.card}>
+          {/* Header */}
+          <div style={styles.header}>
+            <p style={styles.brand}>The Babes Club</p>
+            <h1 style={styles.title}>Welcome back</h1>
+            <p style={styles.subtitle}>Sign in to your account</p>
           </div>
 
-          {/* Password Field */}
-          <div style={styles.fieldGroup}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
+          {/* Error Display */}
+          {error && <div style={styles.errorBox}>{error.message}</div>}
+
+          {/* Form */}
+          <form style={styles.form} onSubmit={handleSubmit}>
+            {/* Email Field */}
+            <div style={styles.fieldGroup}>
+              <label htmlFor="login-email" style={styles.label}>
+                Email
+              </label>
+              <input
+                id="login-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onFocus={() => setFocusedField("email")}
+                onBlur={() => handleBlur("email")}
+                placeholder="you@example.com"
+                disabled={isSubmitting}
+                style={getInputStyle("email", !!emailError)}
+                autoComplete="email"
+                aria-describedby={emailError ? "email-error" : undefined}
+                aria-invalid={!!emailError}
+              />
+              {emailError && (
+                <span id="email-error" style={styles.fieldError}>
+                  {emailError}
+                </span>
+              )}
+            </div>
+
+            {/* Password Field */}
+            <div style={styles.fieldGroup}>
               <label htmlFor="login-password" style={styles.label}>
                 Password
               </label>
-              {onForgotPassword && (
+              <div style={styles.passwordInputWrapper}>
+                <input
+                  id="login-password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onFocus={() => setFocusedField("password")}
+                  onBlur={() => handleBlur("password")}
+                  placeholder="••••••••"
+                  disabled={isSubmitting}
+                  style={getPasswordInputStyle(!!passwordError)}
+                  autoComplete="current-password"
+                  aria-describedby={
+                    passwordError ? "password-error" : undefined
+                  }
+                  aria-invalid={!!passwordError}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  onMouseEnter={() => setEyeHovered(true)}
+                  onMouseLeave={() => setEyeHovered(false)}
+                  style={{
+                    ...styles.eyeButton,
+                    ...(eyeHovered ? styles.eyeButtonHover : {}),
+                  }}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                </button>
+              </div>
+              {passwordError && (
+                <span id="password-error" style={styles.fieldError}>
+                  {passwordError}
+                </span>
+              )}
+            </div>
+
+            {/* Forgot Password Link */}
+            {onForgotPassword && (
+              <div style={styles.forgotPassword}>
                 <button
                   type="button"
                   onClick={onForgotPassword}
-                  style={styles.forgotLink}
+                  style={{
+                    ...styles.link,
+                    background: "none",
+                    border: "none",
+                    fontSize: "inherit",
+                  }}
                 >
                   Forgot password?
                 </button>
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={!isFormValid || isSubmitting}
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+              style={buttonStyle}
+            >
+              {isSubmitting ? (
+                <>
+                  <span style={styles.spinner} />
+                  Signing in...
+                </>
+              ) : (
+                "Sign in"
               )}
-            </div>
-            <input
-              id="login-password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onFocus={() => setFocusedField("password")}
-              onBlur={() => handleBlur("password")}
-              placeholder="••••••••"
-              disabled={isSubmitting}
-              style={getInputStyle("password", !!passwordError)}
-              autoComplete="current-password"
-              aria-describedby={passwordError ? "password-error" : undefined}
-              aria-invalid={!!passwordError}
-            />
-            {passwordError && (
-              <span id="password-error" style={styles.fieldError}>
-                {passwordError}
-              </span>
-            )}
-          </div>
+            </button>
+          </form>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={!isFormValid || isSubmitting}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            style={buttonStyle}
-          >
-            {isSubmitting ? (
-              <>
-                <InlineSpinner size={18} color="#ffffff" />
-                Signing in...
-              </>
-            ) : (
-              "Sign in"
-            )}
-          </button>
-        </form>
-
-        {/* Footer */}
-        {onSwitchToSignup && (
-          <>
-            <div style={styles.divider}>
-              <span style={styles.dividerLine} />
-              <span>New here?</span>
-              <span style={styles.dividerLine} />
-            </div>
-            <p style={styles.footer}>
-              <button
-                type="button"
-                onClick={onSwitchToSignup}
-                style={{
-                  ...styles.link,
-                  background: "none",
-                  border: "none",
-                  fontSize: "inherit",
-                }}
-              >
-                Create an account
-              </button>
-            </p>
-          </>
-        )}
+          {/* Footer */}
+          {onSwitchToSignup && (
+            <>
+              <div style={styles.divider}>
+                <span style={styles.dividerLine} />
+                <span>New to Babes Club?</span>
+                <span style={styles.dividerLine} />
+              </div>
+              <p style={styles.footer}>
+                <button
+                  type="button"
+                  onClick={onSwitchToSignup}
+                  style={{
+                    ...styles.link,
+                    background: "none",
+                    border: "none",
+                    fontSize: "inherit",
+                  }}
+                >
+                  Create an account
+                </button>
+              </p>
+            </>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

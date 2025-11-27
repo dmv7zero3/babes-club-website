@@ -2,27 +2,34 @@
  * Signup Form Component for The Babes Club
  *
  * A polished, branded registration interface with form validation,
- * password strength indicator, loading states, and error handling.
+ * password strength indicator, password visibility toggle, loading states,
+ * and error handling.
  */
 
-import React, { useState, useCallback, useMemo, type FormEvent } from "react";
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  type FormEvent,
+  type CSSProperties,
+} from "react";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import {
   useAuth,
   isValidEmail,
   isValidPassword,
   getPasswordStrength,
 } from "../lib/auth";
-import { InlineSpinner } from "./LoadingIcon";
 
 // ============================================================================
 // Styles
 // ============================================================================
 
-const styles = {
+const styles: Record<string, CSSProperties> = {
   container: {
     minHeight: "100vh",
     display: "flex",
-    flexDirection: "column" as const,
+    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
     padding: "3rem 1rem",
@@ -40,13 +47,13 @@ const styles = {
     boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
   },
   header: {
-    textAlign: "center" as const,
+    textAlign: "center",
     marginBottom: "2rem",
   },
   brand: {
     fontSize: "0.7rem",
     letterSpacing: "0.35em",
-    textTransform: "uppercase" as const,
+    textTransform: "uppercase",
     color: "#FFB6C1",
     marginBottom: "0.75rem",
     fontWeight: 500,
@@ -65,12 +72,12 @@ const styles = {
   },
   form: {
     display: "flex",
-    flexDirection: "column" as const,
+    flexDirection: "column",
     gap: "1.25rem",
   },
   fieldGroup: {
     display: "flex",
-    flexDirection: "column" as const,
+    flexDirection: "column",
     gap: "0.5rem",
   },
   label: {
@@ -80,51 +87,92 @@ const styles = {
     letterSpacing: "0.025em",
   },
   input: {
+    width: "100%",
     padding: "0.875rem 1rem",
-    borderRadius: "12px",
-    border: "1px solid rgba(255, 255, 255, 0.1)",
-    background: "rgba(255, 255, 255, 0.05)",
-    color: "#ffffff",
     fontSize: "0.95rem",
+    color: "#ffffff",
+    background: "rgba(255, 255, 255, 0.05)",
+    border: "1px solid rgba(255, 255, 255, 0.1)",
+    borderRadius: "12px",
     outline: "none",
     transition: "all 0.2s ease",
+    boxSizing: "border-box",
   },
   inputFocus: {
-    borderColor: "#FFB6C1",
-    boxShadow: "0 0 0 3px rgba(255, 182, 193, 0.15)",
+    borderColor: "rgba(255, 182, 193, 0.5)",
+    background: "rgba(255, 255, 255, 0.08)",
+    boxShadow: "0 0 0 3px rgba(255, 182, 193, 0.1)",
   },
   inputError: {
-    borderColor: "#f87171",
-    boxShadow: "0 0 0 3px rgba(248, 113, 113, 0.15)",
+    borderColor: "rgba(239, 68, 68, 0.5)",
   },
-  fieldError: {
-    fontSize: "0.75rem",
-    color: "#f87171",
-    marginTop: "0.25rem",
+  passwordInputWrapper: {
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
   },
-  alert: {
-    padding: "0.875rem 1rem",
+  passwordInput: {
+    width: "100%",
+    padding: "0.875rem 3rem 0.875rem 1rem",
+    fontSize: "0.95rem",
+    color: "#ffffff",
+    background: "rgba(255, 255, 255, 0.05)",
+    border: "1px solid rgba(255, 255, 255, 0.1)",
     borderRadius: "12px",
-    background: "rgba(248, 113, 113, 0.1)",
-    border: "1px solid rgba(248, 113, 113, 0.3)",
-    color: "#fca5a5",
-    fontSize: "0.85rem",
+    outline: "none",
+    transition: "all 0.2s ease",
+    boxSizing: "border-box",
   },
-  button: {
+  eyeButton: {
+    position: "absolute",
+    right: "0.75rem",
+    top: "50%",
+    transform: "translateY(-50%)",
+    background: "none",
+    border: "none",
+    padding: "0.375rem",
+    cursor: "pointer",
+    color: "rgba(255, 255, 255, 0.5)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: "0.5rem",
-    padding: "0.875rem 1.5rem",
+    borderRadius: "6px",
+    transition: "color 0.2s ease, background 0.2s ease",
+  },
+  eyeButtonHover: {
+    color: "rgba(255, 255, 255, 0.8)",
+    background: "rgba(255, 255, 255, 0.1)",
+  },
+  fieldError: {
+    fontSize: "0.75rem",
+    color: "#fca5a5",
+    marginTop: "0.25rem",
+  },
+  errorBox: {
+    padding: "1rem",
+    borderRadius: "12px",
+    background: "rgba(239, 68, 68, 0.1)",
+    border: "1px solid rgba(239, 68, 68, 0.2)",
+    color: "#fca5a5",
+    fontSize: "0.875rem",
+    textAlign: "center",
+  },
+  button: {
+    width: "100%",
+    padding: "1rem",
     fontSize: "0.95rem",
     fontWeight: 600,
-    color: "#ffffff",
+    color: "#0a0a0a",
     background: "linear-gradient(135deg, #FFB6C1 0%, #FFC0CB 100%)",
     border: "none",
     borderRadius: "12px",
     cursor: "pointer",
     transition: "all 0.2s ease",
     marginTop: "0.5rem",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "0.5rem",
   },
   buttonHover: {
     transform: "translateY(-1px)",
@@ -142,24 +190,35 @@ const styles = {
     margin: "1.5rem 0",
     color: "rgba(255, 255, 255, 0.3)",
     fontSize: "0.8rem",
-  } as React.CSSProperties,
+  },
   dividerLine: {
     flex: 1,
     height: "1px",
     background: "rgba(255, 255, 255, 0.1)",
   },
   footer: {
-    textAlign: "center" as React.CSSProperties["textAlign"],
+    textAlign: "center",
     marginTop: "1.5rem",
     fontSize: "0.875rem",
     color: "rgba(255, 255, 255, 0.5)",
-  } as React.CSSProperties,
+  },
   link: {
     color: "#FFB6C1",
     textDecoration: "none",
     fontWeight: 500,
     cursor: "pointer",
     transition: "color 0.2s ease",
+  },
+  spinner: {
+    display: "inline-block",
+    width: "18px",
+    height: "18px",
+    border: "2px solid transparent",
+    borderTopColor: "currentColor",
+    borderRadius: "50%",
+    animation: "spin 0.8s linear infinite",
+    marginRight: "0.5rem",
+    verticalAlign: "middle",
   },
   strengthContainer: {
     marginTop: "0.5rem",
@@ -178,7 +237,7 @@ const styles = {
   },
   strengthLabel: {
     fontSize: "0.7rem",
-    textTransform: "capitalize" as const,
+    textTransform: "capitalize",
   },
   checkboxContainer: {
     display: "flex",
@@ -199,6 +258,12 @@ const styles = {
     lineHeight: 1.5,
   },
 };
+
+const spinnerKeyframes = `
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+`;
 
 // ============================================================================
 // Password Strength Indicator
@@ -304,6 +369,11 @@ export const SignupForm: React.FC<SignupFormProps> = ({
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
 
+  // Password visibility state
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [eyeHovered, setEyeHovered] = useState<string | null>(null);
+
   // Validation
   const emailError =
     touched.email && !isValidEmail(email)
@@ -313,10 +383,13 @@ export const SignupForm: React.FC<SignupFormProps> = ({
     touched.displayName && displayName.length < 2
       ? "Name must be at least 2 characters"
       : null;
+
+  const passwordValidation = isValidPassword(password);
   const passwordError =
-    touched.password && !isValidPassword(password)
-      ? "Password must be at least 8 characters with uppercase, lowercase, and number"
+    touched.password && !passwordValidation.valid
+      ? passwordValidation.message
       : null;
+
   const confirmError =
     touched.confirm && password !== confirmPassword
       ? "Passwords do not match"
@@ -326,17 +399,37 @@ export const SignupForm: React.FC<SignupFormProps> = ({
       ? "You must accept the terms and conditions"
       : null;
 
-  const isFormValid =
-    isValidEmail(email) &&
-    displayName.length >= 2 &&
-    isValidPassword(password) &&
-    password === confirmPassword &&
-    (!requireTerms || acceptedTerms);
+  const isFormValid = useMemo(
+    () =>
+      isValidEmail(email) &&
+      displayName.length >= 2 &&
+      passwordValidation.valid &&
+      password === confirmPassword &&
+      (!requireTerms || acceptedTerms),
+    [
+      email,
+      displayName,
+      password,
+      confirmPassword,
+      acceptedTerms,
+      requireTerms,
+      passwordValidation,
+    ]
+  );
 
   // Handlers
   const handleSubmit = useCallback(
     async (e: FormEvent) => {
       e.preventDefault();
+
+      // Mark all fields as touched
+      setTouched({
+        email: true,
+        displayName: true,
+        password: true,
+        confirm: true,
+        terms: true,
+      });
 
       if (!isFormValid || isSubmitting) return;
 
@@ -347,7 +440,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({
         await signup(email, password, displayName);
         onSuccess?.();
       } catch {
-        // Error is handled by auth context
+        // Error is handled by context
       } finally {
         setIsSubmitting(false);
       }
@@ -364,234 +457,276 @@ export const SignupForm: React.FC<SignupFormProps> = ({
     ]
   );
 
-  const handleBlur = (
-    field: "email" | "displayName" | "password" | "confirm" | "terms"
-  ) => {
+  const handleBlur = (field: string) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
     setFocusedField(null);
   };
 
-  // Dynamic styles
-  const getInputStyle = (field: string, hasError: boolean) => ({
+  const getInputStyle = (field: string, hasError: boolean): CSSProperties => ({
     ...styles.input,
-    ...(focusedField === field && !hasError ? styles.inputFocus : {}),
+    ...(focusedField === field ? styles.inputFocus : {}),
     ...(hasError ? styles.inputError : {}),
   });
 
-  const buttonStyle = useMemo(
-    () => ({
-      ...styles.button,
-      ...(isHovered && isFormValid && !isSubmitting ? styles.buttonHover : {}),
-      ...(!isFormValid || isSubmitting ? styles.buttonDisabled : {}),
-    }),
-    [isHovered, isFormValid, isSubmitting]
-  );
+  const getPasswordInputStyle = (
+    field: string,
+    hasError: boolean
+  ): CSSProperties => ({
+    ...styles.passwordInput,
+    ...(focusedField === field ? styles.inputFocus : {}),
+    ...(hasError ? styles.inputError : {}),
+  });
+
+  const buttonStyle: CSSProperties = {
+    ...styles.button,
+    ...(isHovered && !isSubmitting && isFormValid ? styles.buttonHover : {}),
+    ...(!isFormValid || isSubmitting ? styles.buttonDisabled : {}),
+  };
 
   return (
-    <div style={styles.container} className={className}>
-      <div style={styles.card}>
-        {/* Header */}
-        <div style={styles.header}>
-          <p style={styles.brand}>The Babes Club</p>
-          <h1 style={styles.title}>Create Account</h1>
-          <p style={styles.subtitle}>Join our community</p>
-        </div>
-
-        {/* Error Alert */}
-        {error && (
-          <div style={styles.alert} role="alert">
-            {error.message || "An error occurred. Please try again."}
-          </div>
-        )}
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} style={styles.form}>
-          {/* Display Name Field */}
-          <div style={styles.fieldGroup}>
-            <label htmlFor="signup-name" style={styles.label}>
-              Display Name
-            </label>
-            <input
-              id="signup-name"
-              type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              onFocus={() => setFocusedField("displayName")}
-              onBlur={() => handleBlur("displayName")}
-              placeholder="Your name"
-              disabled={isSubmitting}
-              style={getInputStyle("displayName", !!displayNameError)}
-              autoComplete="name"
-              aria-describedby={displayNameError ? "name-error" : undefined}
-              aria-invalid={!!displayNameError}
-            />
-            {displayNameError && (
-              <span id="name-error" style={styles.fieldError}>
-                {displayNameError}
-              </span>
-            )}
+    <>
+      <style>{spinnerKeyframes}</style>
+      <div style={styles.container} className={className}>
+        <div style={styles.card}>
+          {/* Header */}
+          <div style={styles.header}>
+            <p style={styles.brand}>The Babes Club</p>
+            <h1 style={styles.title}>Create account</h1>
+            <p style={styles.subtitle}>Join our exclusive community</p>
           </div>
 
-          {/* Email Field */}
-          <div style={styles.fieldGroup}>
-            <label htmlFor="signup-email" style={styles.label}>
-              Email
-            </label>
-            <input
-              id="signup-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onFocus={() => setFocusedField("email")}
-              onBlur={() => handleBlur("email")}
-              placeholder="you@example.com"
-              disabled={isSubmitting}
-              style={getInputStyle("email", !!emailError)}
-              autoComplete="email"
-              aria-describedby={emailError ? "email-error" : undefined}
-              aria-invalid={!!emailError}
-            />
-            {emailError && (
-              <span id="email-error" style={styles.fieldError}>
-                {emailError}
-              </span>
-            )}
-          </div>
+          {/* Error Display */}
+          {error && <div style={styles.errorBox}>{error.message}</div>}
 
-          {/* Password Field */}
-          <div style={styles.fieldGroup}>
-            <label htmlFor="signup-password" style={styles.label}>
-              Password
-            </label>
-            <input
-              id="signup-password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onFocus={() => setFocusedField("password")}
-              onBlur={() => handleBlur("password")}
-              placeholder="••••••••"
-              disabled={isSubmitting}
-              style={getInputStyle("password", !!passwordError)}
-              autoComplete="new-password"
-              aria-describedby={passwordError ? "password-error" : undefined}
-              aria-invalid={!!passwordError}
-            />
-            <PasswordStrengthIndicator password={password} />
-            {passwordError && (
-              <span id="password-error" style={styles.fieldError}>
-                {passwordError}
-              </span>
-            )}
-          </div>
-
-          {/* Confirm Password Field */}
-          <div style={styles.fieldGroup}>
-            <label htmlFor="signup-confirm" style={styles.label}>
-              Confirm Password
-            </label>
-            <input
-              id="signup-confirm"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              onFocus={() => setFocusedField("confirm")}
-              onBlur={() => handleBlur("confirm")}
-              placeholder="••••••••"
-              disabled={isSubmitting}
-              style={getInputStyle("confirm", !!confirmError)}
-              autoComplete="new-password"
-              aria-describedby={confirmError ? "confirm-error" : undefined}
-              aria-invalid={!!confirmError}
-            />
-            {confirmError && (
-              <span id="confirm-error" style={styles.fieldError}>
-                {confirmError}
-              </span>
-            )}
-          </div>
-
-          {/* Terms Checkbox */}
-          {requireTerms && (
-            <div style={styles.checkboxContainer}>
-              <input
-                id="signup-terms"
-                type="checkbox"
-                checked={acceptedTerms}
-                onChange={(e) => setAcceptedTerms(e.target.checked)}
-                onBlur={() => handleBlur("terms")}
-                disabled={isSubmitting}
-                style={styles.checkbox}
-              />
-              <label htmlFor="signup-terms" style={styles.checkboxLabel}>
-                I agree to the{" "}
-                <a
-                  href={termsUrl}
-                  style={styles.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Terms of Service
-                </a>{" "}
-                and{" "}
-                <a
-                  href={privacyUrl}
-                  style={styles.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Privacy Policy
-                </a>
+          {/* Form */}
+          <form style={styles.form} onSubmit={handleSubmit}>
+            {/* Display Name Field */}
+            <div style={styles.fieldGroup}>
+              <label htmlFor="signup-name" style={styles.label}>
+                Name
               </label>
+              <input
+                id="signup-name"
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                onFocus={() => setFocusedField("displayName")}
+                onBlur={() => handleBlur("displayName")}
+                placeholder="Your name"
+                disabled={isSubmitting}
+                style={getInputStyle("displayName", !!displayNameError)}
+                autoComplete="name"
+                aria-describedby={displayNameError ? "name-error" : undefined}
+                aria-invalid={!!displayNameError}
+              />
+              {displayNameError && (
+                <span id="name-error" style={styles.fieldError}>
+                  {displayNameError}
+                </span>
+              )}
             </div>
-          )}
-          {termsError && <span style={styles.fieldError}>{termsError}</span>}
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={!isFormValid || isSubmitting}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            style={buttonStyle}
-          >
-            {isSubmitting ? (
-              <>
-                <InlineSpinner size={18} color="#ffffff" />
-                Creating account...
-              </>
-            ) : (
-              "Create account"
+            {/* Email Field */}
+            <div style={styles.fieldGroup}>
+              <label htmlFor="signup-email" style={styles.label}>
+                Email
+              </label>
+              <input
+                id="signup-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onFocus={() => setFocusedField("email")}
+                onBlur={() => handleBlur("email")}
+                placeholder="you@example.com"
+                disabled={isSubmitting}
+                style={getInputStyle("email", !!emailError)}
+                autoComplete="email"
+                aria-describedby={emailError ? "email-error" : undefined}
+                aria-invalid={!!emailError}
+              />
+              {emailError && (
+                <span id="email-error" style={styles.fieldError}>
+                  {emailError}
+                </span>
+              )}
+            </div>
+
+            {/* Password Field */}
+            <div style={styles.fieldGroup}>
+              <label htmlFor="signup-password" style={styles.label}>
+                Password
+              </label>
+              <div style={styles.passwordInputWrapper}>
+                <input
+                  id="signup-password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onFocus={() => setFocusedField("password")}
+                  onBlur={() => handleBlur("password")}
+                  placeholder="At least 7 characters"
+                  disabled={isSubmitting}
+                  style={getPasswordInputStyle("password", !!passwordError)}
+                  autoComplete="new-password"
+                  aria-describedby={
+                    passwordError ? "password-error" : undefined
+                  }
+                  aria-invalid={!!passwordError}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  onMouseEnter={() => setEyeHovered("password")}
+                  onMouseLeave={() => setEyeHovered(null)}
+                  style={{
+                    ...styles.eyeButton,
+                    ...(eyeHovered === "password" ? styles.eyeButtonHover : {}),
+                  }}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                </button>
+              </div>
+              <PasswordStrengthIndicator password={password} />
+              {passwordError && (
+                <span id="password-error" style={styles.fieldError}>
+                  {passwordError}
+                </span>
+              )}
+            </div>
+
+            {/* Confirm Password Field */}
+            <div style={styles.fieldGroup}>
+              <label htmlFor="signup-confirm" style={styles.label}>
+                Confirm Password
+              </label>
+              <div style={styles.passwordInputWrapper}>
+                <input
+                  id="signup-confirm"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onFocus={() => setFocusedField("confirm")}
+                  onBlur={() => handleBlur("confirm")}
+                  placeholder="Re-enter your password"
+                  disabled={isSubmitting}
+                  style={getPasswordInputStyle("confirm", !!confirmError)}
+                  autoComplete="new-password"
+                  aria-describedby={confirmError ? "confirm-error" : undefined}
+                  aria-invalid={!!confirmError}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  onMouseEnter={() => setEyeHovered("confirm")}
+                  onMouseLeave={() => setEyeHovered(null)}
+                  style={{
+                    ...styles.eyeButton,
+                    ...(eyeHovered === "confirm" ? styles.eyeButtonHover : {}),
+                  }}
+                  aria-label={
+                    showConfirmPassword ? "Hide password" : "Show password"
+                  }
+                  tabIndex={-1}
+                >
+                  {showConfirmPassword ? (
+                    <FiEyeOff size={18} />
+                  ) : (
+                    <FiEye size={18} />
+                  )}
+                </button>
+              </div>
+              {confirmError && (
+                <span id="confirm-error" style={styles.fieldError}>
+                  {confirmError}
+                </span>
+              )}
+            </div>
+
+            {/* Terms Checkbox */}
+            {requireTerms && (
+              <div style={styles.checkboxContainer}>
+                <input
+                  id="signup-terms"
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  onBlur={() => handleBlur("terms")}
+                  disabled={isSubmitting}
+                  style={styles.checkbox}
+                />
+                <label htmlFor="signup-terms" style={styles.checkboxLabel}>
+                  I agree to the{" "}
+                  <a
+                    href={termsUrl}
+                    style={styles.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Terms of Service
+                  </a>{" "}
+                  and{" "}
+                  <a
+                    href={privacyUrl}
+                    style={styles.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Privacy Policy
+                  </a>
+                </label>
+              </div>
             )}
-          </button>
-        </form>
+            {termsError && <span style={styles.fieldError}>{termsError}</span>}
 
-        {/* Footer */}
-        {onSwitchToLogin && (
-          <>
-            <div style={styles.divider}>
-              <span style={styles.dividerLine} />
-              <span>Already a member?</span>
-              <span style={styles.dividerLine} />
-            </div>
-            <p style={styles.footer}>
-              <button
-                type="button"
-                onClick={onSwitchToLogin}
-                style={{
-                  ...styles.link,
-                  background: "none",
-                  border: "none",
-                  fontSize: "inherit",
-                }}
-              >
-                Sign in instead
-              </button>
-            </p>
-          </>
-        )}
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={!isFormValid || isSubmitting}
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+              style={buttonStyle}
+            >
+              {isSubmitting ? (
+                <>
+                  <span style={styles.spinner} />
+                  Creating account...
+                </>
+              ) : (
+                "Create account"
+              )}
+            </button>
+          </form>
+
+          {/* Footer */}
+          {onSwitchToLogin && (
+            <>
+              <div style={styles.divider}>
+                <span style={styles.dividerLine} />
+                <span>Already a member?</span>
+                <span style={styles.dividerLine} />
+              </div>
+              <p style={styles.footer}>
+                <button
+                  type="button"
+                  onClick={onSwitchToLogin}
+                  style={{
+                    ...styles.link,
+                    background: "none",
+                    border: "none",
+                    fontSize: "inherit",
+                  }}
+                >
+                  Sign in instead
+                </button>
+              </p>
+            </>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

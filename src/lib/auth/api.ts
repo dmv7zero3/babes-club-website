@@ -1,207 +1,82 @@
-import { updateSessionTokens } from "./session";
-/**
- * Update user profile (including email change)
- * Calls backend and updates session tokens if email changed.
- */
-export const updateUserProfile = async (
-  token: string,
-  updates: Partial<AuthUser> & { email?: string; displayName?: string }
-): Promise<AuthUser> => {
-  try {
-    const response = await authClient.post(
-      "/dashboard/update-profile",
-      updates,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    const data = response.data;
-    const updatedProfile = data?.profile as AuthUser;
-    // If email changed and new tokens issued, update session
-    if (
-      data.emailChanged &&
-      data.accessToken &&
-      data.refreshToken &&
-      data.expiresAt
-    ) {
-      updateSessionTokens(data.accessToken, data.refreshToken, data.expiresAt, {
-        email: updatedProfile.email,
-        displayName: updatedProfile.displayName,
-      });
-    } else if (data.emailChanged && data.tokenError) {
-      // Token issuance failed - user needs to re-login
-      console.warn("Email changed but token refresh failed:", data.tokenError);
-      // Optionally show a toast/alert to the user
-    }
-    return updatedProfile;
-  } catch (error) {
-    throw transformError(error);
-  }
-};
 /**
  * Authentication API Client for The Babes Club
  *
- * Functions for communicating with the authentication backend.
- * All endpoints use the API Gateway at api.thebabesclub.com
+ * Handles all HTTP requests to the authentication endpoints,
+ * with proper error handling and response normalization.
  */
 
-import axios, { AxiosInstance } from "axios";
-import type {
-  AuthUser,
-  AuthResponse,
-  AuthAPIError,
-  AuthErrorCode,
-} from "../types/auth";
-
-// ============================================================================
-// Configuration
-// ============================================================================
-
-// API base URL - should come from environment variables (Webpack)
-const API_BASE_URL = process.env.API_BASE_URL || "https://api.thebabesclub.com";
-
-// Request timeout in milliseconds
-const REQUEST_TIMEOUT = 30000;
+import axios, { AxiosError } from "axios";
+import type { AuthResponse, AuthUser, AuthAPIError } from "../types/auth";
 
 // ============================================================================
 // API Client Setup
 // ============================================================================
 
-const authClient: AxiosInstance = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: REQUEST_TIMEOUT,
+export const authClient = axios.create({
+  baseURL: process.env.API_BASE_URL,
+  timeout: 15000,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Request logging (development only)
-if (process.env.NODE_ENV === "development") {
-  authClient.interceptors.request.use((config) => {
-    console.log("[Auth API] Request:", config);
-    return config;
-  });
-
-  authClient.interceptors.response.use(
-    (response) => {
-      console.log("[Auth API] Response:", response);
-      return response;
-    },
-    (error) => {
-      console.warn("[Auth API] Error:", error);
-      return Promise.reject(error);
-    }
-  );
-}
-
 // ============================================================================
 // Error Handling
 // ============================================================================
 
-/**
- * Map HTTP status codes to error codes
- */
-const getErrorCodeFromStatus = (
-  status: number,
-  responseData?: { error?: string; code?: string }
-): AuthErrorCode => {
-  // Check for explicit error code in response
-  if (responseData?.code) return responseData.code as AuthErrorCode;
-
-  // Map status codes
-  switch (status) {
-    case 400:
-      return "INVALID_CREDENTIALS";
-    case 401:
-      return "TOKEN_INVALID";
-    case 403:
-      return "ACCOUNT_SUSPENDED";
-    case 404:
-      return "EMAIL_NOT_FOUND";
-    case 409:
-      return "EMAIL_EXISTS";
-    case 429:
-      return "RATE_LIMITED";
-    case 500:
-      return "SERVER_ERROR";
-    default:
-      return "UNKNOWN_ERROR";
-  }
-};
-
-/**
- * Get user-friendly error message
- */
-const getErrorMessage = (
-  code: AuthErrorCode,
-  responseMessage?: string
-): string => {
-  switch (code) {
-    case "INVALID_CREDENTIALS":
-      return "Invalid email or password.";
-    case "EMAIL_EXISTS":
-      return "An account with this email already exists.";
-    case "EMAIL_NOT_FOUND":
-      return "No account found for this email.";
-    case "INVALID_EMAIL":
-      return "Please enter a valid email address.";
-    case "WEAK_PASSWORD":
-      return "Password is too weak.";
-    case "ACCOUNT_LOCKED":
-      return "Your account is locked.";
-    case "ACCOUNT_SUSPENDED":
-      return "Your account is suspended.";
-    case "TOKEN_EXPIRED":
-      return "Session expired. Please log in again.";
-    case "TOKEN_INVALID":
-      return "Invalid session. Please log in again.";
-    case "RATE_LIMITED":
-      return "Too many requests. Please try again later.";
-    case "NETWORK_ERROR":
-      return "Network error. Please check your connection.";
-    case "SERVER_ERROR":
-      return "Server error. Please try again later.";
-    default:
-      return responseMessage || "An unknown error occurred.";
-  }
-};
-
-/**
- * Transform Axios error into structured AuthAPIError
- */
 const transformError = (error: unknown): AuthAPIError => {
   if (axios.isAxiosError(error)) {
-    const status = error.response?.status || 0;
-    const code = getErrorCodeFromStatus(status, error.response?.data);
-    const message = getErrorMessage(
-      code,
-      error.response?.data?.error || error.message
-    );
+    const axiosError = error as AxiosError<{ message?: string; code?: string }>;
+
+    if (axiosError.response) {
+      return {
+        status: axiosError.response.status,
+        code: axiosError.response.data?.code || "UNKNOWN_ERROR",
+        message:
+          axiosError.response.data?.message ||
+          "An error occurred during authentication",
+      };
+    }
+
+    if (axiosError.code === "ECONNABORTED") {
+      return {
+        status: 0,
+        code: "NETWORK_ERROR",
+        message: "Request timed out. Please try again.",
+      };
+    }
+
     return {
-      status,
-      code,
-      message,
-      field: error.response?.data?.field,
+      status: 0,
+      code: "NETWORK_ERROR",
+      message: "Unable to connect to the server. Please check your connection.",
     };
   }
+
   return {
     status: 0,
     code: "UNKNOWN_ERROR",
-    message: error instanceof Error ? error.message : "Unknown error",
+    message:
+      error instanceof Error ? error.message : "An unknown error occurred",
   };
 };
 
 // ============================================================================
-// Authentication Functions
+// Auth API Functions
 // ============================================================================
 
 /**
- * Log in with email and password
+ * Login with email and password
  */
 export const loginUser = async (
   email: string,
   password: string
 ): Promise<AuthResponse> => {
   try {
-    const response = await authClient.post("/auth/login", { email, password });
+    const response = await authClient.post("/auth/login", {
+      email: email.trim().toLowerCase(),
+      password,
+    });
     return response.data as AuthResponse;
   } catch (error) {
     throw transformError(error);
@@ -276,6 +151,11 @@ export const isValidEmail = (email: string): boolean => {
 
 /**
  * Validate password strength
+ *
+ * Requirements:
+ * - Minimum 7 characters
+ * - Must contain at least one letter (A-Z or a-z)
+ * - Numbers and special characters are allowed but not required
  */
 export const isValidPassword = (
   password: string
@@ -283,28 +163,13 @@ export const isValidPassword = (
   valid: boolean;
   message?: string;
 } => {
-  if (!password || password.length < 8) {
-    return { valid: false, message: "Password must be at least 8 characters." };
+  if (!password || password.length < 7) {
+    return { valid: false, message: "Password must be at least 7 characters." };
   }
-  if (!/[A-Z]/.test(password)) {
+  if (!/[A-Za-z]/.test(password)) {
     return {
       valid: false,
-      message: "Password must contain an uppercase letter.",
-    };
-  }
-  if (!/[a-z]/.test(password)) {
-    return {
-      valid: false,
-      message: "Password must contain a lowercase letter.",
-    };
-  }
-  if (!/[0-9]/.test(password)) {
-    return { valid: false, message: "Password must contain a number." };
-  }
-  if (!/[^A-Za-z0-9]/.test(password)) {
-    return {
-      valid: false,
-      message: "Password must contain a special character.",
+      message: "Password must contain at least one letter.",
     };
   }
   return { valid: true };
@@ -312,6 +177,13 @@ export const isValidPassword = (
 
 /**
  * Get password strength indicator
+ *
+ * Scoring:
+ * - 7+ characters: +1
+ * - 10+ characters: +1
+ * - Has uppercase and lowercase: +1
+ * - Has numbers: +1
+ * - Has special characters: +1
  */
 export const getPasswordStrength = (
   password: string
@@ -319,15 +191,30 @@ export const getPasswordStrength = (
   score: 0 | 1 | 2 | 3 | 4;
   label: "weak" | "fair" | "good" | "strong" | "excellent";
 } => {
-  let score: 0 | 1 | 2 | 3 | 4 = 0;
-  if (password.length >= 8) score++;
-  if (/[A-Z]/.test(password)) score++;
-  if (/[a-z]/.test(password)) score++;
+  let score = 0;
+
+  // Length checks
+  if (password.length >= 7) score++;
+  if (password.length >= 10) score++;
+
+  // Character variety checks
+  if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
   if (/[0-9]/.test(password)) score++;
   if (/[^A-Za-z0-9]/.test(password)) score++;
-  if (score === 0) return { score: 0, label: "weak" };
-  if (score === 1) return { score: 1, label: "fair" };
-  if (score === 2) return { score: 2, label: "good" };
-  if (score === 3) return { score: 3, label: "strong" };
-  return { score: 4, label: "excellent" };
+
+  // Cap at 4
+  const finalScore = Math.min(4, score) as 0 | 1 | 2 | 3 | 4;
+
+  const labels: Record<
+    number,
+    "weak" | "fair" | "good" | "strong" | "excellent"
+  > = {
+    0: "weak",
+    1: "fair",
+    2: "good",
+    3: "strong",
+    4: "excellent",
+  };
+
+  return { score: finalScore, label: labels[finalScore] };
 };
