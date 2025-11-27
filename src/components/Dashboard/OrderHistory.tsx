@@ -1,12 +1,19 @@
-// src/components/dashboard/OrderHistory.tsx
+// src/components/Dashboard/OrderHistory.tsx
 // Order history component with proper empty state handling
+//
+// NOTE: This is an ALTERNATIVE component to OrderHistoryTable.
+// OrderHistoryTable uses useDashboardData() from DashboardDataProvider.
+// This component uses the standalone useOrders hook.
 
 import React from "react";
-// TODO: If you see import errors below, ensure:
-// 1. src/hooks/useOrders.ts and src/lib/utils/format.ts exist
-// 2. Your tsconfig.json has "paths": { "@/*": ["src/*"] }
-import { useOrders, Order } from "@/hooks/useOrders";
-import { formatCurrency } from "@/lib/utils/format";
+import { useOrders, Order } from "../../hooks/useOrders";
+
+// Currency formatter - defined locally to avoid external dependency
+const formatCurrency = (amountCents: number, currency: string) =>
+  new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: currency || "USD",
+  }).format(amountCents / 100);
 
 // Loading skeleton
 const OrderSkeleton: React.FC = () => (
@@ -102,28 +109,21 @@ const ErrorState: React.FC<ErrorStateProps> = ({ error, onRetry }) => (
 );
 
 // Status badge component
-type OrderStatus = "pending" | "completed" | "cancelled" | "refunded";
-const StatusBadge: React.FC<{ status: OrderStatus }> = ({ status }) => {
-  const styles: Record<OrderStatus, string> = {
+const StatusBadge: React.FC<{ status: Order["status"] }> = ({ status }) => {
+  const styles: Record<Order["status"], string> = {
     pending: "bg-yellow-100 text-yellow-800",
     completed: "bg-green-100 text-green-800",
     cancelled: "bg-gray-100 text-gray-800",
     refunded: "bg-blue-100 text-blue-800",
   };
-  const labels: Record<OrderStatus, string> = {
+
+  const labels: Record<Order["status"], string> = {
     pending: "Pending",
     completed: "Completed",
     cancelled: "Cancelled",
     refunded: "Refunded",
   };
-  // Fallback for unknown status
-  if (!(status in styles)) {
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-800">
-        {status}
-      </span>
-    );
-  }
+
   return (
     <span
       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${styles[status]}`}
@@ -169,7 +169,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onClick }) => {
 
       <div className="flex items-center justify-between">
         <span className="font-semibold text-gray-900">
-          {formatCurrency(order.amount / 100, order.currency)}
+          {formatCurrency(order.amount, order.currency || "USD")}
         </span>
         <svg
           className="w-5 h-5 text-gray-400"

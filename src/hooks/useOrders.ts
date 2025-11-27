@@ -1,5 +1,9 @@
 // src/hooks/useOrders.ts
 // Hook for fetching user orders from the dashboard API
+//
+// NOTE: This hook is an ALTERNATIVE to using useDashboardData().
+// The main dashboard flow uses DashboardDataProvider which calls fetchDashboardSnapshot()
+// to fetch orders. This hook can be used for standalone order fetching outside the dashboard.
 
 import { useState, useEffect, useCallback } from "react";
 import apiClient from "@/lib/api/apiClient";
@@ -80,6 +84,7 @@ export const useOrders = (initialLimit = 20): UseOrdersResult => {
           throw new Error("Not authenticated");
         }
 
+        // Build query params
         const params: Record<string, string> = {
           limit: String(initialLimit),
         };
@@ -88,10 +93,12 @@ export const useOrders = (initialLimit = 20): UseOrdersResult => {
           params.cursor = cursor;
         }
 
+        // FIXED: apiClient.get takes 2 arguments: (url, config)
+        // The config object contains both params and headers
         const response = await apiClient.get<OrdersResponse>(
           "/dashboard/orders",
-          params,
           {
+            params,
             headers: { Authorization: `Bearer ${session.token}` },
           }
         );
@@ -104,20 +111,24 @@ export const useOrders = (initialLimit = 20): UseOrdersResult => {
           setOrders(data.orders || []);
         }
 
-        setHasOrders(data.hasOrders);
+        // Handle both explicit hasOrders flag and implicit check
+        setHasOrders(data.hasOrders ?? data.orders?.length > 0);
         setNextCursor(data.nextCursor);
         setMessage(data.message || null);
         setError(null);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("[useOrders] Error fetching orders:", err);
 
+        // Type guard for axios error
+        const axiosError = err as {
+          response?: { status: number };
+          code?: string;
+        };
+
         // Handle specific error cases
-        if (err.response?.status === 401) {
-          // Session expired - the apiClient interceptor should handle refresh
-          // If we still get 401, the refresh failed
+        if (axiosError.response?.status === 401) {
           setError(new Error("Session expired. Please log in again."));
-        } else if (err.code === "ERR_NETWORK") {
-          // Network error - might be CORS or connectivity
+        } else if (axiosError.code === "ERR_NETWORK") {
           setError(new Error("Network error. Please check your connection."));
         } else {
           setError(
