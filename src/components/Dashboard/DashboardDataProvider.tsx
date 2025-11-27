@@ -7,17 +7,22 @@ import {
   useState,
   type ReactNode,
 } from "react";
+
+type DashboardDataStatus = "idle" | "loading" | "error";
 import {
   type DashboardNftAsset,
   type DashboardOrder,
   type DashboardProfile,
-  type DashboardUserData,
 } from "@/lib/types/dashboard";
 import { updateDashboardProfile } from "@/lib/dashboard/api";
 import { useDashboardAuth } from "./DashboardRouteGuard";
 import { readStoredSession } from "@/lib/dashboard/session";
 
-type DashboardDataStatus = "idle" | "loading" | "error";
+interface DashboardSnapshot {
+  profile: DashboardProfile;
+  orders: DashboardOrder[];
+  nfts: DashboardNftAsset[];
+}
 
 type UpdateableProfileFields = Partial<
   Omit<DashboardProfile, "userId" | "category" | "updatedAt">
@@ -83,8 +88,10 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
   // authenticated user's name/email immediately while the server snapshot
   // is fetched.
   const storedSession = readStoredSession();
-  const [data, setData] = useState<DashboardUserData | undefined>(() => {
-    if (user) return user;
+  const [data, setData] = useState<DashboardSnapshot | undefined>(() => {
+    if (user && "profile" in user && "orders" in user && "nfts" in user) {
+      return user as DashboardSnapshot;
+    }
     if (storedSession?.user) {
       return {
         profile: {
@@ -112,8 +119,7 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
         nfts: [],
       };
     }
-
-    return user;
+    return undefined;
   });
   const [status, setStatus] = useState<DashboardDataStatus>(
     authStatus === "authenticated" ? "idle" : "loading"
@@ -138,16 +144,29 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
     }
 
     if (authStatus === "authenticated" && user) {
-      setData(user);
-      setStatus("idle");
-      setError(undefined);
-      setActiveOrderId((current) => {
-        if (current && user.orders.some((order) => order.orderId === current)) {
-          return current;
-        }
-
-        return user.orders[0]?.orderId ?? null;
-      });
+      // If user is a snapshot, set it directly
+      if ("profile" in user && "orders" in user && "nfts" in user) {
+        setData(user as DashboardSnapshot);
+        setStatus("idle");
+        setError(undefined);
+        setActiveOrderId((current) => {
+          if (
+            current &&
+            (user as DashboardSnapshot).orders.some(
+              (order) => order.orderId === current
+            )
+          ) {
+            return current;
+          }
+          return (user as DashboardSnapshot).orders[0]?.orderId ?? null;
+        });
+      } else {
+        // Fallback: treat as profile only
+        setData({ profile: user as DashboardProfile, orders: [], nfts: [] });
+        setStatus("idle");
+        setError(undefined);
+        setActiveOrderId(null);
+      }
     }
   }, [authStatus, authError, user]);
 

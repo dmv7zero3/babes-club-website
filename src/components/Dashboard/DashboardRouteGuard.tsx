@@ -20,7 +20,7 @@ import {
   clearSession,
   type StoredDashboardSession,
 } from "@/lib/dashboard/session";
-import { fetchDashboardProfile } from "@/lib/dashboard/api";
+import { fetchDashboardSnapshot } from "@/lib/dashboard/api";
 import { ChronicLeafIcon } from "@/components/LoadingIcon";
 
 // ============================================================================
@@ -251,30 +251,25 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = ({
         // Check token expiry
         const nowSeconds = Math.floor(Date.now() / 1000);
         if (storedSession.expiresAt && storedSession.expiresAt <= nowSeconds) {
-          LOGGER.info("Session expired");
           clearSession();
           setStatus("unauthenticated");
           return;
         }
 
-        setSession(storedSession);
-        setLoadingPhase("profile");
-
-        // Step 2: Fetch profile
-        const profile = await fetchDashboardProfile(storedSession.token);
-
-        if (cancelled) return;
-
+        // Step 2: Fetch dashboard snapshot
+        const snapshot = await fetchDashboardSnapshot(storedSession.token);
         setUser({
-          userId: profile.userId,
-          email: profile.email,
-          displayName: profile.displayName,
-          category: profile.category,
+          userId: snapshot.profile.userId,
+          email: snapshot.profile.email,
+          displayName: snapshot.profile.displayName,
+          category: snapshot.profile.category,
         });
 
         setLoadingPhase("data");
         setStatus("authenticated");
-        LOGGER.info("Authentication successful", { userId: profile.userId });
+        LOGGER.info("Authentication successful", {
+          userId: snapshot.profile.userId,
+        });
       } catch (err) {
         if (cancelled) return;
 
