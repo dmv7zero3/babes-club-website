@@ -20,7 +20,10 @@ import {
   clearSession,
   type StoredDashboardSession,
 } from "@/lib/dashboard/session";
-import { fetchDashboardSnapshot } from "@/lib/dashboard/api";
+import {
+  fetchDashboardSnapshot,
+  type DashboardSnapshot,
+} from "@/lib/dashboard/api";
 import { ChronicLeafIcon } from "@/components/LoadingIcon";
 
 // ============================================================================
@@ -41,7 +44,8 @@ export interface DashboardUserData {
 
 export interface DashboardAuthContextValue {
   status: DashboardAuthStatus;
-  user?: DashboardUserData;
+  // Full snapshot with profile (including addresses), orders, and nfts
+  user?: DashboardSnapshot;
   error?: Error;
   reload: () => void;
   logout: () => void;
@@ -180,7 +184,8 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = ({
   loading,
 }) => {
   const [status, setStatus] = useState<DashboardAuthStatus>("loading");
-  const [user, setUser] = useState<DashboardUserData | undefined>();
+  // Store the FULL snapshot (profile with addresses, orders, nfts)
+  const [user, setUser] = useState<DashboardSnapshot | undefined>();
   const [error, setError] = useState<Error | undefined>();
   const [session, setSession] = useState<StoredDashboardSession | null>(null);
   const [loadingPhase, setLoadingPhase] = useState<LoadingPhase>("session");
@@ -262,24 +267,33 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = ({
           return;
         }
 
-        // Store the session in state so token is available in context
+        // ✅ FIX: Store the session in state so token is available in context
         setSession(storedSession);
         setLoadingPhase("profile");
 
         // Step 2: Fetch dashboard snapshot
         LOGGER.debug("Fetching dashboard snapshot");
         const snapshot = await fetchDashboardSnapshot(storedSession.token);
+
         if (cancelled) return;
-        setUser({
-          userId: snapshot.profile.userId,
-          email: snapshot.profile.email,
-          displayName: snapshot.profile.displayName,
-          category: snapshot.profile.category,
+
+        // ✅ FIX: Store the FULL snapshot, not just minimal user data
+        // This includes profile (with addresses), orders, and nfts
+        LOGGER.debug("Dashboard snapshot received", {
+          hasProfile: !!snapshot.profile,
+          hasShippingAddress: !!snapshot.profile?.shippingAddress?.line1,
+          hasBillingAddress: !!snapshot.profile?.billingAddress?.line1,
+          ordersCount: snapshot.orders?.length ?? 0,
+          nftsCount: snapshot.nfts?.length ?? 0,
         });
+
+        setUser(snapshot);
         setLoadingPhase("data");
         setStatus("authenticated");
+
         LOGGER.info("Authentication successful", {
           userId: snapshot.profile.userId,
+          hasAddresses: !!snapshot.profile.shippingAddress?.line1,
         });
       } catch (err) {
         if (cancelled) return;
@@ -359,8 +373,10 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = ({
     LOGGER.debug("Context value updated", {
       status,
       hasUser: !!user,
+      hasProfile: !!user?.profile,
+      hasShippingAddress: !!user?.profile?.shippingAddress?.line1,
+      hasBillingAddress: !!user?.profile?.billingAddress?.line1,
       hasToken: !!session?.token,
-      tokenPreview: session?.token?.slice(0, 20) + "...",
     });
   }, [status, user, session?.token]);
 

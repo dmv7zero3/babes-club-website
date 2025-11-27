@@ -1,3 +1,9 @@
+/**
+ * Dashboard API Client for The Babes Club
+ *
+ * Functions for fetching dashboard data including profile, orders, and NFTs.
+ */
+
 import apiClient from "@/lib/api/apiClient";
 import type {
   DashboardAddress,
@@ -6,6 +12,10 @@ import type {
   DashboardProfile,
   DashboardUserData,
 } from "@/lib/types/dashboard";
+
+// ============================================================================
+// Types
+// ============================================================================
 
 export interface AuthLoginResponse {
   accessToken: string;
@@ -24,14 +34,23 @@ interface DashboardProfileResponse {
 }
 
 interface DashboardOrdersResponse {
-  orders?: Array<Record<string, any>>;
+  orders?: Array<Record<string, unknown>>;
 }
 
 interface DashboardNftsResponse {
-  nfts?: Array<Record<string, any>>;
+  nfts?: Array<Record<string, unknown>>;
 }
 
-export interface DashboardSnapshot extends DashboardUserData {}
+// ✅ Export this type so DashboardRouteGuard can use it
+export interface DashboardSnapshot {
+  profile: DashboardProfile;
+  orders: DashboardOrder[];
+  nfts: DashboardNftAsset[];
+}
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
 
 const buildAuthHeaders = (token: string) => ({
   headers: {
@@ -74,6 +93,15 @@ const normalizeAddress = (address?: unknown): DashboardAddress => {
 const normalizeProfile = (
   profile?: Partial<DashboardProfile> | null
 ): DashboardProfile => {
+  // Debug: Log incoming profile data
+  console.log("[api.ts] normalizeProfile input:", {
+    hasProfile: !!profile,
+    hasShippingAddress: !!profile?.shippingAddress,
+    hasBillingAddress: !!profile?.billingAddress,
+    shippingAddress: profile?.shippingAddress,
+    billingAddress: profile?.billingAddress,
+  });
+
   const shippingAddress = normalizeAddress(profile?.shippingAddress);
   let billingAddress: DashboardAddress | undefined;
   if (
@@ -82,7 +110,8 @@ const normalizeProfile = (
   ) {
     billingAddress = normalizeAddress(profile.billingAddress);
   }
-  return {
+
+  const normalized: DashboardProfile = {
     userId: profile?.userId ?? "anonymous",
     displayName: profile?.displayName ?? "Babes Club Member",
     email: profile?.email ?? "member@example.com",
@@ -95,26 +124,36 @@ const normalizeProfile = (
     updatedAt: profile?.updatedAt ?? new Date().toISOString(),
     category: profile?.category ?? "Member",
   };
+
+  // Debug: Log normalized output
+  console.log("[api.ts] normalizeProfile output:", {
+    shippingAddress: normalized.shippingAddress,
+    billingAddress: normalized.billingAddress,
+  });
+
+  return normalized;
 };
 
 const normalizeOrder = (
-  order: Record<string, any> | undefined,
+  order: Record<string, unknown> | undefined,
   index: number
 ): DashboardOrder => ({
-  orderId: order?.orderId ?? order?.orderNumber ?? `order-${index}`,
-  orderNumber: order?.orderNumber ?? order?.orderId ?? `BC-${index}`,
-  status: order?.status ?? "processing",
+  orderId: String(order?.orderId ?? order?.orderNumber ?? `order-${index}`),
+  orderNumber: String(order?.orderNumber ?? order?.orderId ?? `BC-${index}`),
+  status: String(order?.status ?? "processing"),
   amount:
     typeof order?.amount === "number"
       ? order.amount
       : Number(order?.amount ?? 0),
-  currency: (order?.currency ?? "usd").toLowerCase(),
-  stripePaymentIntentId: order?.stripePaymentIntentId,
-  createdAt: order?.createdAt ?? new Date().toISOString(),
+  currency: String(order?.currency ?? "usd").toLowerCase(),
+  stripePaymentIntentId: order?.stripePaymentIntentId
+    ? String(order.stripePaymentIntentId)
+    : undefined,
+  createdAt: String(order?.createdAt ?? new Date().toISOString()),
   items: Array.isArray(order?.items)
-    ? order.items.map((item: Record<string, any>, itemIndex: number) => ({
-        sku: item?.sku ?? `sku-${itemIndex}`,
-        name: item?.name ?? "Item",
+    ? order.items.map((item: Record<string, unknown>, itemIndex: number) => ({
+        sku: String(item?.sku ?? `sku-${itemIndex}`),
+        name: String(item?.name ?? "Item"),
         quantity:
           typeof item?.quantity === "number"
             ? item.quantity
@@ -128,16 +167,24 @@ const normalizeOrder = (
 });
 
 const normalizeNft = (
-  nft: Record<string, any> | undefined,
+  nft: Record<string, unknown> | undefined,
   index: number
 ): DashboardNftAsset => ({
-  tokenId: nft?.tokenId ?? `token-${index}`,
-  collectionId: nft?.collectionId ?? "collection",
-  tokenName: nft?.tokenName ?? nft?.name ?? "NFT",
-  thumbnailUrl: nft?.thumbnailUrl ?? nft?.image,
-  metadata: nft?.metadata ?? {},
-  lastSyncedAt: nft?.lastSyncedAt ?? new Date().toISOString(),
+  tokenId: String(nft?.tokenId ?? `token-${index}`),
+  collectionId: String(nft?.collectionId ?? "collection"),
+  tokenName: String(nft?.tokenName ?? nft?.name ?? "NFT"),
+  thumbnailUrl: nft?.thumbnailUrl
+    ? String(nft.thumbnailUrl)
+    : nft?.image
+      ? String(nft.image)
+      : undefined,
+  metadata: (nft?.metadata as Record<string, unknown>) ?? {},
+  lastSyncedAt: String(nft?.lastSyncedAt ?? new Date().toISOString()),
 });
+
+// ============================================================================
+// Auth API Functions
+// ============================================================================
 
 export const login = async (
   email: string,
@@ -164,9 +211,16 @@ export const signup = async (
 
   return data;
 };
+
+// ============================================================================
+// Dashboard API Functions
+// ============================================================================
+
 export const fetchDashboardSnapshot = async (
   token: string
 ): Promise<DashboardSnapshot> => {
+  console.log("[api.ts] fetchDashboardSnapshot - fetching data...");
+
   const [profileResponse, ordersResponse, nftsResponse] = await Promise.all([
     apiClient.get<DashboardProfileResponse>(
       "/dashboard/profile",
@@ -182,9 +236,21 @@ export const fetchDashboardSnapshot = async (
     ),
   ]);
 
+  console.log("[api.ts] Raw profile response:", profileResponse.data);
+
   const profile = normalizeProfile(profileResponse.data.profile);
   const orders = (ordersResponse.data.orders ?? []).map(normalizeOrder);
   const nfts = (nftsResponse.data.nfts ?? []).map(normalizeNft);
+
+  console.log("[api.ts] fetchDashboardSnapshot - snapshot created:", {
+    profileUserId: profile.userId,
+    hasShippingAddress: !!profile.shippingAddress?.line1,
+    hasBillingAddress: !!profile.billingAddress?.line1,
+    shippingLine1: profile.shippingAddress?.line1,
+    billingLine1: profile.billingAddress?.line1,
+    ordersCount: orders.length,
+    nftsCount: nfts.length,
+  });
 
   return {
     profile,
@@ -197,6 +263,8 @@ export const updateDashboardProfile = async (
   token: string,
   payload: Partial<DashboardProfile>
 ): Promise<DashboardProfile> => {
+  console.log("[api.ts] updateDashboardProfile - payload:", payload);
+
   // Normalize payload before sending
   const normalizedPayload = {
     ...payload,
@@ -207,10 +275,19 @@ export const updateDashboardProfile = async (
       ? normalizeAddress(payload.billingAddress)
       : undefined,
   };
+
+  console.log(
+    "[api.ts] updateDashboardProfile - normalized payload:",
+    normalizedPayload
+  );
+
   const { data } = await apiClient.post<DashboardProfileResponse>(
     "/dashboard/update-profile",
     normalizedPayload,
     buildAuthHeaders(token)
   );
+
+  console.log("[api.ts] updateDashboardProfile - response:", data);
+
   return normalizeProfile(data.profile);
 };

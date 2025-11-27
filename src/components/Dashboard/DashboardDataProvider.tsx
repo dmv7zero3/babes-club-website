@@ -1,3 +1,10 @@
+/**
+ * Dashboard Data Provider for The Babes Club
+ *
+ * Provides profile, orders, and NFT data context for dashboard components.
+ * Handles data fetching and profile updates.
+ */
+
 import {
   createContext,
   useCallback,
@@ -8,7 +15,6 @@ import {
   type ReactNode,
 } from "react";
 
-type DashboardDataStatus = "idle" | "loading" | "error";
 import {
   type DashboardNftAsset,
   type DashboardOrder,
@@ -17,6 +23,12 @@ import {
 import { updateDashboardProfile } from "@/lib/dashboard/api";
 import { useDashboardAuth } from "./DashboardRouteGuard";
 import { readStoredSession } from "@/lib/dashboard/session";
+
+// ============================================================================
+// Types
+// ============================================================================
+
+type DashboardDataStatus = "idle" | "loading" | "error";
 
 interface DashboardSnapshot {
   profile: DashboardProfile;
@@ -43,6 +55,10 @@ interface DashboardDataContextValue {
   activeOrder?: DashboardOrder | null;
 }
 
+// ============================================================================
+// Context
+// ============================================================================
+
 const DashboardDataContext = createContext<DashboardDataContextValue | null>(
   null
 );
@@ -59,6 +75,10 @@ export const useDashboardData = (): DashboardDataContextValue => {
   return context;
 };
 
+// ============================================================================
+// Provider Component
+// ============================================================================
+
 interface DashboardDataProviderProps {
   children: ReactNode;
 }
@@ -74,19 +94,16 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
 
   // Debug: Log initial auth context
   useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log("[DashboardDataProvider] Auth context", {
+    console.log("[DashboardDataProvider] Auth context changed", {
       authStatus,
       user,
       authError,
-      token,
+      hasToken: !!token,
+      tokenPreview: token?.slice(0, 20) + "...",
     });
   }, [authStatus, user, authError, token]);
 
-  // Prefer a fully-loaded `user` snapshot, but fall back to any minimal
-  // session info persisted in sessionStorage so the UI can show the
-  // authenticated user's name/email immediately while the server snapshot
-  // is fetched.
+  // Initialize data from stored session or user snapshot
   const storedSession = readStoredSession();
   const [data, setData] = useState<DashboardSnapshot | undefined>(() => {
     if (user && "profile" in user && "orders" in user && "nfts" in user) {
@@ -121,15 +138,20 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
     }
     return undefined;
   });
+
   const [status, setStatus] = useState<DashboardDataStatus>(
     authStatus === "authenticated" ? "idle" : "loading"
   );
   const [error, setError] = useState<Error | undefined>(authError);
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
 
+  // Sync data with auth state changes
   useEffect(() => {
-    // Debug: Log status changes
-    console.log("[DashboardDataProvider] useEffect status", authStatus, user);
+    console.log(
+      "[DashboardDataProvider] useEffect - authStatus changed:",
+      authStatus
+    );
+
     if (authStatus === "loading") {
       setStatus("loading");
       return;
@@ -144,8 +166,9 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
     }
 
     if (authStatus === "authenticated" && user) {
-      // If user is a snapshot, set it directly
+      // If user is a full snapshot, set it directly
       if ("profile" in user && "orders" in user && "nfts" in user) {
+        console.log("[DashboardDataProvider] Setting data from user snapshot");
         setData(user as DashboardSnapshot);
         setStatus("idle");
         setError(undefined);
@@ -161,7 +184,10 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
           return (user as DashboardSnapshot).orders[0]?.orderId ?? null;
         });
       } else {
-        // Fallback: treat as profile only
+        // Fallback: treat user as profile only
+        console.log(
+          "[DashboardDataProvider] Setting data from user (profile only)"
+        );
         setData({ profile: user as DashboardProfile, orders: [], nfts: [] });
         setStatus("idle");
         setError(undefined);
@@ -170,23 +196,22 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
     }
   }, [authStatus, authError, user]);
 
+  // Refresh handler
   const refresh = useCallback(() => {
+    console.log("[DashboardDataProvider] Refresh triggered");
     setStatus("loading");
     setError(undefined);
     reload();
   }, [reload]);
 
+  // Update profile handler
   const updateProfile = useCallback(
     async (fields: UpdateableProfileFields) => {
-      // Debug: Log updateProfile call and headers
       console.log("[DashboardDataProvider] updateProfile called", {
-        token,
+        hasToken: !!token,
         fields,
       });
-      console.log("[DashboardDataProvider] updateProfile headers", {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      });
+
       if (!token) {
         console.error(
           "[DashboardDataProvider] No token available for updateProfile"
@@ -195,41 +220,59 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
       }
 
       try {
-        const updatedProfile = await updateDashboardProfile(token, fields);
         console.log(
-          "[DashboardDataProvider] updateDashboardProfile response",
-          updatedProfile
+          "[DashboardDataProvider] Calling updateDashboardProfile API..."
         );
+        const updatedProfile = await updateDashboardProfile(token, fields);
+
+        console.log("[DashboardDataProvider] API response - updatedProfile:", {
+          userId: updatedProfile.userId,
+          displayName: updatedProfile.displayName,
+          email: updatedProfile.email,
+          shippingAddress: updatedProfile.shippingAddress,
+          billingAddress: updatedProfile.billingAddress,
+          updatedAt: updatedProfile.updatedAt,
+        });
+
+        // Update local state with new profile
         setData((previous) => {
           if (!previous) {
+            console.warn("[DashboardDataProvider] No previous data to update");
             return previous;
           }
-          return {
+
+          const newData = {
             ...previous,
             profile: updatedProfile,
           };
+
+          console.log(
+            "[DashboardDataProvider] setData called with new profile:",
+            {
+              previousProfile: previous.profile?.updatedAt,
+              newProfile: updatedProfile.updatedAt,
+            }
+          );
+
+          return newData;
         });
+
+        console.log("[DashboardDataProvider] Profile update complete");
       } catch (err) {
-        // Enhanced error logging with type guard for AxiosError
+        // Enhanced error logging
         if (
           err &&
           typeof err === "object" &&
           "isAxiosError" in err &&
-          (err as any).isAxiosError === true
+          (err as { isAxiosError: boolean }).isAxiosError === true
         ) {
           const axiosErr = err as import("axios").AxiosError;
-          console.error("[DashboardDataProvider] updateProfile error", {
+          console.error("[DashboardDataProvider] updateProfile API error", {
             message: axiosErr.message,
             code: axiosErr.code,
-            response: axiosErr.response,
-            config: axiosErr.config,
+            status: axiosErr.response?.status,
+            data: axiosErr.response?.data,
           });
-          if (axiosErr.response) {
-            console.error(
-              "[DashboardDataProvider] API error response",
-              axiosErr.response.data
-            );
-          }
         } else {
           console.error("[DashboardDataProvider] updateProfile error", err);
         }
@@ -239,16 +282,18 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
     [token]
   );
 
+  // Computed values
   const orders = data?.orders ?? [];
   const nfts = data?.nfts ?? [];
+
   const activeOrder = useMemo(() => {
     if (!activeOrderId) {
       return null;
     }
-
     return orders.find((order) => order.orderId === activeOrderId) ?? null;
   }, [orders, activeOrderId]);
 
+  // Context value
   const contextValue = useMemo<DashboardDataContextValue>(
     () => ({
       status,
@@ -274,6 +319,17 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
       activeOrder,
     ]
   );
+
+  // Debug: Log context value changes
+  useEffect(() => {
+    console.log("[DashboardDataProvider] Context value updated", {
+      status,
+      hasProfile: !!data?.profile,
+      profileUpdatedAt: data?.profile?.updatedAt,
+      ordersCount: orders.length,
+      nftsCount: nfts.length,
+    });
+  }, [status, data?.profile, orders.length, nfts.length]);
 
   return (
     <DashboardDataContext.Provider value={contextValue}>

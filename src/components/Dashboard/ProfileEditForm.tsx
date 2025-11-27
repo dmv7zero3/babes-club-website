@@ -1,5 +1,17 @@
+/**
+ * Profile Edit Form for The Babes Club Dashboard
+ *
+ * Allows users to update their profile information including
+ * display name, email, and shipping/billing addresses.
+ */
+
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { useDashboardData } from "./DashboardDataProvider";
+import { InlineSpinner } from "@/components/LoadingIcon";
+
+// ============================================================================
+// Types
+// ============================================================================
 
 interface FormState {
   displayName: string;
@@ -20,27 +32,17 @@ interface FormState {
   useSameAddress: boolean;
 }
 
-const booleanSetting = (value: unknown, fallback = true): boolean => {
-  if (typeof value === "boolean") {
-    return value;
-  }
-
-  return fallback;
-};
-
-const stringSetting = (value: unknown, fallback = ""): string => {
-  if (typeof value === "string") {
-    return value;
-  }
-
-  return fallback;
-};
+// ============================================================================
+// Helper Functions
+// ============================================================================
 
 const buildFormState = (
   profile: ReturnType<typeof useDashboardData>["profile"]
 ): FormState => {
   const shipping = profile?.shippingAddress;
   const billing = profile?.billingAddress;
+
+  // Check if billing is same as shipping
   const same =
     !billing ||
     (billing.line1 === shipping?.line1 &&
@@ -49,6 +51,7 @@ const buildFormState = (
       billing.state === shipping?.state &&
       billing.postalCode === shipping?.postalCode &&
       billing.country === shipping?.country);
+
   return {
     displayName: profile?.displayName ?? "",
     email: profile?.email ?? "",
@@ -69,21 +72,48 @@ const buildFormState = (
   };
 };
 
+// ============================================================================
+// Component
+// ============================================================================
+
 const ProfileEditForm = () => {
   const { profile, updateProfile } = useDashboardData();
-  const initialState = useMemo(() => buildFormState(profile), [profile]);
+
+  // Memoize initial state based on profile
+  const initialState = useMemo(() => {
+    console.log(
+      "[ProfileEditForm] Building initial state from profile:",
+      profile
+    );
+    return buildFormState(profile);
+  }, [profile]);
 
   const [formState, setFormState] = useState<FormState>(initialState);
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Update form state when profile changes (e.g., after successful save)
   useEffect(() => {
-    setFormState(buildFormState(profile));
-    setFeedback(null);
+    console.log("[ProfileEditForm] Profile changed in context:", {
+      userId: profile?.userId,
+      displayName: profile?.displayName,
+      email: profile?.email,
+      shippingAddress: profile?.shippingAddress,
+      billingAddress: profile?.billingAddress,
+      updatedAt: profile?.updatedAt,
+    });
+
+    const newFormState = buildFormState(profile);
+    console.log("[ProfileEditForm] New form state:", newFormState);
+
+    setFormState(newFormState);
+    // Don't clear feedback on profile update - user should see success message
+    // setFeedback(null);
     setError(null);
   }, [profile]);
 
+  // Loading state
   if (!profile) {
     return (
       <div className="p-6 text-sm bg-white border rounded-xl border-neutral-200 text-neutral-500">
@@ -92,10 +122,15 @@ const ProfileEditForm = () => {
     );
   }
 
+  // ============================================================================
+  // Event Handlers
+  // ============================================================================
+
   const handleInputChange = (
     event: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = event.target;
+
     if (type === "checkbox" && name === "useSameAddress") {
       const checked = (event.target as HTMLInputElement).checked;
       setFormState((previous) => ({
@@ -134,7 +169,7 @@ const ProfileEditForm = () => {
     setFeedback(null);
     setError(null);
 
-    // Simple validation for billing if not using same address
+    // Validation for billing if not using same address
     if (!formState.useSameAddress) {
       if (
         !formState.billingLine1 ||
@@ -180,19 +215,33 @@ const ProfileEditForm = () => {
               country: formState.billingCountry.trim(),
             },
       };
-      console.log("[ProfileEditForm] updateProfile payload:", payload);
+
+      console.log("[ProfileEditForm] Submitting payload:", payload);
+
       await updateProfile(payload);
 
-      setFeedback(
-        "Profile saved. Changes are stored locally until the API is ready."
+      console.log(
+        "[ProfileEditForm] Update successful, profile should refresh"
       );
-    } catch (err: any) {
+
+      setFeedback("Profile saved successfully!");
+    } catch (err: unknown) {
+      console.error("[ProfileEditForm] Update failed:", err);
+
       // Map backend errors to fields if possible
-      if (err?.fieldErrors) {
-        // Example: { shippingAddress: { line1: "Required" }, billingAddress: { city: "Invalid" } }
-        const summary = Object.entries(err.fieldErrors)
+      if (
+        err &&
+        typeof err === "object" &&
+        "fieldErrors" in err &&
+        err.fieldErrors
+      ) {
+        const fieldErrors = err.fieldErrors as Record<
+          string,
+          Record<string, string>
+        >;
+        const summary = Object.entries(fieldErrors)
           .map(([section, fields]) =>
-            Object.entries(fields as Record<string, string>)
+            Object.entries(fields)
               .map(([field, msg]) => `${section}.${field}: ${msg}`)
               .join("; ")
           )
@@ -210,6 +259,10 @@ const ProfileEditForm = () => {
     }
   };
 
+  // ============================================================================
+  // Render
+  // ============================================================================
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -218,11 +271,11 @@ const ProfileEditForm = () => {
       <header className="space-y-1">
         <h3 className="text-lg font-semibold text-neutral-900">Edit Profile</h3>
         <p className="text-sm text-neutral-500">
-          Update member information. Submissions are currently stored in-memory
-          while the backend is under construction.
+          Update your member information and addresses.
         </p>
       </header>
 
+      {/* Basic Info Section */}
       <section className="grid gap-4 md:grid-cols-2">
         <div className="flex flex-col gap-2">
           <label
@@ -270,11 +323,12 @@ const ProfileEditForm = () => {
             value={formState.preferredWallet}
             onChange={handleInputChange}
             placeholder="0x..."
-            className="px-3 py-2 font-mono text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+            className="px-3 py-2 text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
           />
         </div>
       </section>
 
+      {/* Shipping Address Section */}
       <section className="space-y-4">
         <h4 className="text-sm font-semibold tracking-wide uppercase text-neutral-500">
           Shipping Address
@@ -378,37 +432,35 @@ const ProfileEditForm = () => {
         </div>
       </section>
 
-      <div className="flex items-center gap-2 mt-4">
+      {/* Same Address Checkbox */}
+      <div className="flex items-center gap-2">
         <input
+          type="checkbox"
           id="useSameAddress"
           name="useSameAddress"
-          type="checkbox"
           checked={formState.useSameAddress}
           onChange={handleInputChange}
-          aria-checked={formState.useSameAddress}
-          aria-label="Use same address for billing and shipping"
-          className="w-4 h-4 accent-black focus:ring-2 focus:ring-black"
+          className="w-4 h-4 border rounded border-neutral-300 text-babe-pink focus:ring-babe-pink"
         />
         <label
           htmlFor="useSameAddress"
           className="text-sm font-medium text-neutral-700"
         >
-          Use same address for billing and shipping
+          Billing address same as shipping
         </label>
       </div>
 
-      {/* Error summary for accessibility */}
-      {error ? (
+      {/* Feedback Messages */}
+      {error && (
         <div
           className="p-3 text-sm text-red-700 rounded-md bg-red-50"
           role="alert"
-          tabIndex={-1}
           aria-live="assertive"
         >
           {error}
         </div>
-      ) : null}
-      {feedback ? (
+      )}
+      {feedback && (
         <div
           className="p-3 text-sm text-green-700 rounded-md bg-green-50"
           role="status"
@@ -416,10 +468,10 @@ const ProfileEditForm = () => {
         >
           {feedback}
         </div>
-      ) : null}
+      )}
 
       {/* Billing Address Section */}
-      <section className="space-y-4 mt-6">
+      <section className="space-y-4">
         <h4 className="text-sm font-semibold tracking-wide uppercase text-neutral-500">
           Billing Address
         </h4>
@@ -438,7 +490,7 @@ const ProfileEditForm = () => {
               onChange={handleInputChange}
               required={!formState.useSameAddress}
               disabled={formState.useSameAddress}
-              className="px-3 py-2 text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+              className="px-3 py-2 text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black disabled:bg-neutral-100 disabled:text-neutral-500"
               aria-disabled={formState.useSameAddress}
             />
           </div>
@@ -455,7 +507,7 @@ const ProfileEditForm = () => {
               value={formState.billingLine2}
               onChange={handleInputChange}
               disabled={formState.useSameAddress}
-              className="px-3 py-2 text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+              className="px-3 py-2 text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black disabled:bg-neutral-100 disabled:text-neutral-500"
               aria-disabled={formState.useSameAddress}
             />
           </div>
@@ -473,7 +525,7 @@ const ProfileEditForm = () => {
               onChange={handleInputChange}
               required={!formState.useSameAddress}
               disabled={formState.useSameAddress}
-              className="px-3 py-2 text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+              className="px-3 py-2 text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black disabled:bg-neutral-100 disabled:text-neutral-500"
               aria-disabled={formState.useSameAddress}
             />
           </div>
@@ -491,7 +543,7 @@ const ProfileEditForm = () => {
               onChange={handleInputChange}
               required={!formState.useSameAddress}
               disabled={formState.useSameAddress}
-              className="px-3 py-2 text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+              className="px-3 py-2 text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black disabled:bg-neutral-100 disabled:text-neutral-500"
               aria-disabled={formState.useSameAddress}
             />
           </div>
@@ -509,7 +561,7 @@ const ProfileEditForm = () => {
               onChange={handleInputChange}
               required={!formState.useSameAddress}
               disabled={formState.useSameAddress}
-              className="px-3 py-2 text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+              className="px-3 py-2 text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black disabled:bg-neutral-100 disabled:text-neutral-500"
               aria-disabled={formState.useSameAddress}
             />
           </div>
@@ -527,20 +579,28 @@ const ProfileEditForm = () => {
               onChange={handleInputChange}
               required={!formState.useSameAddress}
               disabled={formState.useSameAddress}
-              className="px-3 py-2 text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+              className="px-3 py-2 text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black disabled:bg-neutral-100 disabled:text-neutral-500"
               aria-disabled={formState.useSameAddress}
             />
           </div>
         </div>
       </section>
 
-      <div className="flex items-center justify-end gap-3 mt-6">
+      {/* Submit Button */}
+      <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
         <button
           type="submit"
-          className="px-4 py-2 text-sm font-semibold text-white bg-black rounded-md hover:bg-neutral-800 disabled:opacity-60"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-black rounded-md hover:bg-neutral-800 disabled:opacity-60 disabled:cursor-not-allowed"
           disabled={isSaving}
         >
-          {isSaving ? "Saving…" : "Save Changes"}
+          {isSaving ? (
+            <>
+              <InlineSpinner size={16} color="#ffffff" />
+              Saving…
+            </>
+          ) : (
+            "Save Changes"
+          )}
         </button>
       </div>
     </form>
