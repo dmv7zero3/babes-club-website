@@ -210,7 +210,10 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = ({
         const storedSession = readStoredSession();
 
         if (storedSession && storedSession.token) {
-          LOGGER.debug(`Session found on attempt ${attempt}`);
+          LOGGER.debug(`Session found on attempt ${attempt}`, {
+            hasToken: !!storedSession.token,
+            expiresAt: storedSession.expiresAt,
+          });
           return storedSession;
         }
 
@@ -244,6 +247,7 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = ({
 
         if (!storedSession || !storedSession.token) {
           LOGGER.info("No valid session found");
+          setSession(null);
           setStatus("unauthenticated");
           return;
         }
@@ -251,20 +255,27 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = ({
         // Check token expiry
         const nowSeconds = Math.floor(Date.now() / 1000);
         if (storedSession.expiresAt && storedSession.expiresAt <= nowSeconds) {
+          LOGGER.info("Session expired");
           clearSession();
+          setSession(null);
           setStatus("unauthenticated");
           return;
         }
 
+        // Store the session in state so token is available in context
+        setSession(storedSession);
+        setLoadingPhase("profile");
+
         // Step 2: Fetch dashboard snapshot
+        LOGGER.debug("Fetching dashboard snapshot");
         const snapshot = await fetchDashboardSnapshot(storedSession.token);
+        if (cancelled) return;
         setUser({
           userId: snapshot.profile.userId,
           email: snapshot.profile.email,
           displayName: snapshot.profile.displayName,
           category: snapshot.profile.category,
         });
-
         setLoadingPhase("data");
         setStatus("authenticated");
         LOGGER.info("Authentication successful", {
@@ -276,6 +287,7 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = ({
         const error = err instanceof Error ? err : new Error("Unknown error");
         LOGGER.error("Authentication failed", error);
         setError(error);
+        setSession(null);
         setStatus("unauthenticated");
       }
     };
@@ -329,7 +341,7 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = ({
     };
   }, [status, logout]);
 
-  // Context value
+  // Context value - includes token from session
   const contextValue = useMemo<DashboardAuthContextValue>(
     () => ({
       status,
@@ -337,10 +349,20 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = ({
       error,
       reload,
       logout,
-      token: session?.token,
+      token: session?.token, // This now works because session is set
     }),
     [status, user, error, reload, logout, session?.token]
   );
+
+  // Debug: Log context value changes
+  useEffect(() => {
+    LOGGER.debug("Context value updated", {
+      status,
+      hasUser: !!user,
+      hasToken: !!session?.token,
+      tokenPreview: session?.token?.slice(0, 20) + "...",
+    });
+  }, [status, user, session?.token]);
 
   // ============================================================================
   // Render Logic
