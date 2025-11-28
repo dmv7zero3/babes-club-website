@@ -3,6 +3,11 @@
  *
  * Provides authentication context and loading states for dashboard pages.
  * Uses the branded ChronicLeafIcon loading component.
+ *
+ * FIXES in this version:
+ * 1. Listens for SESSION_EVENTS.CLEARED to handle logout properly
+ * 2. Clears both sessionStorage AND localStorage on logout
+ * 3. Properly navigates to login after logout
  */
 
 import React, {
@@ -18,6 +23,8 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import {
   readStoredSession,
   clearSession,
+  SESSION_EVENTS,
+  DASHBOARD_SESSION_STORAGE_KEY,
   type StoredDashboardSession,
 } from "@/lib/dashboard/session";
 import {
@@ -25,6 +32,7 @@ import {
   type DashboardSnapshot,
 } from "@/lib/dashboard/api";
 import { ChronicLeafIcon } from "@/components/LoadingIcon";
+import DashboardErrorFallback from "./DashboardErrorFallback";
 
 // ============================================================================
 // Types
@@ -44,7 +52,6 @@ export interface DashboardUserData {
 
 export interface DashboardAuthContextValue {
   status: DashboardAuthStatus;
-  // Full snapshot with profile (including addresses), orders, and nfts
   user?: DashboardSnapshot;
   error?: Error;
   reload: () => void;
@@ -53,6 +60,15 @@ export interface DashboardAuthContextValue {
 }
 
 type LoadingPhase = "session" | "profile" | "data" | null;
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+const MAX_RETRIES = 3;
+const SESSION_CHECK_RETRIES = 3;
+const SESSION_CHECK_DELAY_MS = 100;
+const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
 // ============================================================================
 // Context
@@ -73,6 +89,19 @@ export const useDashboardAuth = (): DashboardAuthContextValue => {
 };
 
 // ============================================================================
+// Logger
+// ============================================================================
+
+const LOGGER = {
+  info: (msg: string, data?: unknown) =>
+    console.log(`[DashboardAuth] ${msg}`, data ?? ""),
+  debug: (msg: string, data?: unknown) =>
+    console.debug(`[DashboardAuth] ${msg}`, data ?? ""),
+  error: (msg: string, data?: unknown) =>
+    console.error(`[DashboardAuth] ${msg}`, data ?? ""),
+};
+
+// ============================================================================
 // Loading Component
 // ============================================================================
 
@@ -80,9 +109,6 @@ interface DashboardLoadingProps {
   phase?: LoadingPhase;
 }
 
-/**
- * Branded loading screen for dashboard with phase-specific messages.
- */
 const DashboardLoading: React.FC<DashboardLoadingProps> = ({ phase }) => {
   const getMessage = () => {
     switch (phase) {
@@ -111,64 +137,6 @@ const DashboardLoading: React.FC<DashboardLoadingProps> = ({ phase }) => {
 };
 
 // ============================================================================
-// Error Fallback Component
-// ============================================================================
-
-interface DashboardErrorFallbackProps {
-  error: Error;
-  onRetry?: () => void;
-}
-
-const DashboardErrorFallback: React.FC<DashboardErrorFallbackProps> = ({
-  error,
-  onRetry,
-}) => (
-  <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#0d0d0d] px-4 text-center">
-    <ChronicLeafIcon
-      size={56}
-      showLabel={false}
-      enableRotation={false}
-      enableGlow={true}
-      colors={["#fca5a5", "#f87171", "#ef4444"]}
-    />
-    <div className="space-y-2">
-      <p className="text-sm text-white/70">
-        Unable to load dashboard. Please try again later.
-      </p>
-      {error.message && (
-        <p className="text-xs text-white/40">{error.message}</p>
-      )}
-    </div>
-    {onRetry && (
-      <button
-        onClick={onRetry}
-        className="px-6 py-2 text-sm font-medium text-white transition-colors rounded-lg bg-babe-pink hover:bg-babe-pink-600"
-      >
-        Try Again
-      </button>
-    )}
-  </div>
-);
-
-// ============================================================================
-// Constants
-// ============================================================================
-
-const SESSION_CHECK_RETRIES = 3;
-const SESSION_CHECK_DELAY_MS = 100;
-const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
-
-// Simple logger
-const LOGGER = {
-  info: (msg: string, data?: unknown) =>
-    console.log(`[DashboardAuth] ${msg}`, data ?? ""),
-  debug: (msg: string, data?: unknown) =>
-    console.debug(`[DashboardAuth] ${msg}`, data ?? ""),
-  error: (msg: string, data?: unknown) =>
-    console.error(`[DashboardAuth] ${msg}`, data ?? ""),
-};
-
-// ============================================================================
 // Route Guard Component
 // ============================================================================
 
@@ -184,7 +152,6 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = ({
   loading,
 }) => {
   const [status, setStatus] = useState<DashboardAuthStatus>("loading");
-  // Store the FULL snapshot (profile with addresses, orders, nfts)
   const [user, setUser] = useState<DashboardSnapshot | undefined>();
   const [error, setError] = useState<Error | undefined>();
   const [session, setSession] = useState<StoredDashboardSession | null>(null);
@@ -198,13 +165,19 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = ({
     setReloadFlag((value) => value + 1);
   }, []);
 
+  /**
+   * Logout function - clears session and updates state
+   * The clearSession function now dispatches SESSION_EVENTS.CLEARED
+   */
   const logout = useCallback(() => {
     LOGGER.info("Logging out user");
-    clearSession();
+    clearSession(); // This now clears BOTH sessionStorage AND localStorage
     setSession(null);
     setUser(undefined);
     setStatus("unauthenticated");
-  }, []);
+    // Navigate to login page
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   /**
    * Read session with retry logic
@@ -216,7 +189,7 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = ({
 
         if (storedSession && storedSession.token) {
           LOGGER.debug(`Session found on attempt ${attempt}`, {
-            hasToken: !!storedSession.token,
+            hasToken: !storedSession.token,
             expiresAt: storedSession.expiresAt,
           });
           return storedSession;
@@ -232,6 +205,52 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = ({
       LOGGER.debug("No session found after retries");
       return null;
     }, []);
+
+  /**
+   * FIX: Listen for session events (updated AND cleared)
+   * This ensures the guard reacts to logout calls from anywhere in the app
+   */
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      // Only react to our session key changes
+      if (event.key === DASHBOARD_SESSION_STORAGE_KEY || event.key === null) {
+        LOGGER.debug("Storage event detected, reloading session");
+        reload();
+      }
+    };
+
+    // Listen for session updated events (login, token refresh)
+    const handleSessionUpdate = () => {
+      LOGGER.debug("Session update event detected");
+      reload();
+    };
+
+    // Listen for session cleared events (logout)
+    const handleSessionCleared = () => {
+      LOGGER.debug("Session cleared event detected - logging out");
+      setSession(null);
+      setUser(undefined);
+      setStatus("unauthenticated");
+    };
+
+    // Legacy event name for backward compatibility
+    const handleLegacySessionUpdate = () => {
+      LOGGER.debug("Legacy session update event detected");
+      reload();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener(SESSION_EVENTS.UPDATED, handleSessionUpdate);
+    window.addEventListener(SESSION_EVENTS.CLEARED, handleSessionCleared);
+    window.addEventListener("session-updated", handleLegacySessionUpdate);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener(SESSION_EVENTS.UPDATED, handleSessionUpdate);
+      window.removeEventListener(SESSION_EVENTS.CLEARED, handleSessionCleared);
+      window.removeEventListener("session-updated", handleLegacySessionUpdate);
+    };
+  }, [reload]);
 
   /**
    * Main authentication effect
@@ -267,7 +286,7 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = ({
           return;
         }
 
-        // ✅ FIX: Store the session in state so token is available in context
+        // Store the session in state so token is available in context
         setSession(storedSession);
         setLoadingPhase("profile");
 
@@ -277,8 +296,6 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = ({
 
         if (cancelled) return;
 
-        // ✅ FIX: Store the FULL snapshot, not just minimal user data
-        // This includes profile (with addresses), orders, and nfts
         LOGGER.debug("Dashboard snapshot received", {
           hasProfile: !!snapshot.profile,
           hasShippingAddress: !!snapshot.profile?.shippingAddress?.line1,
@@ -319,7 +336,7 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = ({
   useEffect(() => {
     if (status !== "authenticated") return;
 
-    let timer: NodeJS.Timeout | undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
 
     const resetTimer = () => {
       if (timer) clearTimeout(timer);
@@ -363,7 +380,7 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = ({
       error,
       reload,
       logout,
-      token: session?.token, // This now works because session is set
+      token: session?.token,
     }),
     [status, user, error, reload, logout, session?.token]
   );
