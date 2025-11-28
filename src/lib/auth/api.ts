@@ -1,6 +1,6 @@
 /**
  * Authentication API Client for The Babes Club
- *
+ * src/lib/auth/api.ts
  * Handles all HTTP requests to the authentication endpoints,
  * with proper error handling and response normalization.
  */

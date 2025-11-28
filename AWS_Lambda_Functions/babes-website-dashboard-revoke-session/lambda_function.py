@@ -1,7 +1,10 @@
 """
 Dashboard Revoke Session Lambda - Logout single or all sessions
 Supports both "Logout" (current device) and "Logout All Devices"
+
+AWS_Lambda_Functions/babes-website-dashboard-revoke-session/lambda_function.py
 """
+
 
 from __future__ import annotations
 

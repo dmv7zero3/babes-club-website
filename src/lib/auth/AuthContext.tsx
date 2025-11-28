@@ -1,4 +1,4 @@
-// ...existing imports...
+// src/lib/auth/AuthContext.tsx
 import { updateProfile } from "@/lib/api/updateProfile";
 import { updateSessionTokens } from "./session";
 import { useState } from "react";
