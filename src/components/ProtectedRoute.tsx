@@ -77,7 +77,7 @@ interface ProtectedRouteProps {
  */
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
-  redirectTo = "/auth",
+  redirectTo = "/login",
   loadingComponent,
   loadingMessage = "Checking authentication...",
 }) => {

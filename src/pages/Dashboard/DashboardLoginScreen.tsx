@@ -1,9 +1,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { AxiosError } from "axios";
-import { useDashboardAuth } from "@/components/Dashboard/DashboardRouteGuard";
-import { login } from "@/lib/dashboard/api";
-import { persistSession } from "@/lib/dashboard/session";
+import { useAuth } from "@/lib/auth";
 
 const getErrorMessage = (error: unknown): string => {
   if (!error) {
@@ -42,64 +40,40 @@ const getErrorMessage = (error: unknown): string => {
 };
 
 const DashboardLoginScreen = () => {
-  const { reload, error: guardError } = useDashboardAuth();
+  const {
+    login,
+    isLoading,
+    error: authError,
+    isAuthenticated,
+    clearError,
+  } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const guardMessage = useMemo(() => {
-    if (!guardError) {
-      return null;
-    }
-
-    return guardError.message || "We hit a snag loading the dashboard.";
-  }, [guardError]);
+  const displayError = useMemo(() => {
+    if (authError) return authError.message;
+    return submitError;
+  }, [authError, submitError]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     if (!email || !password) {
       setSubmitError("Email and password are required.");
       return;
     }
-
+    if (isSubmitting || isLoading) return;
     try {
       setSubmitError(null);
       setIsSubmitting(true);
-
-      const response = await login(email.trim(), password);
-      console.log("[Login] API response:", response);
-
-      // Use accessToken for token
-      let expiresAt = response.expiresAt;
-      if (!expiresAt && response.accessToken) {
-        try {
-          const payload = JSON.parse(atob(response.accessToken.split(".")[1]));
-          // exp is in seconds since epoch
-          expiresAt = payload.exp;
-        } catch (e) {
-          console.warn("[Login] Failed to parse JWT for expiresAt", e);
-        }
-      }
-      const sessionObj = {
-        token: response.accessToken,
-        expiresAt,
-        user: {
-          userId: response.user?.userId ?? email.trim().toLowerCase(),
-          email: response.user?.email ?? email.trim(),
-          displayName:
-            response.user?.displayName ??
-            email.trim().split("@")[0] ??
-            "Member",
-        },
-      };
-      console.log("[Login] Persisting session:", sessionObj);
-      persistSession(sessionObj);
-
-      console.log("[Login] Navigating to /dashboard");
-      navigate("/dashboard", { replace: true });
+      clearError();
+      await login(email.trim(), password);
+      // Wait for AuthContext to update before navigating
+      setTimeout(() => {
+        navigate("/dashboard", { replace: true });
+      }, 50);
     } catch (error) {
       setSubmitError(getErrorMessage(error));
     } finally {
@@ -123,15 +97,9 @@ const DashboardLoginScreen = () => {
           </p>
         </header>
 
-        {guardMessage ? (
-          <p className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-            {guardMessage}
-          </p>
-        ) : null}
-
-        {submitError ? (
+        {displayError ? (
           <p className="rounded-xl border border-rose-400/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-            {submitError}
+            {displayError}
           </p>
         ) : null}
 
