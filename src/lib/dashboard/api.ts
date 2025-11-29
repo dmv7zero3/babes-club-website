@@ -7,10 +7,9 @@
 import apiClient from "@/lib/api/apiClient";
 import type {
   DashboardAddress,
-  DashboardNftAsset,
   DashboardOrder,
   DashboardProfile,
-  DashboardUserData,
+  DashboardSnapshot,
 } from "@/lib/types/dashboard";
 
 // ============================================================================
@@ -37,16 +36,7 @@ interface DashboardOrdersResponse {
   orders?: Array<Record<string, unknown>>;
 }
 
-interface DashboardNftsResponse {
-  nfts?: Array<Record<string, unknown>>;
-}
-
 // ✅ Export this type so DashboardRouteGuard can use it
-export interface DashboardSnapshot {
-  profile: DashboardProfile;
-  orders: DashboardOrder[];
-  nfts: DashboardNftAsset[];
-}
 
 // ============================================================================
 // Helper Functions
@@ -166,22 +156,6 @@ const normalizeOrder = (
     : [],
 });
 
-const normalizeNft = (
-  nft: Record<string, unknown> | undefined,
-  index: number
-): DashboardNftAsset => ({
-  tokenId: String(nft?.tokenId ?? `token-${index}`),
-  collectionId: String(nft?.collectionId ?? "collection"),
-  tokenName: String(nft?.tokenName ?? nft?.name ?? "NFT"),
-  thumbnailUrl: nft?.thumbnailUrl
-    ? String(nft.thumbnailUrl)
-    : nft?.image
-      ? String(nft.image)
-      : undefined,
-  metadata: (nft?.metadata as Record<string, unknown>) ?? {},
-  lastSyncedAt: String(nft?.lastSyncedAt ?? new Date().toISOString()),
-});
-
 // ============================================================================
 // Auth API Functions
 // ============================================================================
@@ -221,7 +195,7 @@ export const fetchDashboardSnapshot = async (
 ): Promise<DashboardSnapshot> => {
   console.log("[api.ts] fetchDashboardSnapshot - fetching data...");
 
-  const [profileResponse, ordersResponse, nftsResponse] = await Promise.all([
+  const [profileResponse, ordersResponse] = await Promise.all([
     apiClient.get<DashboardProfileResponse>(
       "/dashboard/profile",
       buildAuthHeaders(token)
@@ -230,17 +204,12 @@ export const fetchDashboardSnapshot = async (
       "/dashboard/orders",
       buildAuthHeaders(token)
     ),
-    apiClient.get<DashboardNftsResponse>(
-      "/dashboard/nfts",
-      buildAuthHeaders(token)
-    ),
   ]);
 
   console.log("[api.ts] Raw profile response:", profileResponse.data);
 
   const profile = normalizeProfile(profileResponse.data.profile);
   const orders = (ordersResponse.data.orders ?? []).map(normalizeOrder);
-  const nfts = (nftsResponse.data.nfts ?? []).map(normalizeNft);
 
   console.log("[api.ts] fetchDashboardSnapshot - snapshot created:", {
     profileUserId: profile.userId,
@@ -249,13 +218,11 @@ export const fetchDashboardSnapshot = async (
     shippingLine1: profile.shippingAddress?.line1,
     billingLine1: profile.billingAddress?.line1,
     ordersCount: orders.length,
-    nftsCount: nfts.length,
   });
 
   return {
     profile,
     orders,
-    nfts,
   };
 };
 

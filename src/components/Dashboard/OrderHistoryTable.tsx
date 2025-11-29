@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useDashboardData } from "./DashboardDataProvider";
+import type { DashboardOrder, DashboardOrderItem } from "@/lib/types/dashboard";
 import { usePagination } from "@/hooks/usePagination";
 import Pagination from "@/components/common/Pagination";
 import { announce } from "@/utils/accessibility";
@@ -33,7 +34,7 @@ const OrderHistoryTable = ({ onSelectOrder }: OrderHistoryTableProps = {}) => {
   const { orders, activeOrderId, setActiveOrderId } = useDashboardData();
 
   // Pagination integration
-  const pagination = usePagination(orders, {
+  const pagination = usePagination<DashboardOrder>(orders, {
     totalItems: orders.length,
     itemsPerPage: 10,
     initialPage: 1,
@@ -57,6 +58,7 @@ const OrderHistoryTable = ({ onSelectOrder }: OrderHistoryTableProps = {}) => {
     );
   }
 
+  const pageData: DashboardOrder[] = pagination.pageData as DashboardOrder[];
   return (
     <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
       <div className="flex items-center justify-between px-6 py-3">
@@ -77,7 +79,7 @@ const OrderHistoryTable = ({ onSelectOrder }: OrderHistoryTableProps = {}) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-100 text-sm text-neutral-700">
-            {pagination.pageData.map((order) => {
+            {pageData.map((order: DashboardOrder) => {
               const isActive = order.orderId === activeOrderId;
               return (
                 <tr
@@ -118,7 +120,9 @@ const OrderHistoryTable = ({ onSelectOrder }: OrderHistoryTableProps = {}) => {
                   <td className="px-6 py-4 text-neutral-500">
                     {order.items.length > 0 ? (
                       <span>
-                        {order.items.map((item) => item.name).join(", ")}
+                        {order.items
+                          .map((item: DashboardOrderItem) => item.name)
+                          .join(", ")}
                       </span>
                     ) : (
                       <span className="text-neutral-400">No items</span>

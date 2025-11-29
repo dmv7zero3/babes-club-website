@@ -92,8 +92,8 @@ const DashboardLoginScreen = () => {
             Sign in to your dashboard
           </h1>
           <p className="text-sm text-neutral-400">
-            Use your Babes Club account email and password to access orders,
-            NFTs, and membership perks.
+            Use your Babes Club account email and password to access orders and
+            membership perks.
           </p>
         </header>
 

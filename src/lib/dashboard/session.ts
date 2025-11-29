@@ -1,3 +1,4 @@
+// No changes needed as there are no references to DashboardUserData.
 /**
  * Dashboard Session Storage Utilities for The Babes Club
  *
@@ -6,7 +7,7 @@
  * Both files use the same storage key for compatibility.
  */
 
-import type { DashboardUserData } from "@/lib/types/dashboard";
+import type { DashboardProfile } from "@/lib/types/dashboard";
 
 // ============================================================================
 // Constants - CRITICAL: Must match src/lib/auth/session.ts
@@ -28,7 +29,7 @@ export interface StoredDashboardSession {
   token: string;
   refreshToken?: string;
   expiresAt?: number;
-  user?: Pick<DashboardUserData["profile"], "userId" | "email" | "displayName">;
+  user?: Pick<DashboardProfile, "userId" | "email" | "displayName">;
   storedAt?: number;
 }
 

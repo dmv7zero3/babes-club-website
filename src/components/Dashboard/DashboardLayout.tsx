@@ -14,12 +14,11 @@ import { ChronicLeafIcon, InlineSpinner } from "@/components/LoadingIcon";
 // Types
 // ============================================================================
 
-export type DashboardPanelKey = "profile" | "orders" | "nfts";
+export type DashboardPanelKey = "profile" | "orders";
 
 interface DashboardLayoutProps {
   profilePanel: ReactNode;
   ordersPanel: ReactNode;
-  nftsPanel: ReactNode;
   headerActions?: ReactNode;
   sidebarFooter?: ReactNode;
   className?: string;
@@ -32,7 +31,6 @@ interface DashboardLayoutProps {
 const PANEL_LABELS: Record<DashboardPanelKey, string> = {
   profile: "Profile",
   orders: "Orders",
-  nfts: "NFTs",
 };
 
 // ============================================================================
@@ -92,7 +90,6 @@ const DashboardContentError: React.FC<DashboardContentErrorProps> = ({
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   profilePanel,
   ordersPanel,
-  nftsPanel,
   headerActions,
   sidebarFooter,
   className,
@@ -104,9 +101,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     () => ({
       profile: profilePanel,
       orders: ordersPanel,
-      nfts: nftsPanel,
     }),
-    [profilePanel, ordersPanel, nftsPanel]
+    [profilePanel, ordersPanel]
   );
 
   const renderMainContent = () => {

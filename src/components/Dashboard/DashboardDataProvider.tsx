@@ -6,19 +6,20 @@
  */
 
 import {
-  createContext,
-  useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
+  useContext,
+  useCallback,
+  createContext,
   type ReactNode,
 } from "react";
 
 import {
-  type DashboardNftAsset,
   type DashboardOrder,
   type DashboardProfile,
+  type DashboardDataContextValue,
+  type DashboardSnapshot,
 } from "@/lib/types/dashboard";
 import { updateDashboardProfile } from "@/lib/dashboard/api";
 import { useDashboardAuth } from "./DashboardRouteGuard";
@@ -30,30 +31,11 @@ import { readStoredSession } from "@/lib/dashboard/session";
 
 type DashboardDataStatus = "idle" | "loading" | "error";
 
-interface DashboardSnapshot {
-  profile: DashboardProfile;
-  orders: DashboardOrder[];
-  nfts: DashboardNftAsset[];
-}
-
 type UpdateableProfileFields = Partial<
   Omit<DashboardProfile, "userId" | "category" | "updatedAt">
 > & {
   updatedAt?: string;
 };
-
-interface DashboardDataContextValue {
-  status: DashboardDataStatus;
-  profile?: DashboardProfile;
-  orders: DashboardOrder[];
-  nfts: DashboardNftAsset[];
-  error?: Error;
-  refresh: () => void;
-  updateProfile: (fields: UpdateableProfileFields) => Promise<void>;
-  activeOrderId: string | null;
-  setActiveOrderId: (orderId: string | null) => void;
-  activeOrder?: DashboardOrder | null;
-}
 
 // ============================================================================
 // Context
@@ -106,7 +88,7 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
   // Initialize data from stored session or user snapshot
   const storedSession = readStoredSession();
   const [data, setData] = useState<DashboardSnapshot | undefined>(() => {
-    if (user && "profile" in user && "orders" in user && "nfts" in user) {
+    if (user && "profile" in user && "orders" in user) {
       return user as DashboardSnapshot;
     }
     if (storedSession?.user) {
@@ -133,7 +115,6 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
           category: "Member",
         },
         orders: [],
-        nfts: [],
       };
     }
     return undefined;
@@ -167,7 +148,7 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
 
     if (authStatus === "authenticated" && user) {
       // If user is a full snapshot, set it directly
-      if ("profile" in user && "orders" in user && "nfts" in user) {
+      if ("profile" in user && "orders" in user) {
         console.log("[DashboardDataProvider] Setting data from user snapshot");
         setData(user as DashboardSnapshot);
         setStatus("idle");
@@ -188,7 +169,7 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
         console.log(
           "[DashboardDataProvider] Setting data from user (profile only)"
         );
-        setData({ profile: user as DashboardProfile, orders: [], nfts: [] });
+        setData({ profile: user as DashboardProfile, orders: [] });
         setStatus("idle");
         setError(undefined);
         setActiveOrderId(null);
@@ -284,13 +265,15 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
 
   // Computed values
   const orders = data?.orders ?? [];
-  const nfts = data?.nfts ?? [];
 
   const activeOrder = useMemo(() => {
     if (!activeOrderId) {
       return null;
     }
-    return orders.find((order) => order.orderId === activeOrderId) ?? null;
+    return (
+      orders.find((order: DashboardOrder) => order.orderId === activeOrderId) ??
+      null
+    );
   }, [orders, activeOrderId]);
 
   // Context value
@@ -299,7 +282,6 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
       status,
       profile: data?.profile,
       orders,
-      nfts,
       error,
       refresh,
       updateProfile,
@@ -311,7 +293,6 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
       status,
       data?.profile,
       orders,
-      nfts,
       error,
       refresh,
       updateProfile,
@@ -327,9 +308,8 @@ const DashboardDataProvider = ({ children }: DashboardDataProviderProps) => {
       hasProfile: !!data?.profile,
       profileUpdatedAt: data?.profile?.updatedAt,
       ordersCount: orders.length,
-      nftsCount: nfts.length,
     });
-  }, [status, data?.profile, orders.length, nfts.length]);
+  }, [status, data?.profile, orders.length]);
 
   return (
     <DashboardDataContext.Provider value={contextValue}>

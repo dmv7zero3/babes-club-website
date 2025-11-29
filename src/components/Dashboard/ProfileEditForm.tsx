@@ -3,6 +3,8 @@
  *
  * Allows users to update their profile information including
  * display name, email, and shipping/billing addresses.
+ *
+ * NFT-related settings have been removed.
  */
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";

@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useState } from "react";
 import { useDashboardData } from "./DashboardDataProvider";
+import type { DashboardOrderItem } from "@/lib/types/dashboard";
 
 const formatCurrency = (amountCents: number, currency: string) =>
   new Intl.NumberFormat(undefined, {
@@ -120,7 +121,7 @@ const OrderDetailDrawer = ({ isOpen, onClose }: OrderDetailDrawerProps) => {
                 Items
               </h4>
               <ul className="mt-3 space-y-2 text-sm">
-                {activeOrder.items.map((item) => (
+                {activeOrder.items.map((item: DashboardOrderItem) => (
                   <li
                     key={`${activeOrder.orderId}-${item.sku}`}
                     className="flex items-start justify-between rounded-lg border border-neutral-200 p-3"

@@ -27,10 +27,8 @@ import {
   DASHBOARD_SESSION_STORAGE_KEY,
   type StoredDashboardSession,
 } from "@/lib/dashboard/session";
-import {
-  fetchDashboardSnapshot,
-  type DashboardSnapshot,
-} from "@/lib/dashboard/api";
+import { fetchDashboardSnapshot } from "@/lib/dashboard/api";
+import type { DashboardSnapshot } from "@/lib/types/dashboard";
 import { ChronicLeafIcon } from "@/components/LoadingIcon";
 import DashboardErrorFallback from "./DashboardErrorFallback";
 
@@ -42,13 +40,6 @@ export type DashboardAuthStatus =
   | "loading"
   | "authenticated"
   | "unauthenticated";
-
-export interface DashboardUserData {
-  userId: string;
-  email: string;
-  displayName: string;
-  category?: string;
-}
 
 export interface DashboardAuthContextValue {
   status: DashboardAuthStatus;
@@ -301,7 +292,7 @@ const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = ({
           hasShippingAddress: !!snapshot.profile?.shippingAddress?.line1,
           hasBillingAddress: !!snapshot.profile?.billingAddress?.line1,
           ordersCount: snapshot.orders?.length ?? 0,
-          nftsCount: snapshot.nfts?.length ?? 0,
+          // nftsCount removed: NFT logic no longer present
         });
 
         setUser(snapshot);

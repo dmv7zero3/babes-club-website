@@ -113,7 +113,7 @@ const SignupScreen = ({ onSuccess }: SignupScreenProps) => {
             Create your account
           </h1>
           <p className="text-sm text-neutral-400">
-            Create an account to access orders, NFTs, and membership perks.
+            Create an account to access orders and membership perks.
           </p>
         </header>
 

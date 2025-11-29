@@ -16,7 +16,7 @@ import ProfileOverviewCard from "@/components/Dashboard/ProfileOverviewCard";
 import ProfileEditForm from "@/components/Dashboard/ProfileEditForm";
 import OrderHistoryTable from "@/components/Dashboard/OrderHistoryTable";
 import OrderDetailDrawer from "@/components/Dashboard/OrderDetailDrawer";
-import NFTHoldingsGrid from "@/components/Dashboard/NFTHoldingsGrid";
+// ...existing code...
 import DashboardLoginScreen from "./DashboardLoginScreen";
 import { ChronicLeafIcon } from "@/components/LoadingIcon";
 
@@ -98,7 +98,7 @@ const DashboardPage: React.FC = () => {
                 />
               </div>
             }
-            nftsPanel={<NFTHoldingsGrid />}
+            // ...removed nftsPanel prop...
             headerActions={<HeaderActions />}
           />
         </DashboardDataProvider>

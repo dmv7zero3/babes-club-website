@@ -143,7 +143,6 @@ def lambda_handler(event: Dict[str, Any], _context: Any) -> Dict[str, Any]:
         },
         "dashboardSettings": {
             "showOrderHistory": True,
-            "showNftHoldings": True,
             "emailNotifications": True
         },
         "status": "active",

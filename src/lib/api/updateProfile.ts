@@ -19,7 +19,6 @@ export interface UpdateProfileResponse {
     };
     dashboardSettings?: {
       showOrderHistory: boolean;
-      showNftHoldings: boolean;
       emailNotifications: boolean;
     };
     preferredWallet?: string;

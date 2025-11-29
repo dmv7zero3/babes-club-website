@@ -1,4 +1,5 @@
 import { useDashboardData } from "./DashboardDataProvider";
+import { type DashboardOrder } from "@/lib/types/dashboard";
 
 const parseBooleanSetting = (value: unknown): boolean | undefined => {
   return typeof value === "boolean" ? value : undefined;
@@ -29,7 +30,7 @@ const formatAddress = (address?: {
 };
 
 const ProfileOverviewCard = () => {
-  const { profile, orders, nfts } = useDashboardData();
+  const { profile, orders } = useDashboardData();
 
   if (!profile) {
     return (
@@ -54,7 +55,10 @@ const ProfileOverviewCard = () => {
   } else {
     stripeCustomerIdDisplay = "Unavailable (contact support)";
   }
-  const totalSpent = orders.reduce((sum, order) => sum + order.amount, 0);
+  const totalSpent = orders.reduce(
+    (sum: number, order: DashboardOrder) => sum + order.amount,
+    0
+  );
   const updatedAt = new Date(profile.updatedAt);
   const formattedDate = Number.isNaN(updatedAt.getTime())
     ? profile.updatedAt
@@ -72,25 +76,7 @@ const ProfileOverviewCard = () => {
   const orderHistorySetting = parseBooleanSetting(
     settingsRaw["showOrderHistory"]
   );
-  const nftHoldingsSetting = parseBooleanSetting(
-    settingsRaw["showNftHoldings"]
-  );
-  const settingsSummary = [
-    {
-      key: "orderHistory",
-      label: "Order history",
-      description: "Members can review their previous purchases.",
-      isEnabled: orderHistorySetting ?? true,
-      isDefault: orderHistorySetting === undefined,
-    },
-    {
-      key: "nftHoldings",
-      label: "NFT holdings",
-      description: "Display connected NFT collections inside the dashboard.",
-      isEnabled: nftHoldingsSetting ?? true,
-      isDefault: nftHoldingsSetting === undefined,
-    },
-  ];
+  // ...removed NFT holdings setting summary...
 
   return (
     <section className="grid gap-6 md:grid-cols-[260px,1fr]">
@@ -107,12 +93,6 @@ const ProfileOverviewCard = () => {
               Orders
             </dt>
             <dd className="font-semibold text-neutral-900">{orders.length}</dd>
-          </div>
-          <div>
-            <dt className="text-xs tracking-wide uppercase text-neutral-400">
-              NFTs
-            </dt>
-            <dd className="font-semibold text-neutral-900">{nfts.length}</dd>
           </div>
           <div>
             <dt className="text-xs tracking-wide uppercase text-neutral-400">

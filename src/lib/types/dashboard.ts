@@ -18,18 +18,34 @@ export interface DashboardProfile {
   preferredWallet?: string;
   avatarUrl?: string;
   stripeCustomerId?: string;
-  dashboardSettings?: Record<string, unknown>;
+  dashboardSettings?: Record<string, unknown>; // NFT logic removed, generic settings only
   updatedAt: string;
   category: DashboardUserCategory;
 }
 
+export interface DashboardSnapshot {
+  profile: DashboardProfile;
+  orders: DashboardOrder[];
+}
+
+export interface DashboardDataContextValue {
+  status: "idle" | "loading" | "error";
+  profile?: DashboardProfile;
+  orders: DashboardOrder[];
+  error?: Error;
+  refresh: () => void;
+  updateProfile: (fields: Partial<DashboardProfile>) => Promise<void>;
+  activeOrderId: string | null;
+  setActiveOrderId: (orderId: string | null) => void;
+  activeOrder?: DashboardOrder | null;
+}
 export interface ProfileUpdatePayload {
   displayName?: string;
   email?: string;
   phone?: string;
   shippingAddress?: DashboardAddress;
   billingAddress?: DashboardAddress;
-  dashboardSettings?: Record<string, unknown>;
+  dashboardSettings?: Record<string, unknown>; // NFT logic removed, generic settings only
   preferredWallet?: string;
 }
 
@@ -43,25 +59,10 @@ export interface DashboardOrderItem {
 export interface DashboardOrder {
   orderId: string;
   orderNumber: string;
-  status: string;
-  amount: number;
-  currency: string;
   stripePaymentIntentId?: string;
   createdAt: string;
   items: DashboardOrderItem[];
-}
-
-export interface DashboardNftAsset {
-  tokenId: string;
-  collectionId: string;
-  tokenName: string;
-  thumbnailUrl?: string;
-  metadata?: Record<string, unknown>;
-  lastSyncedAt: string;
-}
-
-export interface DashboardUserData {
-  profile: DashboardProfile;
-  orders: DashboardOrder[];
-  nfts: DashboardNftAsset[];
+  status: string;
+  amount: number;
+  currency: string;
 }

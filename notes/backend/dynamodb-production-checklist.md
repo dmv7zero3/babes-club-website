@@ -17,12 +17,6 @@ Table: `babesclub-commerce` (single-table design with `PK`/`SK` keys and TTL att
 
 ## 3. Data Seeding & Validation
 
-- [ ] **Catalog load**: Run the seeding script that mirrors `src/businessInfo/JewleryProducts.json` into the table (partition `CATALOG#<collection>`, `SK=PRODUCT#<sku>`). Verify checksum vs. source file.
-- [ ] **User/NFT imports**: Transform mock dashboard data (`public/mock-data/sample-user-data.json`) into `USER#` partitions; spot-check a few `Query` results for correctness.
-- [ ] **Quote/session smoke tests**: Use dev Lambdas to write/read sample `CART#` and `QUOTE#` items, ensuring TTL fields and signatures serialize properly.
-
-## 4. Operational Guardrails
-
 - [ ] **CloudWatch alarms**: Create alarms for `ThrottledRequests`, `UserErrors`, and sudden `ConsumedRead/WriteCapacity` spikes. Tie alerts into the on-call channel.
 - [ ] **DLQs / retry policy**: Attach dead-letter queues to cart/checkout Lambdas so failed DynamoDB writes are preserved for inspection.
 - [ ] **Cost monitoring**: Tag the table (`Project=BabesClub`, `Env=prod`) and enable AWS Cost Explorer alerts for DynamoDB spend exceeding the target.
