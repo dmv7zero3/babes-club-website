@@ -1,6 +1,23 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <% const FALLBACK_ORIGIN = "https://thebabesclub.com"; %> <% const rawOrigin
+    = typeof siteOrigin !== "undefined" && siteOrigin ? siteOrigin :
+    FALLBACK_ORIGIN; %> <% const normalizedOrigin = rawOrigin.endsWith("/") ?
+    rawOrigin.slice(0, -1) : rawOrigin; %> <% const currentRoute = typeof route
+    !== "undefined" && route ? route : "/"; %> <% const normalizedRoute =
+    currentRoute === "/" ? "/" : currentRoute.replace(/\/$/, ""); %> <% const
+    canonicalUrl = normalizedRoute === "/" ? `${normalizedOrigin}/` :
+    `${normalizedOrigin}${normalizedRoute}`; %> <% const defaultOgImagePath =
+    "/images/og-image/og-image.png"; %> <% const requestedOgImage = typeof
+    ogImage !== "undefined" && ogImage ? ogImage : defaultOgImagePath; %> <%
+    const resolvedOgImage = requestedOgImage.startsWith("http") ?
+    requestedOgImage : `${normalizedOrigin}${requestedOgImage.startsWith("/") ?
+    "" : "/"}${requestedOgImage}`; %> <% const ogImageTarget =
+    requestedOgImage.toLowerCase(); %> <% const ogImageType =
+    ogImageTarget.endsWith(".png") ? "image/png" :
+    ogImageTarget.endsWith(".webp") ? "image/webp" :
+    ogImageTarget.endsWith(".avif") ? "image/avif" : "image/jpeg"; %>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
@@ -21,16 +38,24 @@
       content="The Babes Club,jewelry,handcrafted accessories,women owned,Washington DC,artisan jewelry,feminine empowerment,handmade"
     />
     <meta name="author" content="The Babes Club LLC" />
-    <link
-      rel="canonical"
-      href="<%= typeof route !== 'undefined' ? route : '/' %>"
-    />
-    <!-- Canonical set to root relatively; replace with full https://domain/ in production for SEO best practice -->
+    <link rel="canonical" href="<%= canonicalUrl %>" />
 
     <!-- Favicons -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/web-app-manifest-192x192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="/web-app-manifest-512x512.png"
+    />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
 
@@ -71,18 +96,14 @@
       property="og:description"
       content="<%= typeof description !== 'undefined' && description ? description : 'Women-owned, handcrafted accessories brand based in Washington, DC—crafting confidence through artisanal jewelry and feminine expression.' %>"
     />
-    <meta
-      property="og:url"
-      content="<%= typeof route !== 'undefined' ? route : '/' %>"
-    />
-    <% if (typeof ogImage !== 'undefined' && ogImage) { %>
-    <meta property="og:image" content="<%= ogImage %>" />
-    <% } %>
+    <meta property="og:url" content="<%= canonicalUrl %>" />
+    <meta property="og:image" content="<%= resolvedOgImage %>" />
+    <meta property="og:image:secure_url" content="<%= resolvedOgImage %>" />
     <meta
       property="og:image:alt"
       content="Handcrafted jewelry by The Babes Club – women-owned Washington DC accessories brand"
     />
-    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:type" content="<%= ogImageType %>" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
 
@@ -96,9 +117,7 @@
       name="twitter:description"
       content="<%= typeof description !== 'undefined' && description ? description : 'Women-owned handcrafted accessories from Washington, DC—artistry, authenticity & feminine empowerment.' %>"
     />
-    <% if (typeof ogImage !== 'undefined' && ogImage) { %>
-    <meta name="twitter:image" content="<%= ogImage %>" />
-    <% } %>
+    <meta name="twitter:image" content="<%= resolvedOgImage %>" />
     <meta
       name="twitter:image:alt"
       content="Handcrafted jewelry by The Babes Club – women-owned Washington DC accessories brand"
