@@ -9,6 +9,7 @@ Based on extensive research (2023-2024) and real-world implementation, this guid
 ## 🚨 The Flicker Problem
 
 Animation flicker occurs when:
+
 - Elements briefly appear in their default state before animation starts
 - Browser paints content before JavaScript/GSAP initializes
 - Layout shifts happen during responsive breakpoints
@@ -29,7 +30,7 @@ Animation flicker occurs when:
 .menu-overlay {
   opacity: 0;
   visibility: hidden;
-  
+
   /* GPU acceleration */
   will-change: transform, opacity;
   transform: translateZ(0);
@@ -71,7 +72,7 @@ export function initializeMenuElements(refs: MenuOverlayAnimationRefs) {
     opacity: 0,
     clearProps: "transform", // Reset any previous transforms
   });
-  
+
   // Set initial animation states
   gsap.set(overlayRef.current, { opacity: 0 });
   gsap.set(contentRef.current, { opacity: 0, y: 25, scale: 0.96 });
@@ -81,11 +82,11 @@ export function initializeMenuElements(refs: MenuOverlayAnimationRefs) {
 // ✅ CORRECT: Add class when starting animation
 export function animateMenuOpen(refs: MenuOverlayAnimationRefs) {
   // Add class to enable CSS visibility
-  overlayRef.current.classList.add('menu-animating');
-  
+  overlayRef.current.classList.add("menu-animating");
+
   // Ensure all elements are visible for animation
   gsap.set([...allElements], { visibility: "visible" });
-  
+
   // Start animation timeline...
 }
 ```
@@ -130,7 +131,8 @@ useLayoutEffect(() => {
 useLayoutEffect(() => {
   if (isOpen) {
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => { // Double RAF ensures DOM stability
+      requestAnimationFrame(() => {
+        // Double RAF ensures DOM stability
         initializeMenuElements(animationRefs);
         animationTimeline = animateMenuOpen(animationRefs);
       });
@@ -147,21 +149,21 @@ useLayoutEffect(() => {
 // ✅ CORRECT: Kill existing animations before starting new ones
 export function animateMenuOpen(refs: MenuOverlayAnimationRefs) {
   gsap.killTweensOf([...allElements, ...navItems, ...ctaButtons]);
-  
+
   // Start fresh animation...
 }
 
 // ✅ CORRECT: Complete cleanup on close
 export function resetMenuToHidden(refs: MenuOverlayAnimationRefs) {
   gsap.killTweensOf(allElements);
-  
+
   gsap.set(allElements, {
     opacity: 0,
     visibility: "hidden",
     clearProps: "transform,scale,rotation,x,y", // Clean slate
   });
-  
-  overlayRef.current.classList.remove('menu-animating');
+
+  overlayRef.current.classList.remove("menu-animating");
 }
 ```
 
@@ -170,6 +172,7 @@ export function resetMenuToHidden(refs: MenuOverlayAnimationRefs) {
 ## 🛠 Implementation Checklist
 
 ### **CSS Requirements** ✅
+
 - [ ] All animated elements start with `visibility: hidden`
 - [ ] Hardware acceleration applied (`transform: translateZ(0)`)
 - [ ] WebKit-specific optimizations for iOS Safari
@@ -177,6 +180,7 @@ export function resetMenuToHidden(refs: MenuOverlayAnimationRefs) {
 - [ ] `will-change` properties set appropriately
 
 ### **JavaScript Requirements** ✅
+
 - [ ] Use `useLayoutEffect` for DOM mutations
 - [ ] Double `requestAnimationFrame` for timing safety
 - [ ] `gsap.killTweensOf()` before starting new animations
@@ -184,6 +188,7 @@ export function resetMenuToHidden(refs: MenuOverlayAnimationRefs) {
 - [ ] Complete cleanup with `clearProps`
 
 ### **Mobile Optimizations** ✅
+
 - [ ] `touch-action: manipulation` for faster touches
 - [ ] `-webkit-font-smoothing: antialiased` for crisp text
 - [ ] Reduced motion support for accessibility
@@ -194,6 +199,7 @@ export function resetMenuToHidden(refs: MenuOverlayAnimationRefs) {
 ## 🚫 Common Mistakes That Cause Flicker
 
 ### **❌ WRONG: JavaScript-only hiding**
+
 ```typescript
 // This allows flicker before JS runs
 useEffect(() => {
@@ -202,12 +208,14 @@ useEffect(() => {
 ```
 
 ### **❌ WRONG: Conditional rendering**
+
 ```typescript
 // Unmounting/remounting causes flicker
 {isOpen && <MobileMenuOverlay />}
 ```
 
 ### **❌ WRONG: Animating display property**
+
 ```css
 /* Never animate display - causes layout thrashing */
 .menu-overlay {
@@ -217,6 +225,7 @@ useEffect(() => {
 ```
 
 ### **❌ WRONG: No animation cleanup**
+
 ```typescript
 // Overlapping animations cause conflicts
 useEffect(() => {
@@ -229,18 +238,22 @@ useEffect(() => {
 ## 📱 Browser-Specific Issues & Solutions
 
 ### **iOS Safari**
+
 - **Problem**: Aggressive optimization causes flicker with transforms
 - **Solution**: Use `-webkit-` prefixes and `preserve-3d`
 
 ### **Chrome/Edge**
+
 - **Problem**: Layout thrashing with non-GPU properties
 - **Solution**: Stick to `transform` and `opacity` only
 
 ### **Firefox**
+
 - **Problem**: Slower composite layer creation
 - **Solution**: Pre-warm with `will-change` properties
 
 ### **High DPI Displays**
+
 - **Problem**: Blurry text during animations
 - **Solution**: Font smoothing and `text-rendering: optimizeLegibility`
 
@@ -249,25 +262,38 @@ useEffect(() => {
 ## 🎯 Professional Animation Patterns
 
 ### **Smooth Opening Sequence**
+
 ```typescript
 const timeline = gsap.timeline({
-  defaults: { ease: "power2.out", force3D: true }
+  defaults: { ease: "power2.out", force3D: true },
 });
 
 timeline
   .to(overlay, { opacity: 1, duration: 0.45 })
   .to(content, { opacity: 1, y: 0, scale: 1, duration: 0.55 }, "-=0.25")
-  .to(closeButton, { opacity: 1, scale: 1, rotation: 0, duration: 0.4 }, "-=0.35")
-  .to(navItems, { 
-    opacity: 1, x: 0, y: 0, duration: 0.45,
-    stagger: { amount: 0.28, ease: "power2.out" }
-  }, "-=0.25");
+  .to(
+    closeButton,
+    { opacity: 1, scale: 1, rotation: 0, duration: 0.4 },
+    "-=0.35"
+  )
+  .to(
+    navItems,
+    {
+      opacity: 1,
+      x: 0,
+      y: 0,
+      duration: 0.45,
+      stagger: { amount: 0.28, ease: "power2.out" },
+    },
+    "-=0.25"
+  );
 ```
 
 ### **Fast But Elegant Close**
+
 ```typescript
 const closeTimeline = gsap.timeline({
-  onComplete: () => resetMenuToHidden(refs)
+  onComplete: () => resetMenuToHidden(refs),
 });
 
 closeTimeline
@@ -280,12 +306,14 @@ closeTimeline
 ## 🧪 Testing Strategy
 
 ### **Device Testing Priority**
+
 1. **iOS Safari** (iPhone/iPad) - Most flicker-prone
 2. **Android Chrome** - Performance validation
 3. **Desktop Safari** - WebKit consistency
 4. **Chrome DevTools** - Mobile simulation
 
 ### **Test Scenarios**
+
 - [ ] Cold page load → open menu immediately
 - [ ] Rapid open/close sequences
 - [ ] Device rotation during animation
@@ -293,6 +321,7 @@ closeTimeline
 - [ ] Battery saver mode (reduces animations)
 
 ### **Performance Metrics**
+
 - No visible flicker on any device
 - 60fps animation performance
 - < 16ms frame times in DevTools
@@ -303,6 +332,7 @@ closeTimeline
 ## 📚 Research Sources
 
 This guide is based on:
+
 - [GSAP Official Documentation](https://greensock.com/docs/) - Animation best practices
 - [Web.dev Performance](https://web.dev/performance/) - Browser optimization
 - [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/CSS/will-change) - CSS performance
@@ -314,9 +344,10 @@ This guide is based on:
 ## 🎉 Success Indicators
 
 When implemented correctly, you should achieve:
+
 - ✅ **Zero flicker** on all devices and browsers
 - ✅ **Buttery smooth 60fps** animations
-- ✅ **Professional feel** that enhances user experience  
+- ✅ **Professional feel** that enhances user experience
 - ✅ **Consistent behavior** across iOS, Android, and desktop
 - ✅ **Fast interaction** with no animation lag
 
