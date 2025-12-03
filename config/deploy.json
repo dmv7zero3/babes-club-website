@@ -1,0 +1,8 @@
+{
+  "awsRegion": "us-east-1",
+  "s3Bucket": "babes-club-website",
+  "cloudFrontDistributionId": "E2YAUX21SFC05K",
+  "accountId": "752567131183",
+  "siteOrigin": "https://thebabesclub.com",
+  "excludeFromUpload": ["images/**"]
+}

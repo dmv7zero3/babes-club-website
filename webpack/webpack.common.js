@@ -1,3 +1,4 @@
+// webpack/webpack.common.js
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import webpack from "webpack";
@@ -5,6 +6,7 @@ import { config as dotenvConfig } from "dotenv";
 import paths from "./config/paths.js";
 import CopyWebpackPlugin from "copy-webpack-plugin";
 import path from "path";
+import fs from "fs";
 
 // Load .env file from project root with explicit path
 const envPath = path.resolve(process.cwd(), ".env");
@@ -68,7 +70,56 @@ allowedEnv.forEach((key) => {
   console.log(`  ${key}: ${status}${value ? ` (${displayValue})` : ""}`);
 });
 
+// -----------------------------------------------------------------------------
+// Load business data for default template parameters
+// -----------------------------------------------------------------------------
+const businessDataPath = path.resolve(
+  process.cwd(),
+  "src/businessInfo/business-data.json"
+);
+let business = {
+  business_name: "The Babes Club",
+  tagline: "Handcrafted Jewelry & Accessories",
+  description: "Women-owned handcrafted jewelry studio in Washington, DC.",
+  og_image: "/images/og-image/og-image.png",
+  contact: { website: "https://thebabesclub.com" },
+};
+
+try {
+  business = JSON.parse(fs.readFileSync(businessDataPath, "utf-8"));
+} catch (err) {
+  console.warn("⚠️ Could not load business-data.json, using defaults");
+}
+
+const ORIGIN =
+  process.env.SITE_ORIGIN ||
+  business.contact?.website ||
+  "https://thebabesclub.com";
+const DEFAULT_OG_IMAGE = `${ORIGIN}${business.og_image || "/images/og-image/og-image.png"}`;
+
+// Default template parameters for development mode
+// Production mode overrides these via routes-meta.js
+const defaultTemplateParams = {
+  title: `${business.business_name} | ${business.tagline || "Handcrafted Jewelry & Accessories"}`,
+  description:
+    business.description ||
+    "Women-owned handcrafted jewelry studio in Washington, DC.",
+  keywords:
+    "The Babes Club,jewelry,handcrafted accessories,women owned,Washington DC,artisan jewelry",
+  canonical: `${ORIGIN}/`,
+  ogTitle: `${business.business_name} | ${business.tagline || "Handcrafted Jewelry & Accessories"}`,
+  ogDescription:
+    business.description ||
+    "Women-owned handcrafted jewelry studio in Washington, DC.",
+  ogImage: DEFAULT_OG_IMAGE,
+  ogImageAlt:
+    "Handcrafted jewelry by The Babes Club – women-owned Washington DC accessories brand",
+  jsonLd: null,
+};
+
+// -----------------------------------------------------------------------------
 // Helper to build HtmlWebpackPlugin instances for each route (exported for prod config)
+// -----------------------------------------------------------------------------
 export function buildHtmlPlugins(routeMeta = []) {
   return routeMeta.map(
     (m) =>
@@ -160,6 +211,7 @@ const commonConfig = {
     new HtmlWebpackPlugin({
       template: paths.public + "/index.html",
       filename: "index.html",
+      templateParameters: defaultTemplateParams, // <-- Pass default params for dev
       minify: false,
     }),
   ],
