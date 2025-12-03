@@ -1,4 +1,5 @@
 import React from "react";
+import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
 
 import { EMAIL } from "@/businessInfo/business";
@@ -8,6 +9,9 @@ const PrivacyPolicyPage: React.FC = () => {
 
   return (
     <main className="min-h-screen py-20 bg-gradient-to-b from-cotton-candy-100 via-white to-babe-pink-50 text-slate-900">
+      <Helmet>
+        <title>Privacy Policy | The Babes Club</title>
+      </Helmet>
       <div className="w-11/12 max-w-4xl mx-auto space-y-8">
         <header className="space-y-3 text-center">
           <p className="text-sm uppercase tracking-[0.2em] text-babe-pink-500">

@@ -1,4 +1,5 @@
 import React from "react";
+import { Helmet } from "react-helmet";
 import { Link } from "react-router-dom";
 
 import { EMAIL } from "@/businessInfo/business";
@@ -8,6 +9,9 @@ const ShippingPolicyPage: React.FC = () => {
 
   return (
     <main className="min-h-[50vh] bg-gradient-to-b from-cotton-candy-100 via-white to-babe-pink-50 py-20 text-slate-900">
+      <Helmet>
+        <title>Shipping Policy | The Babes Club</title>
+      </Helmet>
       <div className="w-11/12 max-w-3xl mx-auto space-y-6 text-center">
         <div className="space-y-4">
           <h1 className="text-4xl font-heading text-babe-pink-700">

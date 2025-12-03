@@ -1,4 +1,8 @@
 {
+  ".DS_Store": {
+    "hash": "56e48f7dd6cbacc2",
+    "bytes": 6148
+  },
   "157.ce0165d2.js": {
     "hash": "ec091881c0bb5219",
     "bytes": 1665
@@ -80,15 +84,15 @@
     "bytes": 43312
   },
   "about/index.html": {
-    "hash": "3a02d232f959c4b0",
+    "hash": "1bc9bc67975b383c",
     "bytes": 5438
   },
   "about/index.html.br": {
-    "hash": "17dfa763137f7daa",
-    "bytes": 1121
+    "hash": "6a74bb151a97944a",
+    "bytes": 1119
   },
   "about/index.html.gz": {
-    "hash": "95289af542425b41",
+    "hash": "2860dde0141edf6c",
     "bytes": 1450
   },
   "animations.ce161b32.js": {
@@ -112,15 +116,15 @@
     "bytes": 693843
   },
   "contact/index.html": {
-    "hash": "7ec0d92ba568f2e8",
+    "hash": "9c8f84455e6fe7da",
     "bytes": 4948
   },
   "contact/index.html.br": {
-    "hash": "e59bc1392930489d",
-    "bytes": 1062
+    "hash": "d68e1d4789160e04",
+    "bytes": 1061
   },
   "contact/index.html.gz": {
-    "hash": "0ee07e52ba498749",
+    "hash": "e37ae8b0129d2e99",
     "bytes": 1378
   },
   "fonts/GrandHotel-Regular.ttf": {
@@ -140,27 +144,27 @@
     "bytes": 342680
   },
   "gallery/index.html": {
-    "hash": "80091809fee861b8",
+    "hash": "cfcb09c45ba4174c",
     "bytes": 4990
   },
   "gallery/index.html.br": {
-    "hash": "ef5abcf6f1526489",
-    "bytes": 1082
+    "hash": "339a9b378763dce7",
+    "bytes": 1086
   },
   "gallery/index.html.gz": {
-    "hash": "1b9833911b2f4ab7",
+    "hash": "2ebfe4eb46bbe38d",
     "bytes": 1410
   },
   "index.html": {
-    "hash": "a28fb90297916f5e",
+    "hash": "864492756660f4ab",
     "bytes": 4814
   },
   "index.html.br": {
-    "hash": "4f328077da2a76c1",
-    "bytes": 966
+    "hash": "1446da0a117835a1",
+    "bytes": 968
   },
   "index.html.gz": {
-    "hash": "4a756295857719c4",
+    "hash": "d69d55b1c77bf993",
     "bytes": 1284
   },
   "js/gsap/MorphSVGPlugin.js": {
@@ -227,21 +231,21 @@
     "hash": "ef3ba834af8b067e",
     "bytes": 20768
   },
-  "main.b12119b1.js": {
-    "hash": "8ca28613711e022a",
-    "bytes": 212159
+  "main.6ad36f56.js": {
+    "hash": "80ee7501f1ad4cf7",
+    "bytes": 212451
   },
-  "main.b12119b1.js.br": {
-    "hash": "76397b31a3d95313",
-    "bytes": 43567
+  "main.6ad36f56.js.br": {
+    "hash": "7bff3b5966fca73f",
+    "bytes": 43591
   },
-  "main.b12119b1.js.gz": {
-    "hash": "ce25733d4ae092e9",
-    "bytes": 55217
+  "main.6ad36f56.js.gz": {
+    "hash": "fdbfcc5033b2287b",
+    "bytes": 55267
   },
-  "main.b12119b1.js.map": {
-    "hash": "6199713868054fe0",
-    "bytes": 563077
+  "main.6ad36f56.js.map": {
+    "hash": "da7a8ccf9f0bab05",
+    "bytes": 563702
   },
   "react.a9e4a8e1.js": {
     "hash": "e5e38eb29e0c635b",
@@ -280,15 +284,15 @@
     "bytes": 17534
   },
   "shop/index.html": {
-    "hash": "f2defdf2698491db",
+    "hash": "6a2ea10943ef9c58",
     "bytes": 4911
   },
   "shop/index.html.br": {
-    "hash": "8dcaedf52b3e1109",
-    "bytes": 1038
+    "hash": "2bb7c76e709f4b38",
+    "bytes": 1043
   },
   "shop/index.html.gz": {
-    "hash": "db1069448b5521ff",
+    "hash": "18d732d45653c201",
     "bytes": 1361
   },
   "styles/main.fd096f52.css": {
