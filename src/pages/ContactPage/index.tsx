@@ -1,5 +1,6 @@
 import React from "react";
 import { CalendarDays, Gift, Mail, Sparkles } from "lucide-react";
+import { Helmet } from "react-helmet";
 
 import ContactForm from "@/components/ContactForm/ContactForm";
 import businessInfo from "@/businessInfo/business-data.json";
@@ -31,6 +32,9 @@ const ContactPage: React.FC = () => {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-cotton-candy-100 via-white to-babe-pink-50 text-slate-900">
+      <Helmet>
+        <title>Contact | The Babes Club</title>
+      </Helmet>
       <section className="mx-auto w-11/12 max-w-6xl py-24">
         <div className="space-y-6 text-center md:text-left">
           <p className="text-sm uppercase tracking-[0.35em] text-babe-pink-500">
