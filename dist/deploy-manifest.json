@@ -1,0 +1,330 @@
+{
+  "157.ce0165d2.js": {
+    "hash": "ec091881c0bb5219",
+    "bytes": 1665
+  },
+  "157.ce0165d2.js.br": {
+    "hash": "683a86f8815459a7",
+    "bytes": 812
+  },
+  "157.ce0165d2.js.gz": {
+    "hash": "bc7730b88266ebe9",
+    "bytes": 934
+  },
+  "157.ce0165d2.js.map": {
+    "hash": "511a06d95b7fbcfa",
+    "bytes": 5022
+  },
+  "626.0df6aeec.js": {
+    "hash": "6da54e8731a69dae",
+    "bytes": 2848
+  },
+  "626.0df6aeec.js.br": {
+    "hash": "e5ae5faec96f8931",
+    "bytes": 904
+  },
+  "626.0df6aeec.js.gz": {
+    "hash": "39e593003109e20b",
+    "bytes": 1031
+  },
+  "626.0df6aeec.js.map": {
+    "hash": "5d44a30e5250bfe9",
+    "bytes": 5247
+  },
+  "737.b74f9c82.js": {
+    "hash": "a041eca5b546e282",
+    "bytes": 14749
+  },
+  "737.b74f9c82.js.br": {
+    "hash": "0757c96bc23a897e",
+    "bytes": 4064
+  },
+  "737.b74f9c82.js.gz": {
+    "hash": "2a6438aa7c85a637",
+    "bytes": 4575
+  },
+  "737.b74f9c82.js.map": {
+    "hash": "1dd96f7b16b3854a",
+    "bytes": 40543
+  },
+  "74.243b43c3.js": {
+    "hash": "98cf78720d946adf",
+    "bytes": 1248
+  },
+  "74.243b43c3.js.br": {
+    "hash": "c0c61202807deb0b",
+    "bytes": 674
+  },
+  "74.243b43c3.js.gz": {
+    "hash": "2ce876fd113b4161",
+    "bytes": 768
+  },
+  "74.243b43c3.js.map": {
+    "hash": "b59392d7bc4d245e",
+    "bytes": 3820
+  },
+  "825.87abf811.js": {
+    "hash": "2a0d84e9af87e300",
+    "bytes": 10735
+  },
+  "825.87abf811.js.br": {
+    "hash": "22e4ea77eed23884",
+    "bytes": 3886
+  },
+  "825.87abf811.js.gz": {
+    "hash": "7339841d0cfdf775",
+    "bytes": 4410
+  },
+  "825.87abf811.js.map": {
+    "hash": "e531cff2333b05dc",
+    "bytes": 43312
+  },
+  "about/index.html": {
+    "hash": "3a02d232f959c4b0",
+    "bytes": 5438
+  },
+  "about/index.html.br": {
+    "hash": "17dfa763137f7daa",
+    "bytes": 1121
+  },
+  "about/index.html.gz": {
+    "hash": "95289af542425b41",
+    "bytes": 1450
+  },
+  "animations.ce161b32.js": {
+    "hash": "cff935428b56b11d",
+    "bytes": 136033
+  },
+  "animations.ce161b32.js.LICENSE.txt": {
+    "hash": "8c59e4a7ea3e72aa",
+    "bytes": 1080
+  },
+  "animations.ce161b32.js.br": {
+    "hash": "8edc6dcda275c4ae",
+    "bytes": 46363
+  },
+  "animations.ce161b32.js.gz": {
+    "hash": "06b89415c5fb36d5",
+    "bytes": 51963
+  },
+  "animations.ce161b32.js.map": {
+    "hash": "b5bd1da57c5a01ce",
+    "bytes": 693843
+  },
+  "contact/index.html": {
+    "hash": "7ec0d92ba568f2e8",
+    "bytes": 4948
+  },
+  "contact/index.html.br": {
+    "hash": "e59bc1392930489d",
+    "bytes": 1062
+  },
+  "contact/index.html.gz": {
+    "hash": "0ee07e52ba498749",
+    "bytes": 1378
+  },
+  "fonts/GrandHotel-Regular.ttf": {
+    "hash": "ec7ae65d49c936cb",
+    "bytes": 65012
+  },
+  "fonts/GrandHotel-Regular.woff": {
+    "hash": "97de748299acca4e",
+    "bytes": 1183036
+  },
+  "fonts/GrandHotel-Regular.woff2": {
+    "hash": "0f3b98adca2da791",
+    "bytes": 24592
+  },
+  "fonts/Inter_18pt-Regular.ttf": {
+    "hash": "3e5f90a0138b38de",
+    "bytes": 342680
+  },
+  "gallery/index.html": {
+    "hash": "80091809fee861b8",
+    "bytes": 4990
+  },
+  "gallery/index.html.br": {
+    "hash": "ef5abcf6f1526489",
+    "bytes": 1082
+  },
+  "gallery/index.html.gz": {
+    "hash": "1b9833911b2f4ab7",
+    "bytes": 1410
+  },
+  "index.html": {
+    "hash": "a28fb90297916f5e",
+    "bytes": 4814
+  },
+  "index.html.br": {
+    "hash": "4f328077da2a76c1",
+    "bytes": 966
+  },
+  "index.html.gz": {
+    "hash": "4a756295857719c4",
+    "bytes": 1284
+  },
+  "js/gsap/MorphSVGPlugin.js": {
+    "hash": "e3b0c44298fc1c14",
+    "bytes": 0
+  },
+  "js/gsap/MorphSVGPlugin.min.js": {
+    "hash": "e3020f2e6b8157b2",
+    "bytes": 15907
+  },
+  "js/gsap/MorphSVGPlugin.min.js.LICENSE.txt": {
+    "hash": "0293bc745215e565",
+    "bytes": 384
+  },
+  "js/gsap/MorphSVGPlugin.min.js.br": {
+    "hash": "298a8b8f9752ac24",
+    "bytes": 6685
+  },
+  "js/gsap/MorphSVGPlugin.min.js.gz": {
+    "hash": "7301fb4930f02564",
+    "bytes": 7413
+  },
+  "js/gsap/MorphSVGPlugin.min.js.map": {
+    "hash": "dd1f93b097b0dfeb",
+    "bytes": 113320
+  },
+  "js/gsap/SplitText.min.js": {
+    "hash": "215fd29c26fe1638",
+    "bytes": 15170
+  },
+  "js/gsap/SplitText.min.js.LICENSE.txt": {
+    "hash": "a6d3cfc7fe22c476",
+    "bytes": 379
+  },
+  "js/gsap/SplitText.min.js.br": {
+    "hash": "f06c136fed546284",
+    "bytes": 4426
+  },
+  "js/gsap/SplitText.min.js.gz": {
+    "hash": "9344608d0b5ce85c",
+    "bytes": 5130
+  },
+  "js/gsap/SplitText.min.js.map": {
+    "hash": "1d55ddc02b1459ab",
+    "bytes": 46767
+  },
+  "js/gsap/TextPlugin.min.js": {
+    "hash": "355c8b412069450e",
+    "bytes": 10236
+  },
+  "js/gsap/TextPlugin.min.js.LICENSE.txt": {
+    "hash": "cbd588c71e131568",
+    "bytes": 301
+  },
+  "js/gsap/TextPlugin.min.js.br": {
+    "hash": "aa6c48e849ddd533",
+    "bytes": 2863
+  },
+  "js/gsap/TextPlugin.min.js.gz": {
+    "hash": "646b62c32d3adb4e",
+    "bytes": 3423
+  },
+  "js/gsap/TextPlugin.min.js.map": {
+    "hash": "ef3ba834af8b067e",
+    "bytes": 20768
+  },
+  "main.b12119b1.js": {
+    "hash": "8ca28613711e022a",
+    "bytes": 212159
+  },
+  "main.b12119b1.js.br": {
+    "hash": "76397b31a3d95313",
+    "bytes": 43567
+  },
+  "main.b12119b1.js.gz": {
+    "hash": "ce25733d4ae092e9",
+    "bytes": 55217
+  },
+  "main.b12119b1.js.map": {
+    "hash": "6199713868054fe0",
+    "bytes": 563077
+  },
+  "react.a9e4a8e1.js": {
+    "hash": "e5e38eb29e0c635b",
+    "bytes": 136035
+  },
+  "react.a9e4a8e1.js.LICENSE.txt": {
+    "hash": "4285e01869deaf69",
+    "bytes": 729
+  },
+  "react.a9e4a8e1.js.br": {
+    "hash": "a363a3fb8089ff73",
+    "bytes": 37984
+  },
+  "react.a9e4a8e1.js.gz": {
+    "hash": "3e5cd86e3d067d6b",
+    "bytes": 43829
+  },
+  "react.a9e4a8e1.js.map": {
+    "hash": "82a854253a648588",
+    "bytes": 341105
+  },
+  "runtime.aab14717.js": {
+    "hash": "44965971e1363f51",
+    "bytes": 3295
+  },
+  "runtime.aab14717.js.br": {
+    "hash": "d875ed791de16222",
+    "bytes": 1512
+  },
+  "runtime.aab14717.js.gz": {
+    "hash": "6acfca557367158a",
+    "bytes": 1703
+  },
+  "runtime.aab14717.js.map": {
+    "hash": "1cb04919f97233ca",
+    "bytes": 17534
+  },
+  "shop/index.html": {
+    "hash": "f2defdf2698491db",
+    "bytes": 4911
+  },
+  "shop/index.html.br": {
+    "hash": "8dcaedf52b3e1109",
+    "bytes": 1038
+  },
+  "shop/index.html.gz": {
+    "hash": "db1069448b5521ff",
+    "bytes": 1361
+  },
+  "styles/main.fd096f52.css": {
+    "hash": "efc95145750fb62b",
+    "bytes": 105689
+  },
+  "styles/main.fd096f52.css.br": {
+    "hash": "be43ca24a64a83e9",
+    "bytes": 12541
+  },
+  "styles/main.fd096f52.css.gz": {
+    "hash": "2908f4ba20112f4d",
+    "bytes": 15959
+  },
+  "styles/main.fd096f52.css.map": {
+    "hash": "dc01ece45e798464",
+    "bytes": 15168
+  },
+  "vendor.24931366.js": {
+    "hash": "96dec9af5d5ff4f2",
+    "bytes": 115526
+  },
+  "vendor.24931366.js.LICENSE.txt": {
+    "hash": "236e858ef62ab728",
+    "bytes": 1148
+  },
+  "vendor.24931366.js.br": {
+    "hash": "39e9400b7d709b1a",
+    "bytes": 36770
+  },
+  "vendor.24931366.js.gz": {
+    "hash": "5df9ca6121b212fc",
+    "bytes": 42014
+  },
+  "vendor.24931366.js.map": {
+    "hash": "ce0543ba1821d7f1",
+    "bytes": 2312836
+  }
+}
