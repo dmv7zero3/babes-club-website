@@ -1,8 +1,4 @@
 {
-  ".DS_Store": {
-    "hash": "56e48f7dd6cbacc2",
-    "bytes": 6148
-  },
   "157.ce0165d2.js": {
     "hash": "ec091881c0bb5219",
     "bytes": 1665
@@ -84,16 +80,16 @@
     "bytes": 43312
   },
   "about/index.html": {
-    "hash": "1bc9bc67975b383c",
+    "hash": "ea30ff416958e119",
     "bytes": 5438
   },
   "about/index.html.br": {
-    "hash": "6a74bb151a97944a",
-    "bytes": 1119
+    "hash": "6ecc4bca65652651",
+    "bytes": 1118
   },
   "about/index.html.gz": {
-    "hash": "2860dde0141edf6c",
-    "bytes": 1450
+    "hash": "8463bc796344085c",
+    "bytes": 1448
   },
   "animations.ce161b32.js": {
     "hash": "cff935428b56b11d",
@@ -116,16 +112,16 @@
     "bytes": 693843
   },
   "contact/index.html": {
-    "hash": "9c8f84455e6fe7da",
+    "hash": "27056aebb56a2976",
     "bytes": 4948
   },
   "contact/index.html.br": {
-    "hash": "d68e1d4789160e04",
-    "bytes": 1061
+    "hash": "54ec8ebe15c7e306",
+    "bytes": 1060
   },
   "contact/index.html.gz": {
-    "hash": "e37ae8b0129d2e99",
-    "bytes": 1378
+    "hash": "2f978b0864c9101d",
+    "bytes": 1376
   },
   "fonts/GrandHotel-Regular.ttf": {
     "hash": "ec7ae65d49c936cb",
@@ -144,28 +140,28 @@
     "bytes": 342680
   },
   "gallery/index.html": {
-    "hash": "cfcb09c45ba4174c",
+    "hash": "519ff56e712025d7",
     "bytes": 4990
   },
   "gallery/index.html.br": {
-    "hash": "339a9b378763dce7",
-    "bytes": 1086
+    "hash": "82b937aa115ff903",
+    "bytes": 1088
   },
   "gallery/index.html.gz": {
-    "hash": "2ebfe4eb46bbe38d",
-    "bytes": 1410
+    "hash": "2c009de032cb62d3",
+    "bytes": 1408
   },
   "index.html": {
-    "hash": "864492756660f4ab",
+    "hash": "133389dcb49643fb",
     "bytes": 4814
   },
   "index.html.br": {
-    "hash": "1446da0a117835a1",
-    "bytes": 968
+    "hash": "18ee8e37b4af9870",
+    "bytes": 967
   },
   "index.html.gz": {
-    "hash": "d69d55b1c77bf993",
-    "bytes": 1284
+    "hash": "c58b7d7faad1f7cf",
+    "bytes": 1283
   },
   "js/gsap/MorphSVGPlugin.js": {
     "hash": "e3b0c44298fc1c14",
@@ -231,21 +227,21 @@
     "hash": "ef3ba834af8b067e",
     "bytes": 20768
   },
-  "main.6ad36f56.js": {
-    "hash": "80ee7501f1ad4cf7",
-    "bytes": 212451
+  "main.fddd9b06.js": {
+    "hash": "1ce5e99638276b56",
+    "bytes": 212829
   },
-  "main.6ad36f56.js.br": {
-    "hash": "7bff3b5966fca73f",
-    "bytes": 43591
+  "main.fddd9b06.js.br": {
+    "hash": "36120b4294729b10",
+    "bytes": 43585
   },
-  "main.6ad36f56.js.gz": {
-    "hash": "fdbfcc5033b2287b",
-    "bytes": 55267
+  "main.fddd9b06.js.gz": {
+    "hash": "970a4e52344ab713",
+    "bytes": 55305
   },
-  "main.6ad36f56.js.map": {
-    "hash": "da7a8ccf9f0bab05",
-    "bytes": 563702
+  "main.fddd9b06.js.map": {
+    "hash": "ad176b7d5da43fc3",
+    "bytes": 564524
   },
   "react.a9e4a8e1.js": {
     "hash": "e5e38eb29e0c635b",
@@ -284,16 +280,16 @@
     "bytes": 17534
   },
   "shop/index.html": {
-    "hash": "6a2ea10943ef9c58",
+    "hash": "5f31b7d0665d3220",
     "bytes": 4911
   },
   "shop/index.html.br": {
-    "hash": "2bb7c76e709f4b38",
-    "bytes": 1043
+    "hash": "515a68e7ce80fe93",
+    "bytes": 1041
   },
   "shop/index.html.gz": {
-    "hash": "18d732d45653c201",
-    "bytes": 1361
+    "hash": "eaa5fbb45751b3b7",
+    "bytes": 1359
   },
   "styles/main.fd096f52.css": {
     "hash": "efc95145750fb62b",
