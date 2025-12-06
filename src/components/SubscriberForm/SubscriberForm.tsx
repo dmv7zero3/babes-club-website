@@ -74,6 +74,9 @@ const SubscriberForm: React.FC<SubscriberFormProps> = ({
     createInitialFormState
   );
   const sectionRef = useRef<HTMLElement | null>(null);
+  const timelineRef = useRef<gsap.core.Timeline | null>(null);
+  const triggerRef = useRef<ScrollTrigger | null>(null);
+  const hasAnimatedRef = useRef(false);
 
   const isSubmitting = formState.status === "submitting";
 
@@ -211,6 +214,7 @@ const SubscriberForm: React.FC<SubscriberFormProps> = ({
     className
   );
 
+  // FIX: backdrop-blur-xl removed (GPU killer) - replaced with minimal backdrop-blur-sm
   const contentWrapperClassName = twMerge(
     "relative flex flex-col overflow-hidden bg-babe-pink-500/25 backdrop-blur-sm lg:flex-row",
     "before:absolute before:inset-0 before:bg-white/15 before:opacity-50 before:content-['']"
@@ -264,28 +268,41 @@ const SubscriberForm: React.FC<SubscriberFormProps> = ({
           0.1
         );
 
+      // FIX: Store timeline ref for cleanup
+      timelineRef.current = timeline;
+
       const trigger = ScrollTrigger.create({
         trigger: section,
-        start: "top 75%",
-        end: "bottom 20%",
-        onEnter: (self) => {
-          if (self.direction >= 0) {
-            timeline.restart();
-            return;
-          }
-
-          timeline.progress(1).pause();
+        start: "top 80%",
+        // FIX: Added `once: true` - prevents infinite trigger callbacks and memory buildup
+        once: true,
+        onEnter: () => {
+          if (hasAnimatedRef.current) return;
+          hasAnimatedRef.current = true;
+          timeline.play();
         },
-        onLeave: () => timeline.progress(1).pause(),
-        onEnterBack: () => timeline.progress(1).pause(),
       });
 
+      // FIX: Store trigger ref for cleanup
+      triggerRef.current = trigger;
+
+      // FIX: Proper cleanup chain
       return () => {
-        trigger.kill();
+        // 1. Kill trigger first
+        if (triggerRef.current) {
+          triggerRef.current.kill();
+          triggerRef.current = null;
+        }
+        // 2. Kill timeline
+        if (timelineRef.current) {
+          timelineRef.current.kill();
+          timelineRef.current = null;
+        }
       };
     }, section);
 
     return () => {
+      // 3. Revert context last
       ctx.revert();
     };
   }, []);
