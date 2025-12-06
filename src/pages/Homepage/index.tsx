@@ -1,4 +1,5 @@
 import React from "react";
+import { Helmet } from "react-helmet";
 import HeroClipReveal from "./components/HeroClipReveal";
 import SplitScreenPinning from "@/components/SplitScreenPinning/SplitScreenPinning";
 import Hero from "./components/Hero";
@@ -16,6 +17,11 @@ const BrandMarquee = React.lazy(() => import("./components/BrandMarquee"));
 const HomePage: React.FC = () => {
   return (
     <>
+      <Helmet>
+        <title>
+          The Babes Club | Handcrafted Accessories • Made in Washington, DC
+        </title>
+      </Helmet>
       {/* Demo: GSAP Flip hero image reveal */}
       {/* Categories split-screen pinning */}
       <HeroClipReveal

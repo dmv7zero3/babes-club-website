@@ -3,34 +3,50 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>
-      <%= typeof title !== 'undefined' ? title : 'The Babes Club' %>
-    </title>
 
-    <!-- Primary Meta Tags -->
-    <meta
-      name="title"
-      content="<%= typeof title !== 'undefined' ? title : 'The Babes Club' %>"
-    />
-    <meta
-      name="description"
-      content="<%= typeof description !== 'undefined' && description ? description : 'The Babes Club LLC is a women-owned Washington, DC studio crafting handcrafted jewelry & accessories—artistry, authenticity, and feminine empowerment.' %>"
-    />
-    <meta
-      name="keywords"
-      content="The Babes Club,jewelry,handcrafted accessories,women owned,Washington DC,artisan jewelry,feminine empowerment,handmade"
-    />
+    <!-- Primary Meta -->
+    <title><%= title %></title>
+    <meta name="description" content="<%= description %>" />
+    <meta name="keywords" content="<%= keywords %>" />
     <meta name="author" content="The Babes Club LLC" />
-    <link
-      rel="canonical"
-      href="<%= typeof route !== 'undefined' ? route : '/' %>"
-    />
-    <!-- Canonical set to root relatively; replace with full https://domain/ in production for SEO best practice -->
+    <link rel="canonical" href="<%= canonical %>" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="The Babes Club" />
+    <meta property="og:title" content="<%= ogTitle %>" />
+    <meta property="og:description" content="<%= ogDescription %>" />
+    <meta property="og:url" content="<%= canonical %>" />
+    <meta property="og:image" content="<%= ogImage %>" />
+    <meta property="og:image:alt" content="<%= ogImageAlt %>" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="<%= ogTitle %>" />
+    <meta name="twitter:description" content="<%= ogDescription %>" />
+    <meta name="twitter:image" content="<%= ogImage %>" />
+    <meta name="twitter:image:alt" content="<%= ogImageAlt %>" />
+    <meta name="twitter:site" content="@HollyChronic" />
+    <meta name="twitter:creator" content="@HollyChronic" />
 
     <!-- Favicons -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/web-app-manifest-192x192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="/web-app-manifest-512x512.png"
+    />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
 
@@ -40,7 +56,7 @@
     <meta name="apple-mobile-web-app-title" content="Babes Club" />
     <meta name="mobile-web-app-capable" content="yes" />
 
-    <!-- Preload critical fonts -->
+    <!-- Preload critical font -->
     <link
       rel="preload"
       as="font"
@@ -48,71 +64,11 @@
       type="font/woff2"
       crossorigin="anonymous"
     />
-
-    <!-- Route-specific preloads -->
-    <% if (typeof route !== 'undefined' && route === '/products/earrings') { %>
-    <link
-      rel="preload"
-      as="image"
-      href="/images/models/model-earrings-8.webp"
-      type="image/webp"
-      fetchpriority="high"
-    />
-    <% } %>
-
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="The Babes Club" />
-    <meta
-      property="og:title"
-      content="<%= typeof title !== 'undefined' ? title : 'Handcrafted Jewelry & Accessories | The Babes Club' %>"
-    />
-    <meta
-      property="og:description"
-      content="<%= typeof description !== 'undefined' && description ? description : 'Women-owned, handcrafted accessories brand based in Washington, DC—crafting confidence through artisanal jewelry and feminine expression.' %>"
-    />
-    <meta
-      property="og:url"
-      content="<%= typeof route !== 'undefined' ? route : '/' %>"
-    />
-    <% if (typeof ogImage !== 'undefined' && ogImage) { %>
-    <meta property="og:image" content="<%= ogImage %>" />
-    <% } %>
-    <meta
-      property="og:image:alt"
-      content="Handcrafted jewelry by The Babes Club – women-owned Washington DC accessories brand"
-    />
-    <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta
-      name="twitter:title"
-      content="<%= typeof title !== 'undefined' ? title : 'Handcrafted Jewelry & Accessories | The Babes Club' %>"
-    />
-    <meta
-      name="twitter:description"
-      content="<%= typeof description !== 'undefined' && description ? description : 'Women-owned handcrafted accessories from Washington, DC—artistry, authenticity & feminine empowerment.' %>"
-    />
-    <% if (typeof ogImage !== 'undefined' && ogImage) { %>
-    <meta name="twitter:image" content="<%= ogImage %>" />
-    <% } %>
-    <meta
-      name="twitter:image:alt"
-      content="Handcrafted jewelry by The Babes Club – women-owned Washington DC accessories brand"
-    />
-    <meta name="twitter:site" content="@HollyChronic" />
-    <meta name="twitter:creator" content="@HollyChronic" />
-
-    <!-- Prefetch / Preconnect (optional performance hints) -->
-    <!-- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /> -->
   </head>
   <body>
-    <% if (typeof jsonLd !== 'undefined' && jsonLd) { %>
+    <% if (jsonLd) { %>
     <script type="application/ld+json">
-      <%= JSON.stringify(jsonLd) %>
+      <%- jsonLd %>
     </script>
     <% } %>
     <noscript>This site works best with JavaScript enabled.</noscript>

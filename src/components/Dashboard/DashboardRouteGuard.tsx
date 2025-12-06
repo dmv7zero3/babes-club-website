@@ -1,3 +1,15 @@
+/**
+ * Dashboard Route Guard for The Babes Club
+ *
+ * Provides authentication context and loading states for dashboard pages.
+ * Uses the branded ChronicLeafIcon loading component.
+ *
+ * FIXES in this version:
+ * 1. Listens for SESSION_EVENTS.CLEARED to handle logout properly
+ * 2. Clears both sessionStorage AND localStorage on logout
+ * 3. Properly navigates to login after logout
+ */
+
 import React, {
   createContext,
   useCallback,
@@ -5,67 +17,119 @@ import React, {
   useEffect,
   useMemo,
   useState,
-  ReactNode,
+  type ReactNode,
 } from "react";
-// Fix 1.4: Retry logic helpers
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const LOGGER = {
-  info: (...args: any[]) => console.info("[DashboardRouteGuard]", ...args),
-  warn: (...args: any[]) => console.warn("[DashboardRouteGuard]", ...args),
-  error: (...args: any[]) => console.error("[DashboardRouteGuard]", ...args),
-};
-
-const isRetryableError = (error: unknown): boolean => {
-  if (!error) return false;
-  const maybeAxios = error as any;
-  const status = maybeAxios?.response?.status;
-  return (
-    !maybeAxios?.response || // Network error
-    status === 408 || // Timeout
-    status === 429 || // Rate limit
-    (status >= 500 && status < 600) // Server errors
-  );
-};
-import DashboardErrorFallback from "./DashboardErrorFallback";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import type { AxiosError } from "axios";
-import { fetchDashboardSnapshot } from "@/lib/dashboard/api";
 import {
-  clearSession,
   readStoredSession,
+  clearSession,
+  SESSION_EVENTS,
+  DASHBOARD_SESSION_STORAGE_KEY,
   type StoredDashboardSession,
 } from "@/lib/dashboard/session";
-import type { DashboardUserData } from "@/lib/types/dashboard";
+import { fetchDashboardSnapshot } from "@/lib/dashboard/api";
+import type { DashboardSnapshot } from "@/lib/types/dashboard";
+import { ChronicLeafIcon } from "@/components/LoadingIcon";
+import DashboardErrorFallback from "./DashboardErrorFallback";
 
-export const DASHBOARD_USER_STORAGE_KEY = "babes.dashboard.session";
+// ============================================================================
+// Types
+// ============================================================================
 
-type DashboardAuthStatus = "loading" | "authenticated" | "unauthenticated";
+export type DashboardAuthStatus =
+  | "loading"
+  | "authenticated"
+  | "unauthenticated";
 
-interface DashboardAuthContextValue {
+export interface DashboardAuthContextValue {
   status: DashboardAuthStatus;
-  user?: DashboardUserData;
+  user?: DashboardSnapshot;
   error?: Error;
-  token?: string;
   reload: () => void;
   logout: () => void;
+  token?: string;
 }
+
+type LoadingPhase = "session" | "profile" | "data" | null;
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+const MAX_RETRIES = 3;
+const SESSION_CHECK_RETRIES = 3;
+const SESSION_CHECK_DELAY_MS = 100;
+const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+
+// ============================================================================
+// Context
+// ============================================================================
 
 const DashboardAuthContext = createContext<DashboardAuthContextValue | null>(
   null
 );
 
 export const useDashboardAuth = (): DashboardAuthContextValue => {
-  const context = useContext(DashboardAuthContext);
-
-  if (!context) {
+  const ctx = useContext(DashboardAuthContext);
+  if (!ctx) {
     throw new Error(
-      "useDashboardAuth must be used within a DashboardRouteGuard."
+      "useDashboardAuth must be used within a DashboardRouteGuard"
     );
   }
-
-  return context;
+  return ctx;
 };
+
+// ============================================================================
+// Logger
+// ============================================================================
+
+const LOGGER = {
+  info: (msg: string, data?: unknown) =>
+    console.log(`[DashboardAuth] ${msg}`, data ?? ""),
+  debug: (msg: string, data?: unknown) =>
+    console.debug(`[DashboardAuth] ${msg}`, data ?? ""),
+  error: (msg: string, data?: unknown) =>
+    console.error(`[DashboardAuth] ${msg}`, data ?? ""),
+};
+
+// ============================================================================
+// Loading Component
+// ============================================================================
+
+interface DashboardLoadingProps {
+  phase?: LoadingPhase;
+}
+
+const DashboardLoading: React.FC<DashboardLoadingProps> = ({ phase }) => {
+  const getMessage = () => {
+    switch (phase) {
+      case "session":
+        return "Checking authentication...";
+      case "profile":
+        return "Loading your profile...";
+      case "data":
+        return "Fetching dashboard data...";
+      default:
+        return "Loading dashboard...";
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#0d0d0d]">
+      <ChronicLeafIcon
+        size={72}
+        label={getMessage()}
+        showLabel={true}
+        enableRotation={true}
+        enableGlow={true}
+      />
+    </div>
+  );
+};
+
+// ============================================================================
+// Route Guard Component
+// ============================================================================
 
 interface DashboardRouteGuardProps {
   children: ReactNode;
@@ -73,111 +137,233 @@ interface DashboardRouteGuardProps {
   loading?: ReactNode;
 }
 
-const isAuthError = (error: unknown): boolean => {
-  if (!error) {
-    return false;
-  }
-
-  const maybeAxios = error as AxiosError;
-  const status = maybeAxios?.response?.status;
-  return status === 401 || status === 403;
-};
-
-const DashboardRouteGuard = ({
+const DashboardRouteGuard: React.FC<DashboardRouteGuardProps> = ({
   children,
   fallback,
   loading,
-}: DashboardRouteGuardProps) => {
+}) => {
   const [status, setStatus] = useState<DashboardAuthStatus>("loading");
-  const [user, setUser] = useState<DashboardUserData | undefined>();
+  const [user, setUser] = useState<DashboardSnapshot | undefined>();
   const [error, setError] = useState<Error | undefined>();
-  const [session, setSession] = useState<StoredDashboardSession | null>(() =>
-    readStoredSession()
-  );
-  const [loadingPhase, setLoadingPhase] = useState<
-    "session" | "profile" | "data" | null
-  >(null);
+  const [session, setSession] = useState<StoredDashboardSession | null>(null);
+  const [loadingPhase, setLoadingPhase] = useState<LoadingPhase>("session");
+  const [reloadFlag, setReloadFlag] = useState(0);
 
   const navigate = useNavigate();
-
-  const [reloadFlag, setReloadFlag] = useState(0);
+  const location = useLocation();
 
   const reload = useCallback(() => {
     setReloadFlag((value) => value + 1);
   }, []);
 
+  /**
+   * Logout function - clears session and updates state
+   * The clearSession function now dispatches SESSION_EVENTS.CLEARED
+   */
   const logout = useCallback(() => {
-    clearSession();
+    LOGGER.info("Logging out user");
+    clearSession(); // This now clears BOTH sessionStorage AND localStorage
     setSession(null);
     setUser(undefined);
     setStatus("unauthenticated");
-  }, []);
+    // Navigate to login page
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
-  useEffect(() => {
-    let isMounted = true;
+  /**
+   * Read session with retry logic
+   */
+  const readSessionWithRetry =
+    useCallback(async (): Promise<StoredDashboardSession | null> => {
+      for (let attempt = 1; attempt <= SESSION_CHECK_RETRIES; attempt++) {
+        const storedSession = readStoredSession();
 
-    const loadUser = async (attempt = 1): Promise<void> => {
-      const MAX_RETRIES = 3;
-      try {
-        setLoadingPhase("session");
-        setStatus("loading");
-        setError(undefined);
-
-        const activeSession = readStoredSession();
-
-        if (!activeSession || !activeSession.token) {
-          if (!isMounted) return;
-          setSession(null);
-          setUser(undefined);
-          setStatus("unauthenticated");
-          setLoadingPhase(null);
-          return;
+        if (storedSession && storedSession.token) {
+          LOGGER.debug(`Session found on attempt ${attempt}`, {
+            hasToken: !storedSession.token,
+            expiresAt: storedSession.expiresAt,
+          });
+          return storedSession;
         }
 
-        if (!isMounted) return;
-        setSession(activeSession);
-        setLoadingPhase("profile");
-        // Fetch dashboard snapshot with retry logic
-        const snapshot = await fetchDashboardSnapshot(activeSession.token);
-        if (!isMounted) return;
-        setLoadingPhase("data");
-        setUser(snapshot);
-        setStatus("authenticated");
-        setLoadingPhase(null);
-      } catch (err) {
-        setLoadingPhase(null);
-        if (!isMounted) return;
-        // Auth errors (401/403) - logout immediately
-        if (isAuthError(err)) {
-          LOGGER.warn("Authentication error during profile fetch", err);
-          logout();
-          return;
-        }
-        // Retryable errors - try again with exponential backoff
-        if (isRetryableError(err) && attempt < MAX_RETRIES) {
-          const backoffMs = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
-          LOGGER.info(
-            `Profile fetch failed (attempt ${attempt}/${MAX_RETRIES}), retrying in ${backoffMs}ms...`
+        if (attempt < SESSION_CHECK_RETRIES) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, SESSION_CHECK_DELAY_MS)
           );
-          await delay(backoffMs);
-          return loadUser(attempt + 1);
         }
-        // Other errors or max retries exceeded
-        setStatus("unauthenticated");
-        setUser(undefined);
-        setError(
-          err instanceof Error
-            ? err
-            : new Error("Unable to load dashboard. Please refresh the page.")
-        );
+      }
+
+      LOGGER.debug("No session found after retries");
+      return null;
+    }, []);
+
+  /**
+   * FIX: Listen for session events (updated AND cleared)
+   * This ensures the guard reacts to logout calls from anywhere in the app
+   */
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      // Only react to our session key changes
+      if (event.key === DASHBOARD_SESSION_STORAGE_KEY || event.key === null) {
+        LOGGER.debug("Storage event detected, reloading session");
+        reload();
       }
     };
-    void loadUser();
-    return () => {
-      isMounted = false;
-    };
-  }, [reloadFlag, logout]);
 
+    // Listen for session updated events (login, token refresh)
+    const handleSessionUpdate = () => {
+      LOGGER.debug("Session update event detected");
+      reload();
+    };
+
+    // Listen for session cleared events (logout)
+    const handleSessionCleared = () => {
+      LOGGER.debug("Session cleared event detected - logging out");
+      setSession(null);
+      setUser(undefined);
+      setStatus("unauthenticated");
+    };
+
+    // Legacy event name for backward compatibility
+    const handleLegacySessionUpdate = () => {
+      LOGGER.debug("Legacy session update event detected");
+      reload();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener(SESSION_EVENTS.UPDATED, handleSessionUpdate);
+    window.addEventListener(SESSION_EVENTS.CLEARED, handleSessionCleared);
+    window.addEventListener("session-updated", handleLegacySessionUpdate);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener(SESSION_EVENTS.UPDATED, handleSessionUpdate);
+      window.removeEventListener(SESSION_EVENTS.CLEARED, handleSessionCleared);
+      window.removeEventListener("session-updated", handleLegacySessionUpdate);
+    };
+  }, [reload]);
+
+  /**
+   * Main authentication effect
+   */
+  useEffect(() => {
+    let cancelled = false;
+
+    const authenticate = async () => {
+      try {
+        setStatus("loading");
+        setLoadingPhase("session");
+        setError(undefined);
+
+        // Step 1: Read session
+        const storedSession = await readSessionWithRetry();
+
+        if (cancelled) return;
+
+        if (!storedSession || !storedSession.token) {
+          LOGGER.info("No valid session found");
+          setSession(null);
+          setStatus("unauthenticated");
+          return;
+        }
+
+        // Check token expiry
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        if (storedSession.expiresAt && storedSession.expiresAt <= nowSeconds) {
+          LOGGER.info("Session expired");
+          clearSession();
+          setSession(null);
+          setStatus("unauthenticated");
+          return;
+        }
+
+        // Store the session in state so token is available in context
+        setSession(storedSession);
+        setLoadingPhase("profile");
+
+        // Step 2: Fetch dashboard snapshot
+        LOGGER.debug("Fetching dashboard snapshot");
+        const snapshot = await fetchDashboardSnapshot(storedSession.token);
+
+        if (cancelled) return;
+
+        LOGGER.debug("Dashboard snapshot received", {
+          hasProfile: !!snapshot.profile,
+          hasShippingAddress: !!snapshot.profile?.shippingAddress?.line1,
+          hasBillingAddress: !!snapshot.profile?.billingAddress?.line1,
+          ordersCount: snapshot.orders?.length ?? 0,
+          // nftsCount removed: NFT logic no longer present
+        });
+
+        setUser(snapshot);
+        setLoadingPhase("data");
+        setStatus("authenticated");
+
+        LOGGER.info("Authentication successful", {
+          userId: snapshot.profile.userId,
+          hasAddresses: !!snapshot.profile.shippingAddress?.line1,
+        });
+      } catch (err) {
+        if (cancelled) return;
+
+        const error = err instanceof Error ? err : new Error("Unknown error");
+        LOGGER.error("Authentication failed", error);
+        setError(error);
+        setSession(null);
+        setStatus("unauthenticated");
+      }
+    };
+
+    authenticate();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadFlag, readSessionWithRetry]);
+
+  /**
+   * Inactivity timeout
+   */
+  useEffect(() => {
+    if (status !== "authenticated") return;
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const resetTimer = () => {
+      if (timer) clearTimeout(timer);
+
+      const stored = readStoredSession();
+      const nowSeconds = Math.floor(Date.now() / 1000);
+
+      const timeUntilExpiryMs = stored?.expiresAt
+        ? (stored.expiresAt - nowSeconds) * 1000
+        : INACTIVITY_TIMEOUT_MS;
+
+      const timeout = Math.min(timeUntilExpiryMs, INACTIVITY_TIMEOUT_MS);
+
+      if (timeout <= 0) {
+        LOGGER.info("Session expired, logging out");
+        logout();
+        return;
+      }
+
+      timer = setTimeout(() => {
+        LOGGER.info("Inactivity timeout reached, logging out");
+        logout();
+      }, timeout);
+    };
+
+    const events = ["mousedown", "keydown", "scroll", "touchstart"];
+    events.forEach((event) => window.addEventListener(event, resetTimer));
+    resetTimer();
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      events.forEach((event) => window.removeEventListener(event, resetTimer));
+    };
+  }, [status, logout]);
+
+  // Context value - includes token from session
   const contextValue = useMemo<DashboardAuthContextValue>(
     () => ({
       status,
@@ -189,93 +375,25 @@ const DashboardRouteGuard = ({
     }),
     [status, user, error, reload, logout, session?.token]
   );
-  // Auto-logout after a period of inactivity (client-side). This is a UX
-  // convenience; for strict security you should also revoke sessions server-side.
-  const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
+  // Debug: Log context value changes
   useEffect(() => {
-    if (status !== "authenticated") {
-      return undefined;
-    }
+    LOGGER.debug("Context value updated", {
+      status,
+      hasUser: !!user,
+      hasProfile: !!user?.profile,
+      hasShippingAddress: !!user?.profile?.shippingAddress?.line1,
+      hasBillingAddress: !!user?.profile?.billingAddress?.line1,
+      hasToken: !!session?.token,
+    });
+  }, [status, user, session?.token]);
 
-    let timer: ReturnType<typeof setTimeout> | null = null;
-
-    const resetTimer = () => {
-      if (timer) {
-        clearTimeout(timer);
-      }
-
-      // Calculate timeout considering both inactivity AND token expiry
-      const stored = readStoredSession();
-      if (!stored) {
-        logout();
-        return;
-      }
-
-      const nowSeconds = Math.floor(Date.now() / 1000);
-      const timeUntilExpiryMs = stored.expiresAt
-        ? Math.max(0, (stored.expiresAt - nowSeconds) * 1000)
-        : INACTIVITY_TIMEOUT_MS;
-
-      // Use the shorter of: inactivity timeout or time until token expires
-      const actualTimeoutMs = Math.min(
-        INACTIVITY_TIMEOUT_MS,
-        timeUntilExpiryMs
-      );
-
-      if (actualTimeoutMs <= 0) {
-        // Token already expired
-        logout();
-        try {
-          navigate("/login", { replace: true });
-        } catch (e) {
-          // ignore navigation errors
-        }
-        return;
-      }
-
-      LOGGER.info(`Setting inactivity timer for ${actualTimeoutMs}ms`);
-
-      timer = setTimeout(() => {
-        LOGGER.info("Inactivity timeout or token expiry reached - logging out");
-        logout();
-        try {
-          navigate("/login", { replace: true });
-        } catch (e) {
-          // ignore navigation errors
-        }
-      }, actualTimeoutMs);
-    };
-
-    const events = ["mousemove", "keydown", "click", "touchstart"];
-    events.forEach((ev) => window.addEventListener(ev, resetTimer));
-
-    resetTimer();
-
-    return () => {
-      if (timer) {
-        clearTimeout(timer);
-      }
-      events.forEach((ev) => window.removeEventListener(ev, resetTimer));
-    };
-  }, [status, logout, navigate]);
-
-  const location = useLocation();
+  // ============================================================================
+  // Render Logic
+  // ============================================================================
 
   if (status === "loading") {
-    const loadingContent = loading ?? (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="space-y-4 text-center">
-          <div className="inline-block w-8 h-8 border-4 border-solid rounded-full animate-spin border-cotton-candy border-r-transparent"></div>
-          <p className="text-sm text-neutral-400">
-            {loadingPhase === "session" && "Checking authentication..."}
-            {loadingPhase === "profile" && "Loading your profile..."}
-            {loadingPhase === "data" && "Fetching dashboard data..."}
-            {!loadingPhase && "Loading dashboard..."}
-          </p>
-        </div>
-      </div>
-    );
+    const loadingContent = loading ?? <DashboardLoading phase={loadingPhase} />;
     return <>{loadingContent}</>;
   }
 
@@ -295,17 +413,22 @@ const DashboardRouteGuard = ({
     );
   }
 
-  // Allow the login page to render the fallback (login form) without
-  // redirecting back to `/login` (which would cause a loop). For any other
-  // path, redirect unauthenticated users to `/login`.
+  // For login page, render fallback (login form) without redirect
   if (location.pathname === "/login") {
     return (
       <DashboardAuthContext.Provider value={contextValue}>
-        {fallback ?? <div>Unable to load dashboard user.</div>}
+        {fallback ?? (
+          <div className="flex items-center justify-center min-h-screen">
+            <p className="text-sm text-neutral-400">
+              Unable to load dashboard user.
+            </p>
+          </div>
+        )}
       </DashboardAuthContext.Provider>
     );
   }
 
+  // Redirect unauthenticated users to login
   return (
     <DashboardAuthContext.Provider value={contextValue}>
       <Navigate to="/login" replace />

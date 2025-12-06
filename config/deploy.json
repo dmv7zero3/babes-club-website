@@ -3,5 +3,6 @@
   "s3Bucket": "babes-club-website",
   "cloudFrontDistributionId": "E2YAUX21SFC05K",
   "accountId": "752567131183",
-  "siteOrigin": "https://thebabesclub.com"
+  "siteOrigin": "https://thebabesclub.com",
+  "excludeFromUpload": ["images/**"]
 }

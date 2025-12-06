@@ -1,5 +1,19 @@
+/**
+ * Profile Edit Form for The Babes Club Dashboard
+ *
+ * Allows users to update their profile information including
+ * display name, email, and shipping/billing addresses.
+ *
+ * NFT-related settings have been removed.
+ */
+
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { useDashboardData } from "./DashboardDataProvider";
+import { InlineSpinner } from "@/components/LoadingIcon";
+
+// ============================================================================
+// Types
+// ============================================================================
 
 interface FormState {
   displayName: string;
@@ -11,28 +25,35 @@ interface FormState {
   shippingState: string;
   shippingPostalCode: string;
   shippingCountry: string;
+  billingLine1: string;
+  billingLine2: string;
+  billingCity: string;
+  billingState: string;
+  billingPostalCode: string;
+  billingCountry: string;
+  useSameAddress: boolean;
 }
 
-const booleanSetting = (value: unknown, fallback = true): boolean => {
-  if (typeof value === "boolean") {
-    return value;
-  }
-
-  return fallback;
-};
-
-const stringSetting = (value: unknown, fallback = ""): string => {
-  if (typeof value === "string") {
-    return value;
-  }
-
-  return fallback;
-};
+// ============================================================================
+// Helper Functions
+// ============================================================================
 
 const buildFormState = (
   profile: ReturnType<typeof useDashboardData>["profile"]
 ): FormState => {
   const shipping = profile?.shippingAddress;
+  const billing = profile?.billingAddress;
+
+  // Check if billing is same as shipping
+  const same =
+    !billing ||
+    (billing.line1 === shipping?.line1 &&
+      billing.line2 === shipping?.line2 &&
+      billing.city === shipping?.city &&
+      billing.state === shipping?.state &&
+      billing.postalCode === shipping?.postalCode &&
+      billing.country === shipping?.country);
+
   return {
     displayName: profile?.displayName ?? "",
     email: profile?.email ?? "",
@@ -43,24 +64,58 @@ const buildFormState = (
     shippingState: shipping?.state ?? "",
     shippingPostalCode: shipping?.postalCode ?? "",
     shippingCountry: shipping?.country ?? "",
+    billingLine1: billing?.line1 ?? shipping?.line1 ?? "",
+    billingLine2: billing?.line2 ?? shipping?.line2 ?? "",
+    billingCity: billing?.city ?? shipping?.city ?? "",
+    billingState: billing?.state ?? shipping?.state ?? "",
+    billingPostalCode: billing?.postalCode ?? shipping?.postalCode ?? "",
+    billingCountry: billing?.country ?? shipping?.country ?? "",
+    useSameAddress: same,
   };
 };
 
+// ============================================================================
+// Component
+// ============================================================================
+
 const ProfileEditForm = () => {
   const { profile, updateProfile } = useDashboardData();
-  const initialState = useMemo(() => buildFormState(profile), [profile]);
+
+  // Memoize initial state based on profile
+  const initialState = useMemo(() => {
+    console.log(
+      "[ProfileEditForm] Building initial state from profile:",
+      profile
+    );
+    return buildFormState(profile);
+  }, [profile]);
 
   const [formState, setFormState] = useState<FormState>(initialState);
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Update form state when profile changes (e.g., after successful save)
   useEffect(() => {
-    setFormState(buildFormState(profile));
-    setFeedback(null);
+    console.log("[ProfileEditForm] Profile changed in context:", {
+      userId: profile?.userId,
+      displayName: profile?.displayName,
+      email: profile?.email,
+      shippingAddress: profile?.shippingAddress,
+      billingAddress: profile?.billingAddress,
+      updatedAt: profile?.updatedAt,
+    });
+
+    const newFormState = buildFormState(profile);
+    console.log("[ProfileEditForm] New form state:", newFormState);
+
+    setFormState(newFormState);
+    // Don't clear feedback on profile update - user should see success message
+    // setFeedback(null);
     setError(null);
   }, [profile]);
 
+  // Loading state
   if (!profile) {
     return (
       <div className="p-6 text-sm bg-white border rounded-xl border-neutral-200 text-neutral-500">
@@ -69,17 +124,45 @@ const ProfileEditForm = () => {
     );
   }
 
+  // ============================================================================
+  // Event Handlers
+  // ============================================================================
+
   const handleInputChange = (
     event: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    const { name, value } = event.target;
-    setFormState((previous) => ({
-      ...previous,
-      [name]: value,
-    }));
-  };
+    const { name, value, type } = event.target;
 
-  // Checkbox handler removed (no toggles)
+    if (type === "checkbox" && name === "useSameAddress") {
+      const checked = (event.target as HTMLInputElement).checked;
+      setFormState((previous) => ({
+        ...previous,
+        useSameAddress: checked,
+        // If toggling ON, mirror shipping to billing
+        ...(checked
+          ? {
+              billingLine1: previous.shippingLine1,
+              billingLine2: previous.shippingLine2,
+              billingCity: previous.shippingCity,
+              billingState: previous.shippingState,
+              billingPostalCode: previous.shippingPostalCode,
+              billingCountry: previous.shippingCountry,
+            }
+          : {}),
+      }));
+    } else {
+      setFormState((previous) => ({
+        ...previous,
+        [name]: value,
+        // If editing shipping and useSameAddress, mirror to billing
+        ...(previous.useSameAddress && name.startsWith("shipping")
+          ? {
+              ["billing" + name.slice(8)]: value,
+            }
+          : {}),
+      }));
+    }
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -87,6 +170,21 @@ const ProfileEditForm = () => {
     setIsSaving(true);
     setFeedback(null);
     setError(null);
+
+    // Validation for billing if not using same address
+    if (!formState.useSameAddress) {
+      if (
+        !formState.billingLine1 ||
+        !formState.billingCity ||
+        !formState.billingState ||
+        !formState.billingPostalCode ||
+        !formState.billingCountry
+      ) {
+        setError("Please fill in all required billing address fields.");
+        setIsSaving(false);
+        return;
+      }
+    }
 
     try {
       const payload = {
@@ -101,23 +199,71 @@ const ProfileEditForm = () => {
           postalCode: formState.shippingPostalCode.trim(),
           country: formState.shippingCountry.trim(),
         },
+        billingAddress: formState.useSameAddress
+          ? {
+              line1: formState.shippingLine1.trim(),
+              line2: formState.shippingLine2.trim() || undefined,
+              city: formState.shippingCity.trim(),
+              state: formState.shippingState.trim(),
+              postalCode: formState.shippingPostalCode.trim(),
+              country: formState.shippingCountry.trim(),
+            }
+          : {
+              line1: formState.billingLine1.trim(),
+              line2: formState.billingLine2.trim() || undefined,
+              city: formState.billingCity.trim(),
+              state: formState.billingState.trim(),
+              postalCode: formState.billingPostalCode.trim(),
+              country: formState.billingCountry.trim(),
+            },
       };
-      console.log("[ProfileEditForm] updateProfile payload:", payload);
+
+      console.log("[ProfileEditForm] Submitting payload:", payload);
+
       await updateProfile(payload);
 
-      setFeedback(
-        "Profile saved. Changes are stored locally until the API is ready."
+      console.log(
+        "[ProfileEditForm] Update successful, profile should refresh"
       );
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to save profile changes right now."
-      );
+
+      setFeedback("Profile saved successfully!");
+    } catch (err: unknown) {
+      console.error("[ProfileEditForm] Update failed:", err);
+
+      // Map backend errors to fields if possible
+      if (
+        err &&
+        typeof err === "object" &&
+        "fieldErrors" in err &&
+        err.fieldErrors
+      ) {
+        const fieldErrors = err.fieldErrors as Record<
+          string,
+          Record<string, string>
+        >;
+        const summary = Object.entries(fieldErrors)
+          .map(([section, fields]) =>
+            Object.entries(fields)
+              .map(([field, msg]) => `${section}.${field}: ${msg}`)
+              .join("; ")
+          )
+          .join("; ");
+        setError(summary);
+      } else {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Unable to save profile changes right now."
+        );
+      }
     } finally {
       setIsSaving(false);
     }
   };
+
+  // ============================================================================
+  // Render
+  // ============================================================================
 
   return (
     <form
@@ -127,11 +273,11 @@ const ProfileEditForm = () => {
       <header className="space-y-1">
         <h3 className="text-lg font-semibold text-neutral-900">Edit Profile</h3>
         <p className="text-sm text-neutral-500">
-          Update member information. Submissions are currently stored in-memory
-          while the backend is under construction.
+          Update your member information and addresses.
         </p>
       </header>
 
+      {/* Basic Info Section */}
       <section className="grid gap-4 md:grid-cols-2">
         <div className="flex flex-col gap-2">
           <label
@@ -179,11 +325,12 @@ const ProfileEditForm = () => {
             value={formState.preferredWallet}
             onChange={handleInputChange}
             placeholder="0x..."
-            className="px-3 py-2 font-mono text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+            className="px-3 py-2 text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
           />
         </div>
       </section>
 
+      {/* Shipping Address Section */}
       <section className="space-y-4">
         <h4 className="text-sm font-semibold tracking-wide uppercase text-neutral-500">
           Shipping Address
@@ -287,34 +434,175 @@ const ProfileEditForm = () => {
         </div>
       </section>
 
-      {/* Toggles for Show Order History and Show NFT Holdings removed */}
+      {/* Same Address Checkbox */}
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="useSameAddress"
+          name="useSameAddress"
+          checked={formState.useSameAddress}
+          onChange={handleInputChange}
+          className="w-4 h-4 border rounded border-neutral-300 text-babe-pink focus:ring-babe-pink"
+        />
+        <label
+          htmlFor="useSameAddress"
+          className="text-sm font-medium text-neutral-700"
+        >
+          Billing address same as shipping
+        </label>
+      </div>
 
-      {feedback ? (
-        <div className="p-3 text-sm text-green-700 rounded-md bg-green-50">
-          {feedback}
-        </div>
-      ) : null}
-      {error ? (
-        <div className="p-3 text-sm text-red-700 rounded-md bg-red-50">
+      {/* Feedback Messages */}
+      {error && (
+        <div
+          className="p-3 text-sm text-red-700 rounded-md bg-red-50"
+          role="alert"
+          aria-live="assertive"
+        >
           {error}
         </div>
-      ) : null}
-
-      <div className="flex items-center justify-end gap-3">
-        <button
-          type="button"
-          onClick={() => setFormState(initialState)}
-          className="px-4 py-2 text-sm font-medium border rounded-md border-neutral-300 text-neutral-700 hover:bg-neutral-100"
-          disabled={isSaving}
+      )}
+      {feedback && (
+        <div
+          className="p-3 text-sm text-green-700 rounded-md bg-green-50"
+          role="status"
+          aria-live="polite"
         >
-          Reset
-        </button>
+          {feedback}
+        </div>
+      )}
+
+      {/* Billing Address Section */}
+      <section className="space-y-4">
+        <h4 className="text-sm font-semibold tracking-wide uppercase text-neutral-500">
+          Billing Address
+        </h4>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="flex flex-col gap-2 md:col-span-2">
+            <label
+              className="text-sm font-medium text-neutral-700"
+              htmlFor="billingLine1"
+            >
+              Address Line 1
+            </label>
+            <input
+              id="billingLine1"
+              name="billingLine1"
+              value={formState.billingLine1}
+              onChange={handleInputChange}
+              required={!formState.useSameAddress}
+              disabled={formState.useSameAddress}
+              className="px-3 py-2 text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black disabled:bg-neutral-100 disabled:text-neutral-500"
+              aria-disabled={formState.useSameAddress}
+            />
+          </div>
+          <div className="flex flex-col gap-2 md:col-span-2">
+            <label
+              className="text-sm font-medium text-neutral-700"
+              htmlFor="billingLine2"
+            >
+              Address Line 2 (optional)
+            </label>
+            <input
+              id="billingLine2"
+              name="billingLine2"
+              value={formState.billingLine2}
+              onChange={handleInputChange}
+              disabled={formState.useSameAddress}
+              className="px-3 py-2 text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black disabled:bg-neutral-100 disabled:text-neutral-500"
+              aria-disabled={formState.useSameAddress}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label
+              className="text-sm font-medium text-neutral-700"
+              htmlFor="billingCity"
+            >
+              City
+            </label>
+            <input
+              id="billingCity"
+              name="billingCity"
+              value={formState.billingCity}
+              onChange={handleInputChange}
+              required={!formState.useSameAddress}
+              disabled={formState.useSameAddress}
+              className="px-3 py-2 text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black disabled:bg-neutral-100 disabled:text-neutral-500"
+              aria-disabled={formState.useSameAddress}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label
+              className="text-sm font-medium text-neutral-700"
+              htmlFor="billingState"
+            >
+              State / Province
+            </label>
+            <input
+              id="billingState"
+              name="billingState"
+              value={formState.billingState}
+              onChange={handleInputChange}
+              required={!formState.useSameAddress}
+              disabled={formState.useSameAddress}
+              className="px-3 py-2 text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black disabled:bg-neutral-100 disabled:text-neutral-500"
+              aria-disabled={formState.useSameAddress}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label
+              className="text-sm font-medium text-neutral-700"
+              htmlFor="billingPostalCode"
+            >
+              Postal Code
+            </label>
+            <input
+              id="billingPostalCode"
+              name="billingPostalCode"
+              value={formState.billingPostalCode}
+              onChange={handleInputChange}
+              required={!formState.useSameAddress}
+              disabled={formState.useSameAddress}
+              className="px-3 py-2 text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black disabled:bg-neutral-100 disabled:text-neutral-500"
+              aria-disabled={formState.useSameAddress}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label
+              className="text-sm font-medium text-neutral-700"
+              htmlFor="billingCountry"
+            >
+              Country
+            </label>
+            <input
+              id="billingCountry"
+              name="billingCountry"
+              value={formState.billingCountry}
+              onChange={handleInputChange}
+              required={!formState.useSameAddress}
+              disabled={formState.useSameAddress}
+              className="px-3 py-2 text-sm border rounded-md border-neutral-300 focus:border-black focus:outline-none focus:ring-1 focus:ring-black disabled:bg-neutral-100 disabled:text-neutral-500"
+              aria-disabled={formState.useSameAddress}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Submit Button */}
+      <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
         <button
           type="submit"
-          className="px-4 py-2 text-sm font-semibold text-white bg-black rounded-md hover:bg-neutral-800 disabled:opacity-60"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-black rounded-md hover:bg-neutral-800 disabled:opacity-60 disabled:cursor-not-allowed"
           disabled={isSaving}
         >
-          {isSaving ? "Saving…" : "Save Changes"}
+          {isSaving ? (
+            <>
+              <InlineSpinner size={16} color="#ffffff" />
+              Saving…
+            </>
+          ) : (
+            "Save Changes"
+          )}
         </button>
       </div>
     </form>

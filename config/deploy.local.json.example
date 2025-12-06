@@ -1,7 +1,0 @@
-{
-  "awsRegion": "us-east-1",
-  "s3Bucket": "your-dev-bucket-name",
-  "cloudFrontDistributionId": "YOURDEV123456",
-  "accountId": "000000000000",
-  "siteOrigin": "https://dev.example.com"
-}

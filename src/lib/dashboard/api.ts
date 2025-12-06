@@ -1,11 +1,20 @@
+/**
+ * Dashboard API Client for The Babes Club
+ *
+ * Functions for fetching dashboard data including profile, orders, and NFTs.
+ */
+
 import apiClient from "@/lib/api/apiClient";
 import type {
   DashboardAddress,
-  DashboardNftAsset,
   DashboardOrder,
   DashboardProfile,
-  DashboardUserData,
+  DashboardSnapshot,
 } from "@/lib/types/dashboard";
+
+// ============================================================================
+// Types
+// ============================================================================
 
 export interface AuthLoginResponse {
   accessToken: string;
@@ -24,14 +33,14 @@ interface DashboardProfileResponse {
 }
 
 interface DashboardOrdersResponse {
-  orders?: Array<Record<string, any>>;
+  orders?: Array<Record<string, unknown>>;
 }
 
-interface DashboardNftsResponse {
-  nfts?: Array<Record<string, any>>;
-}
+// ✅ Export this type so DashboardRouteGuard can use it
 
-export interface DashboardSnapshot extends DashboardUserData {}
+// ============================================================================
+// Helper Functions
+// ============================================================================
 
 const buildAuthHeaders = (token: string) => ({
   headers: {
@@ -39,50 +48,102 @@ const buildAuthHeaders = (token: string) => ({
   },
 });
 
-const normalizeAddress = (
-  address?: Partial<DashboardAddress>
-): DashboardAddress => ({
-  line1: address?.line1 ?? "",
-  city: address?.city ?? "",
-  state: address?.state ?? "",
-  postalCode: address?.postalCode ?? "",
-  country: address?.country ?? "US",
-  line2: address?.line2,
-});
+const safeString = (value: unknown, fallback = ""): string => {
+  if (typeof value === "string") return value;
+  if (typeof value === "number") return String(value);
+  if (value === null || value === undefined) return fallback;
+  return fallback;
+};
+
+const isAddressObject = (value: unknown): value is Record<string, unknown> => {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+};
+
+const normalizeAddress = (address?: unknown): DashboardAddress => {
+  if (!isAddressObject(address)) {
+    return {
+      line1: "",
+      city: "",
+      state: "",
+      postalCode: "",
+      country: "",
+      line2: "",
+    };
+  }
+  return {
+    line1: safeString(address.line1, ""),
+    city: safeString(address.city, ""),
+    state: safeString(address.state, ""),
+    postalCode: safeString(address.postalCode, ""),
+    country: safeString(address.country, ""),
+    line2: safeString(address.line2, ""),
+  };
+};
 
 const normalizeProfile = (
-  profile?: Partial<DashboardProfile>
-): DashboardProfile => ({
-  userId: profile?.userId ?? "anonymous",
-  displayName: profile?.displayName ?? "Babes Club Member",
-  email: profile?.email ?? "member@example.com",
-  shippingAddress: normalizeAddress(profile?.shippingAddress),
-  preferredWallet: profile?.preferredWallet,
-  avatarUrl: profile?.avatarUrl,
-  stripeCustomerId: profile?.stripeCustomerId,
-  dashboardSettings: profile?.dashboardSettings ?? {},
-  updatedAt: profile?.updatedAt ?? new Date().toISOString(),
-  category: profile?.category ?? "Member",
-});
+  profile?: Partial<DashboardProfile> | null
+): DashboardProfile => {
+  // Debug: Log incoming profile data
+  console.log("[api.ts] normalizeProfile input:", {
+    hasProfile: !!profile,
+    hasShippingAddress: !!profile?.shippingAddress,
+    hasBillingAddress: !!profile?.billingAddress,
+    shippingAddress: profile?.shippingAddress,
+    billingAddress: profile?.billingAddress,
+  });
+
+  const shippingAddress = normalizeAddress(profile?.shippingAddress);
+  let billingAddress: DashboardAddress | undefined;
+  if (
+    profile?.billingAddress !== undefined &&
+    profile?.billingAddress !== null
+  ) {
+    billingAddress = normalizeAddress(profile.billingAddress);
+  }
+
+  const normalized: DashboardProfile = {
+    userId: profile?.userId ?? "anonymous",
+    displayName: profile?.displayName ?? "Babes Club Member",
+    email: profile?.email ?? "member@example.com",
+    shippingAddress,
+    billingAddress,
+    preferredWallet: profile?.preferredWallet,
+    avatarUrl: profile?.avatarUrl,
+    stripeCustomerId: profile?.stripeCustomerId,
+    dashboardSettings: profile?.dashboardSettings ?? {},
+    updatedAt: profile?.updatedAt ?? new Date().toISOString(),
+    category: profile?.category ?? "Member",
+  };
+
+  // Debug: Log normalized output
+  console.log("[api.ts] normalizeProfile output:", {
+    shippingAddress: normalized.shippingAddress,
+    billingAddress: normalized.billingAddress,
+  });
+
+  return normalized;
+};
 
 const normalizeOrder = (
-  order: Record<string, any> | undefined,
+  order: Record<string, unknown> | undefined,
   index: number
 ): DashboardOrder => ({
-  orderId: order?.orderId ?? order?.orderNumber ?? `order-${index}`,
-  orderNumber: order?.orderNumber ?? order?.orderId ?? `BC-${index}`,
-  status: order?.status ?? "processing",
+  orderId: String(order?.orderId ?? order?.orderNumber ?? `order-${index}`),
+  orderNumber: String(order?.orderNumber ?? order?.orderId ?? `BC-${index}`),
+  status: String(order?.status ?? "processing"),
   amount:
     typeof order?.amount === "number"
       ? order.amount
       : Number(order?.amount ?? 0),
-  currency: (order?.currency ?? "usd").toLowerCase(),
-  stripePaymentIntentId: order?.stripePaymentIntentId,
-  createdAt: order?.createdAt ?? new Date().toISOString(),
+  currency: String(order?.currency ?? "usd").toLowerCase(),
+  stripePaymentIntentId: order?.stripePaymentIntentId
+    ? String(order.stripePaymentIntentId)
+    : undefined,
+  createdAt: String(order?.createdAt ?? new Date().toISOString()),
   items: Array.isArray(order?.items)
-    ? order.items.map((item: Record<string, any>, itemIndex: number) => ({
-        sku: item?.sku ?? `sku-${itemIndex}`,
-        name: item?.name ?? "Item",
+    ? order.items.map((item: Record<string, unknown>, itemIndex: number) => ({
+        sku: String(item?.sku ?? `sku-${itemIndex}`),
+        name: String(item?.name ?? "Item"),
         quantity:
           typeof item?.quantity === "number"
             ? item.quantity
@@ -95,17 +156,9 @@ const normalizeOrder = (
     : [],
 });
 
-const normalizeNft = (
-  nft: Record<string, any> | undefined,
-  index: number
-): DashboardNftAsset => ({
-  tokenId: nft?.tokenId ?? `token-${index}`,
-  collectionId: nft?.collectionId ?? "collection",
-  tokenName: nft?.tokenName ?? nft?.name ?? "NFT",
-  thumbnailUrl: nft?.thumbnailUrl ?? nft?.image,
-  metadata: nft?.metadata ?? {},
-  lastSyncedAt: nft?.lastSyncedAt ?? new Date().toISOString(),
-});
+// ============================================================================
+// Auth API Functions
+// ============================================================================
 
 export const login = async (
   email: string,
@@ -132,10 +185,17 @@ export const signup = async (
 
   return data;
 };
+
+// ============================================================================
+// Dashboard API Functions
+// ============================================================================
+
 export const fetchDashboardSnapshot = async (
   token: string
 ): Promise<DashboardSnapshot> => {
-  const [profileResponse, ordersResponse, nftsResponse] = await Promise.all([
+  console.log("[api.ts] fetchDashboardSnapshot - fetching data...");
+
+  const [profileResponse, ordersResponse] = await Promise.all([
     apiClient.get<DashboardProfileResponse>(
       "/dashboard/profile",
       buildAuthHeaders(token)
@@ -144,32 +204,57 @@ export const fetchDashboardSnapshot = async (
       "/dashboard/orders",
       buildAuthHeaders(token)
     ),
-    apiClient.get<DashboardNftsResponse>(
-      "/dashboard/nfts",
-      buildAuthHeaders(token)
-    ),
   ]);
+
+  console.log("[api.ts] Raw profile response:", profileResponse.data);
 
   const profile = normalizeProfile(profileResponse.data.profile);
   const orders = (ordersResponse.data.orders ?? []).map(normalizeOrder);
-  const nfts = (nftsResponse.data.nfts ?? []).map(normalizeNft);
+
+  console.log("[api.ts] fetchDashboardSnapshot - snapshot created:", {
+    profileUserId: profile.userId,
+    hasShippingAddress: !!profile.shippingAddress?.line1,
+    hasBillingAddress: !!profile.billingAddress?.line1,
+    shippingLine1: profile.shippingAddress?.line1,
+    billingLine1: profile.billingAddress?.line1,
+    ordersCount: orders.length,
+  });
 
   return {
     profile,
     orders,
-    nfts,
   };
 };
 
 export const updateDashboardProfile = async (
   token: string,
-  fields: Partial<DashboardProfile>
+  payload: Partial<DashboardProfile>
 ): Promise<DashboardProfile> => {
+  console.log("[api.ts] updateDashboardProfile - payload:", payload);
+
+  // Normalize payload before sending
+  const normalizedPayload = {
+    ...payload,
+    shippingAddress: payload.shippingAddress
+      ? normalizeAddress(payload.shippingAddress)
+      : undefined,
+    billingAddress: payload.billingAddress
+      ? normalizeAddress(payload.billingAddress)
+      : undefined,
+  };
+
+  console.log(
+    "[api.ts] updateDashboardProfile - normalized payload:",
+    normalizedPayload
+  );
+
   const { data } = await apiClient.post<DashboardProfileResponse>(
     "/dashboard/update-profile",
-    fields,
+    normalizedPayload,
     buildAuthHeaders(token)
   );
+
+  console.log("[api.ts] updateDashboardProfile - response:", data);
 
   return normalizeProfile(data.profile);
 };

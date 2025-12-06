@@ -1,66 +1,131 @@
 """
-Dashboard Update Profile Lambda - Updates user profile with email change support
-Enforces 4-day cooldown between email changes
+Babes Club - Update Profile Lambda
+Updated: 2025 - Added billingAddress support
 
----
-REQUIRED SETUP:
-- API Gateway POST and OPTIONS methods for `/dashboard/update-profile`
-- API Gateway method response for POST must include:
-    - Access-Control-Allow-Origin
-    - Access-Control-Allow-Headers
-    - Access-Control-Allow-Methods
-- Lambda must return these CORS headers for all responses (success and error)
-- API Gateway must attach a CUSTOM authorizer that returns `userId` in the request context
-- Frontend must send a valid Authorization header (JWT/session token)
-- DynamoDB table must be accessible and have correct schema for user profiles and email lookups
----
+Handles authenticated profile updates from the React dashboard.
+Supports atomic updates for:
+- displayName, phone, shippingAddress, billingAddress, dashboardSettings, preferredWallet
+- Email changes with uniqueness check and token refresh
+
+Environment Variables:
+- COMMERCE_TABLE: DynamoDB table name
+- CORS_ALLOW_ORIGIN: Allowed CORS origins (comma-separated)
+- JWT_SECRET: JWT signing secret
+- REFRESH_SECRET: Refresh token secret
 """
-
-from __future__ import annotations
 
 import json
 import logging
 import os
-from datetime import datetime, timedelta
 from typing import Any, Dict, Tuple
 
+import boto3
+from boto3.dynamodb.conditions import Key
+
 # Initialize logger at module level
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-try:
-    from shared_commerce import (
-        get_commerce_table,
-        now_utc_iso,
-        resolve_origin,
-    )
-except ImportError as e:
-    logger.error(f"Failed to import shared_commerce: {e}")
-    raise
+# ============================================================================
+# Helper Functions
+# ============================================================================
+
+def get_commerce_table():
+    """Get DynamoDB table resource."""
+    table_name = os.environ.get("COMMERCE_TABLE", "babesclub-commerce")
+    dynamodb = boto3.resource("dynamodb", region_name=os.environ.get("AWS_REGION", "us-east-1"))
+    return dynamodb.Table(table_name)
 
 
-def _parse_body(event: Dict[str, Any]) -> Tuple[Dict[str, Any], str | None]:
-    """Parse and validate request body"""
-    try:
-        body = event.get("body") or "{}"
-        logger.info(f"Parsing body: {body[:200]}...")  # Log first 200 chars
-        
-        if isinstance(body, str):
-            parsed = json.loads(body or "{}")
-            logger.info(f"Parsed body keys: {list(parsed.keys())}")
-            return parsed, None
-        if isinstance(body, bytes):
-            parsed = json.loads(body.decode("utf-8"))
-            logger.info(f"Parsed body keys: {list(parsed.keys())}")
-            return parsed, None
-        return body, None
-    except json.JSONDecodeError as exc:
-        logger.error(f"JSON decode error: {exc}")
-        return {}, f"Invalid JSON: {exc}"
+def now_utc_iso() -> str:
+    """Return current UTC timestamp in ISO format."""
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).isoformat()
+
+
+def get_cors_origin(event: Dict[str, Any]) -> str:
+    """Extract and validate CORS origin from request."""
+    allowed_origins = os.environ.get("CORS_ALLOW_ORIGIN", "*").split(",")
+    request_origin = (event.get("headers") or {}).get("origin", "")
+    
+    if "*" in allowed_origins:
+        return "*"
+    if request_origin in allowed_origins:
+        return request_origin
+    return allowed_origins[0] if allowed_origins else "*"
+
+
+def create_jwt(payload: Dict[str, Any], expires_in: int = 43200) -> str:
+    """Create a JWT token (12 hours default)."""
+    import time
+    import hmac
+    import hashlib
+    import base64
+    
+    secret = os.environ.get("JWT_SECRET", "dev-secret")
+    
+    header = {"alg": "HS256", "typ": "JWT"}
+    
+    now = int(time.time())
+    payload_with_claims = {
+        **payload,
+        "iat": now,
+        "exp": now + expires_in,
+    }
+    
+    def b64_encode(data: bytes) -> str:
+        return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
+    
+    header_b64 = b64_encode(json.dumps(header).encode())
+    payload_b64 = b64_encode(json.dumps(payload_with_claims).encode())
+    
+    signature = hmac.new(
+        secret.encode(),
+        f"{header_b64}.{payload_b64}".encode(),
+        hashlib.sha256
+    ).digest()
+    signature_b64 = b64_encode(signature)
+    
+    return f"{header_b64}.{payload_b64}.{signature_b64}"
+
+
+def create_refresh_token(payload: Dict[str, Any], expires_in: int = 2592000) -> str:
+    """Create a refresh token (30 days default)."""
+    import time
+    import hmac
+    import hashlib
+    import base64
+    
+    secret = os.environ.get("REFRESH_SECRET", os.environ.get("JWT_SECRET", "dev-secret"))
+    
+    header = {"alg": "HS256", "typ": "JWT"}
+    
+    now = int(time.time())
+    payload_with_claims = {
+        **payload,
+        "iat": now,
+        "exp": now + expires_in,
+        "type": "refresh",
+    }
+    
+    def b64_encode(data: bytes) -> str:
+        return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
+    
+    header_b64 = b64_encode(json.dumps(header).encode())
+    payload_b64 = b64_encode(json.dumps(payload_with_claims).encode())
+    
+    signature = hmac.new(
+        secret.encode(),
+        f"{header_b64}.{payload_b64}".encode(),
+        hashlib.sha256
+    ).digest()
+    signature_b64 = b64_encode(signature)
+    
+    return f"{header_b64}.{payload_b64}.{signature_b64}"
 
 
 def _response(status_code: int, payload: Dict[str, Any], cors_origin: str | None = None) -> Dict[str, Any]:
-    """Build JSON response"""
+    """Build JSON response with CORS headers."""
     origin = cors_origin or "*"
     response = {
         "statusCode": status_code,
@@ -76,303 +141,409 @@ def _response(status_code: int, payload: Dict[str, Any], cors_origin: str | None
     return response
 
 
+def _filter_sensitive_fields(profile: Dict[str, Any]) -> Dict[str, Any]:
+    """Remove sensitive fields from profile before returning to client."""
+    sensitive_fields = {
+        "passwordHash",
+        "passwordSalt",
+        "hashAlgorithm",
+        "hashIterations",
+        "PK",
+        "SK",
+    }
+    return {k: v for k, v in profile.items() if k not in sensitive_fields}
+
+
+def _issue_new_tokens(user_id: str, email: str, display_name: str, role: str = "customer") -> Tuple[str, str, int]:
+    """
+    Issue new access and refresh tokens after email change.
+    
+    Returns:
+        Tuple of (access_token, refresh_token, expires_at_timestamp)
+    """
+    import time
+    
+    jwt_payload = {
+        "userId": user_id,
+        "email": email,
+        "role": role,
+        "displayName": display_name,
+    }
+    
+    access_token = create_jwt(jwt_payload)
+    refresh_token = create_refresh_token(jwt_payload, expires_in=30*24*3600)
+    expires_at = int(time.time()) + 43200  # 12 hours
+    
+    logger.info(f"Issued new tokens for user {user_id} with email {email}")
+    
+    return access_token, refresh_token, expires_at
+
+
+def _validate_address(address: Any, field_name: str) -> Tuple[bool, str | None, Dict[str, Any] | None]:
+    """
+    Validate an address object.
+    
+    Returns:
+        Tuple of (is_valid, error_message, normalized_address)
+    """
+    if address is None:
+        return True, None, None
+    
+    if not isinstance(address, dict):
+        return False, f"{field_name} must be an object", None
+    
+    required_fields = ["line1", "city", "state", "postalCode", "country"]
+    
+    for field in required_fields:
+        value = address.get(field, "")
+        if not isinstance(value, str) or not value.strip():
+            return False, f"{field_name}.{field} is required", None
+    
+    # Normalize the address
+    normalized = {
+        "line1": address.get("line1", "").strip(),
+        "city": address.get("city", "").strip(),
+        "state": address.get("state", "").strip(),
+        "postalCode": address.get("postalCode", "").strip(),
+        "country": address.get("country", "").strip(),
+    }
+    
+    # Include line2 only if provided
+    line2 = address.get("line2", "")
+    if isinstance(line2, str) and line2.strip():
+        normalized["line2"] = line2.strip()
+    
+    return True, None, normalized
+
+
+# ============================================================================
+# Allowed Fields Configuration
+# ============================================================================
+
 # Fields users can update directly
+# UPDATED: Added billingAddress to allowed fields
 ALLOWED_FIELDS = {
     "displayName",
     "phone",
     "shippingAddress",
+    "billingAddress",  # NEW: Allow billing address updates
     "dashboardSettings",
     "preferredWallet"
 }
 
 
+# ============================================================================
+# Lambda Handler
+# ============================================================================
+
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
-    Update user profile
+    Update user profile.
     
     Supports:
-    - Updating allowed fields (displayName, phone, shippingAddress, etc.)
-    - Email changes (with 4-day rate limit)
+    - Updating allowed fields (displayName, phone, shippingAddress, billingAddress, etc.)
+    - Email changes with uniqueness check and token refresh
+    - Atomic DynamoDB transactions for email changes
     
-    Request body:
-        {
-            "displayName": "Jane Doe",          // optional
-            "email": "newemail@example.com",    // optional (triggers email change)
-            "shippingAddress": {...},           // optional
-            "dashboardSettings": {...},         // optional
-            "phone": "+1234567890",             // optional
-            "preferredWallet": "0x..."          // optional
-        }
+    Request Body:
+    {
+        "displayName": "Jane Doe",           // optional
+        "email": "newemail@example.com",     // optional (triggers email change)
+        "shippingAddress": { ... },          // optional
+        "billingAddress": { ... },           // optional (NEW)
+        "dashboardSettings": { ... },        // optional
+        "phone": "+1234567890",              // optional
+        "preferredWallet": "0x..."           // optional
+    }
     
-    Response:
-        {
-            "profile": {
-                // Updated profile (no sensitive fields)
-            }
-        }
+    Response (normal update):
+    {
+        "profile": { ... }
+    }
+    
+    Response (email changed):
+    {
+        "profile": { ... },
+        "accessToken": "new-jwt",
+        "refreshToken": "new-refresh-token",
+        "expiresAt": 1234567890,
+        "emailChanged": true
+    }
     """
-    # Log the entire event for debugging
-    logger.info("=" * 80)
-    logger.info("LAMBDA INVOCATION START")
-    logger.info(f"Request ID: {getattr(context, 'aws_request_id', 'N/A')}")
-    logger.info(f"HTTP Method: {event.get('httpMethod', 'UNKNOWN')}")
-    logger.info(f"Path: {event.get('path', 'UNKNOWN')}")
-    logger.info(f"Headers: {json.dumps(event.get('headers', {}), indent=2)}")
-    logger.info(f"Request Context: {json.dumps(event.get('requestContext', {}), indent=2)}")
+    logger.info("=== UPDATE PROFILE LAMBDA START ===")
+    logger.info(f"Event: {json.dumps(event, default=str)}")
     
+    cors_origin = get_cors_origin(event)
+    
+    # Handle OPTIONS preflight
+    http_method = event.get("httpMethod", event.get("requestContext", {}).get("http", {}).get("method", ""))
+    if http_method == "OPTIONS":
+        logger.info("Handling OPTIONS preflight request")
+        return _response(200, {"message": "OK"}, cors_origin=cors_origin)
+    
+    # Parse request body
     try:
-        # Handle CORS preflight
-        method = (event.get("httpMethod") or "POST").upper()
-        cors_origin = resolve_origin(event)
-        
-        logger.info(f"Method: {method}, CORS origin: {cors_origin}")
-        
-        if method == "OPTIONS":
-            logger.info("Handling OPTIONS preflight request")
-            return _response(200, {"ok": True}, cors_origin=cors_origin)
-
-        # Parse request body
-        body, error = _parse_body(event)
-        if error:
-            logger.error(f"Body parse error: {error}")
-            return _response(400, {"error": error}, cors_origin=cors_origin)
-
-        # Get userId from authorizer context
-        authorizer_context = event.get("requestContext", {}).get("authorizer", {})
-        logger.info(f"Authorizer context: {json.dumps(authorizer_context, indent=2)}")
-        
-        user_id = authorizer_context.get("userId")
-        
-        if not user_id:
-            logger.warning("No userId in authorizer context")
-            return _response(401, {"error": "Unauthorized"}, cors_origin=cors_origin)
-
-        logger.info(f"Processing update for user: {user_id}")
-
-        # Get DynamoDB table
-        try:
-            table = get_commerce_table()
-            logger.info(f"Connected to table: {table.table_name}")
-        except Exception as exc:
-            logger.exception(f"Failed to get commerce table: {exc}")
-            return _response(500, {"error": "Database connection failed"}, cors_origin=cors_origin)
-
-        # Fetch current profile
-        try:
-            logger.info(f"Fetching profile for USER#{user_id}")
-            existing_response = table.get_item(
-                Key={"PK": f"USER#{user_id}", "SK": "PROFILE"}
-            )
-            existing = existing_response.get("Item")
-            
-            if not existing:
-                logger.warning(f"Profile not found for user: {user_id}")
-                return _response(404, {"error": "Profile not found"}, cors_origin=cors_origin)
-            
-            logger.info(f"Found existing profile with keys: {list(existing.keys())}")
-            
-        except Exception as exc:
-            logger.exception(f"Failed to read profile for {user_id}: {exc}")
-            return _response(500, {"error": "Database error"}, cors_origin=cors_origin)
-
-        # Collect updates for allowed fields
-        updates: Dict[str, Any] = {}
-        
-        for key, val in (body or {}).items():
-            if key in ALLOWED_FIELDS:
+        body_str = event.get("body", "{}")
+        body = json.loads(body_str) if body_str else {}
+        logger.info(f"Parsed body: {json.dumps(body, default=str)}")
+    except json.JSONDecodeError as exc:
+        logger.error(f"Invalid JSON body: {exc}")
+        return _response(400, {"error": "Invalid JSON body"}, cors_origin=cors_origin)
+    
+    # Extract userId from authorizer context
+    authorizer_context = event.get("requestContext", {}).get("authorizer", {})
+    logger.info(f"Authorizer context: {json.dumps(authorizer_context, indent=2)}")
+    
+    user_id = authorizer_context.get("userId")
+    
+    if not user_id:
+        logger.warning("No userId in authorizer context")
+        return _response(401, {"error": "Unauthorized"}, cors_origin=cors_origin)
+    
+    logger.info(f"Processing update for user: {user_id}")
+    
+    # Get DynamoDB table
+    try:
+        table = get_commerce_table()
+        logger.info(f"Connected to table: {table.table_name}")
+    except Exception as exc:
+        logger.exception(f"Failed to get commerce table: {exc}")
+        return _response(500, {"error": "Database connection failed"}, cors_origin=cors_origin)
+    
+    # Fetch current profile
+    try:
+        logger.info(f"Fetching profile for USER#{user_id}")
+        existing_response = table.get_item(
+            Key={"PK": f"USER#{user_id}", "SK": "PROFILE"}
+        )
+        existing = existing_response.get("Item")
+        if not existing:
+            logger.warning(f"Profile not found for user: {user_id}")
+            return _response(404, {"error": "Profile not found"}, cors_origin=cors_origin)
+        logger.info(f"Found existing profile with keys: {list(existing.keys())}")
+    except Exception as exc:
+        logger.exception(f"Failed to read profile for {user_id}: {exc}")
+        return _response(500, {"error": "Database error"}, cors_origin=cors_origin)
+    
+    # Collect updates for allowed fields
+    updates: Dict[str, Any] = {}
+    
+    for key, val in (body or {}).items():
+        if key in ALLOWED_FIELDS:
+            # Special validation for address fields
+            if key in ("shippingAddress", "billingAddress"):
+                is_valid, error_msg, normalized = _validate_address(val, key)
+                if not is_valid:
+                    logger.warning(f"Address validation failed: {error_msg}")
+                    return _response(400, {"error": error_msg}, cors_origin=cors_origin)
+                if normalized:
+                    updates[key] = normalized
+                    logger.info(f"Adding update for field: {key}")
+            else:
                 updates[key] = val
                 logger.info(f"Adding update for field: {key}")
-
-        # Handle email change separately (special logic)
-        new_email = (body.get("email") or "").strip()
-        old_email_lower = existing.get("emailLower", "")
-        
-        logger.info(f"Email change request: '{new_email}' (current: '{old_email_lower}')")
-        
-        if new_email:
-            new_email_lower = new_email.lower()
+    
+    # Handle email change: check uniqueness and update
+    new_email = (body.get("email") or "").strip()
+    old_email = existing.get("email", "")
+    old_email_lower = existing.get("emailLower", "")
+    email_actually_changed = False
+    
+    logger.info(f"Email change request: '{new_email}' (current: '{old_email_lower}')")
+    
+    if new_email:
+        new_email_lower = new_email.lower()
+        if new_email_lower == old_email_lower:
+            logger.info("Email unchanged, skipping email update")
+        else:
+            # Check if new email is already in use
+            try:
+                email_check = table.get_item(
+                    Key={"PK": f"EMAIL#{new_email_lower}", "SK": "LOOKUP"}
+                )
+                if email_check.get("Item"):
+                    logger.warning(f"Email {new_email_lower} already in use")
+                    return _response(409, {"error": "Email already in use"}, cors_origin=cors_origin)
+            except Exception as exc:
+                logger.exception(f"Failed to check email availability: {exc}")
+                return _response(500, {"error": "Database error"}, cors_origin=cors_origin)
             
-            # Skip if email unchanged
-            if new_email_lower == old_email_lower:
-                logger.info(f"Email unchanged for {user_id}, skipping email update")
-                new_email = None  # Don't process email change
-            else:
-                logger.info(f"Processing email change: {old_email_lower} -> {new_email_lower}")
-                
-                # Check rate limit (4 days between email changes)
-                last_change_str = existing.get("emailChangedAt")
-                
-                if last_change_str:
-                    try:
-                        last_change = datetime.fromisoformat(last_change_str.replace("Z", "+00:00"))
-                        now = datetime.now(last_change.tzinfo)
-                        time_since_change = now - last_change
-                        
-                        logger.info(f"Last email change: {last_change}, time since: {time_since_change}")
-                        
-                        if time_since_change < timedelta(days=4):
-                            days_remaining = 4 - time_since_change.days
-                            logger.warning(f"Email change rate limit hit for {user_id}, days remaining: {days_remaining}")
-                            return _response(
-                                429,
-                                {
-                                    "error": f"Please wait {days_remaining} more day(s) before changing your email again",
-                                    "daysRemaining": days_remaining
-                                },
-                                cors_origin=cors_origin
-                            )
-                    except Exception as exc:
-                        logger.warning(f"Failed to parse emailChangedAt: {exc}")
-
-                # Check if new email is available
-                try:
-                    logger.info(f"Checking if email {new_email_lower} is available")
-                    email_check = table.get_item(
-                        Key={"PK": f"EMAIL#{new_email_lower}", "SK": "LOOKUP"}
-                    ).get("Item")
-                    
-                    if email_check:
-                        logger.warning(f"Email {new_email_lower} already in use")
-                        return _response(409, {"error": "Email already in use"}, cors_origin=cors_origin)
-                    
-                    logger.info(f"Email {new_email_lower} is available")
-                    
-                except Exception as exc:
-                    logger.exception(f"Failed to check email availability: {exc}")
-                    return _response(500, {"error": "Database error"}, cors_origin=cors_origin)
-
-                # Email change is valid - add to updates
-                updates["email"] = new_email
-                updates["emailLower"] = new_email_lower
-                updates["emailChangedAt"] = now_utc_iso()
-
-        # Check if there's anything to update
-        if not updates:
-            logger.info(f"No updates provided for {user_id}")
-            return _response(400, {"error": "No fields to update"}, cors_origin=cors_origin)
-
-        # Always update timestamp
-        updates["updatedAt"] = now_utc_iso()
-
-        logger.info(f"Preparing to update {len(updates)} fields: {list(updates.keys())}")
-
-        # Build update transaction
-        transact_items = []
-
-        # 1. Update profile
-        expr_parts = []
-        expr_values: Dict[str, Any] = {}
+            # Email is available, add to updates
+            updates["email"] = new_email
+            updates["emailLower"] = new_email_lower
+            updates["emailChangedAt"] = now_utc_iso()
+            email_actually_changed = True
+            logger.info(f"Email change will be processed: {old_email_lower} -> {new_email_lower}")
+    
+    # Check if there are any updates
+    if not updates:
+        logger.warning("No valid fields to update")
+        return _response(400, {"error": "No valid fields to update"}, cors_origin=cors_origin)
+    
+    # Add updatedAt timestamp
+    updates["updatedAt"] = now_utc_iso()
+    
+    # Build transaction items
+    transact_items = []
+    
+    # Build update expression for profile
+    expr_parts = []
+    expr_values = {}
+    expr_names = {}
+    
+    for key, val in updates.items():
+        # Handle reserved words in DynamoDB
+        attr_name = f"#{key}" if key in {"status", "name", "email"} else key
+        placeholder = f":{key}"
         
-        for key, val in updates.items():
-            placeholder = f":{key}"
-            expr_parts.append(f"{key} = {placeholder}")
-            expr_values[placeholder] = val
-
+        if key in {"status", "name", "email"}:
+            expr_names[f"#{key}"] = key
+        
+        expr_parts.append(f"{attr_name} = {placeholder}")
+        expr_values[placeholder] = val
+    
+    if expr_parts:
         update_expr = "SET " + ", ".join(expr_parts)
-
         logger.info(f"Update expression: {update_expr}")
         logger.info(f"Expression values: {json.dumps({k: str(v)[:100] for k, v in expr_values.items()})}")
-
-        transact_items.append({
+        if expr_names:
+            logger.info(f"Expression attribute names: {json.dumps(expr_names)}")
+        
+        update_item = {
             "Update": {
                 "TableName": table.table_name,
                 "Key": {"PK": f"USER#{user_id}", "SK": "PROFILE"},
                 "UpdateExpression": update_expr,
                 "ExpressionAttributeValues": expr_values
             }
+        }
+        if expr_names:
+            update_item["Update"]["ExpressionAttributeNames"] = expr_names
+        
+        transact_items.append(update_item)
+        logger.info("Added profile update transaction item")
+    
+    # If email changed, update EMAIL# lookups
+    if email_actually_changed:
+        new_email_lower = new_email.lower()
+        logger.info("=== EMAIL CHANGE TRANSACTION ===")
+        logger.info(f"Old email: {old_email_lower}")
+        logger.info(f"New email: {new_email_lower}")
+        
+        # Create new email lookup
+        new_email_item = {
+            "PK": f"EMAIL#{new_email_lower}",
+            "SK": "LOOKUP",
+            "userId": user_id,
+            "email": new_email,
+            "emailLower": new_email_lower,
+            "createdAt": existing.get("createdAt", now_utc_iso()),
+            "setAt": now_utc_iso()
+        }
+        
+        transact_items.append({
+            "Put": {
+                "TableName": table.table_name,
+                "Item": new_email_item,
+                "ConditionExpression": "attribute_not_exists(PK)"
+            }
         })
-
-        # 2. If email changed, update EMAIL# lookups
-        if new_email:
-            logger.info(f"Adding email lookup transactions for {new_email_lower}")
-            
-            # Create new email lookup
+        logger.info(f"Added PUT transaction for EMAIL#{new_email_lower}")
+        
+        # Delete old email lookup
+        if old_email_lower:
             transact_items.append({
-                "Put": {
+                "Delete": {
                     "TableName": table.table_name,
-                    "Item": {
-                        "PK": f"EMAIL#{new_email_lower}",
-                        "SK": "LOOKUP",
-                        "userId": user_id,
-                        "email": new_email,
-                        "emailLower": new_email_lower,
-                        "createdAt": existing.get("createdAt", now_utc_iso()),
-                        "setAt": now_utc_iso()
-                    },
-                    "ConditionExpression": "attribute_not_exists(PK)"  # Ensure still available
+                    "Key": {"PK": f"EMAIL#{old_email_lower}", "SK": "LOOKUP"}
                 }
             })
-
-            # Delete old email lookup
-            if old_email_lower:
-                logger.info(f"Deleting old email lookup: {old_email_lower}")
-                transact_items.append({
-                    "Delete": {
-                        "TableName": table.table_name,
-                        "Key": {"PK": f"EMAIL#{old_email_lower}", "SK": "LOOKUP"}
+            logger.info(f"Added DELETE transaction for EMAIL#{old_email_lower}")
+        else:
+            logger.warning("No old email to delete (old_email_lower was empty)")
+    
+    # Execute transaction
+    if transact_items:
+        logger.info(f"=== EXECUTING TRANSACTION ===")
+        logger.info(f"Transaction has {len(transact_items)} items:")
+        for i, item in enumerate(transact_items):
+            op_type = list(item.keys())[0]
+            logger.info(f"  Item {i+1}: {op_type}")
+        
+        dynamodb = boto3.client("dynamodb", region_name=os.environ.get("AWS_REGION", "us-east-1"))
+        
+        # Convert to DynamoDB format for transact_write_items
+        from boto3.dynamodb.types import TypeSerializer
+        serializer = TypeSerializer()
+        
+        formatted_items = []
+        for item in transact_items:
+            if "Update" in item:
+                formatted_update = {
+                    "Update": {
+                        "TableName": item["Update"]["TableName"],
+                        "Key": {k: serializer.serialize(v) for k, v in item["Update"]["Key"].items()},
+                        "UpdateExpression": item["Update"]["UpdateExpression"],
+                        "ExpressionAttributeValues": {k: serializer.serialize(v) for k, v in item["Update"]["ExpressionAttributeValues"].items()}
+                    }
+                }
+                if "ExpressionAttributeNames" in item["Update"]:
+                    formatted_update["Update"]["ExpressionAttributeNames"] = item["Update"]["ExpressionAttributeNames"]
+                formatted_items.append(formatted_update)
+            elif "Put" in item:
+                formatted_items.append({
+                    "Put": {
+                        "TableName": item["Put"]["TableName"],
+                        "Item": {k: serializer.serialize(v) for k, v in item["Put"]["Item"].items()},
+                        "ConditionExpression": item["Put"].get("ConditionExpression", "attribute_not_exists(PK)")
                     }
                 })
-
-        logger.info(f"Executing transaction with {len(transact_items)} items")
-
-        # Execute transaction
-        try:
-            table.meta.client.transact_write_items(TransactItems=transact_items)
-            logger.info(f"Successfully updated profile for {user_id}")
-            
-            if new_email:
-                logger.info(f"Email changed for {user_id}: {old_email_lower} → {new_email_lower}")
-            
-        except Exception as exc:
-            # Check if it's a conditional check failure (email taken during update)
-            if "ConditionalCheckFailed" in str(exc):
-                logger.warning(f"Email {new_email_lower} taken during update for {user_id}")
-                return _response(409, {"error": "Email already in use"}, cors_origin=cors_origin)
-            
-            logger.exception(f"Failed to update profile for {user_id}: {exc}")
-            return _response(500, {"error": "Failed to update profile"}, cors_origin=cors_origin)
-
-        # Fetch updated profile
-        try:
-            logger.info(f"Fetching updated profile for {user_id}")
-            updated_response = table.get_item(
-                Key={"PK": f"USER#{user_id}", "SK": "PROFILE"}
-            )
-            updated_item = updated_response.get("Item", {})
-            logger.info(f"Retrieved updated profile with {len(updated_item)} fields")
-            
-        except Exception as exc:
-            logger.warning(f"Failed to fetch updated profile: {exc}")
-            updated_item = {}
-
-        # Remove sensitive fields
-        sensitive_fields = ["PK", "SK", "passwordHash", "passwordSalt", "hashAlgorithm", "hashIterations"]
-        for field in sensitive_fields:
-            updated_item.pop(field, None)
-
-        logger.info("=" * 80)
-        logger.info("LAMBDA INVOCATION COMPLETE - SUCCESS")
-        logger.info("=" * 80)
-
-        return _response(200, {"profile": updated_item}, cors_origin=cors_origin)
-
-    except Exception as exc:
-        logger.exception(f"Unhandled exception in lambda_handler: {exc}")
-        logger.info("=" * 80)
-        logger.info("LAMBDA INVOCATION COMPLETE - ERROR")
-        logger.info("=" * 80)
+            elif "Delete" in item:
+                formatted_items.append({
+                    "Delete": {
+                        "TableName": item["Delete"]["TableName"],
+                        "Key": {k: serializer.serialize(v) for k, v in item["Delete"]["Key"].items()}
+                    }
+                })
         
-        # Try to return a proper error response
         try:
-            cors_origin = resolve_origin(event)
-            return _response(500, {"error": "Internal server error", "details": str(exc)}, cors_origin=cors_origin)
-        except:
-            # Last resort - return a basic response
-            return {
-                "statusCode": 500,
-                "headers": {
-                    "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": "*",
-                },
-                "body": json.dumps({"error": "Internal server error"})
-            }
+            dynamodb.transact_write_items(TransactItems=formatted_items)
+            logger.info("Transaction completed successfully")
+        except Exception as exc:
+            logger.exception(f"Transaction failed: {exc}")
+            return _response(500, {"error": "Failed to update profile"}, cors_origin=cors_origin)
+    
+    # Fetch updated profile
+    try:
+        updated_response = table.get_item(
+            Key={"PK": f"USER#{user_id}", "SK": "PROFILE"}
+        )
+        updated_profile = updated_response.get("Item", {})
+        filtered_profile = _filter_sensitive_fields(updated_profile)
+        logger.info(f"Updated profile keys: {list(filtered_profile.keys())}")
+    except Exception as exc:
+        logger.exception(f"Failed to fetch updated profile: {exc}")
+        return _response(500, {"error": "Database error"}, cors_origin=cors_origin)
+    
+    # Build response
+    response_payload: Dict[str, Any] = {"profile": filtered_profile}
+    
+    # If email changed, issue new tokens
+    if email_actually_changed:
+        try:
+            display_name = filtered_profile.get("displayName", new_email.split("@")[0])
+            access_token, refresh_token, expires_at = _issue_new_tokens(
+                user_id, new_email, display_name
+            )
+            response_payload["accessToken"] = access_token
+            response_payload["refreshToken"] = refresh_token
+            response_payload["expiresAt"] = expires_at
+            response_payload["emailChanged"] = True
+            logger.info("New tokens issued for email change")
+        except Exception as exc:
+            logger.exception(f"Failed to issue new tokens: {exc}")
+            response_payload["emailChanged"] = True
+            response_payload["tokenError"] = "Profile updated but failed to issue new tokens. Please log out and log back in."
+    
+    logger.info("=== UPDATE PROFILE LAMBDA END ===")
+    return _response(200, response_payload, cors_origin=cors_origin)

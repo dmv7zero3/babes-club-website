@@ -1,7 +1,17 @@
-import { FormEvent, useState } from "react";
+/**
+ * Signup Screen for The Babes Club
+ *
+ * FIXED: Now properly uses useAuth().signup() to update AuthContext state
+ * before navigation, preventing the 404 error on first signup.
+ *
+ * Previous bug: The screen was calling persistSession() from dashboard/session
+ * but the ProtectedRoute on /dashboard checks useAuth().isAuthenticated
+ * from AuthContext - two different systems that weren't synchronized.
+ */
+
+import { FormEvent, useState, useCallback } from "react";
 import type { AxiosError } from "axios";
-import { signup } from "@/lib/dashboard/api";
-import { persistSession } from "@/lib/dashboard/session";
+import { useAuth } from "@/lib/auth"; // USE AuthContext instead of direct API call
 
 const getErrorMessage = (error: unknown): string => {
   if (!error) {
@@ -22,71 +32,79 @@ const getErrorMessage = (error: unknown): string => {
   );
 };
 
-const SignupScreen = ({ onSuccess }: { onSuccess?: () => void }) => {
+interface SignupScreenProps {
+  onSuccess?: () => void;
+}
+
+const SignupScreen = ({ onSuccess }: SignupScreenProps) => {
+  // Use AuthContext - this ensures state is synchronized with ProtectedRoute
+  const { signup, isLoading, error, clearError } = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSubmit = useCallback(
+    async (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
 
-    if (!email || !password) {
-      setSubmitError("Email and password are required.");
-      return;
-    }
+      if (!email || !password) {
+        setSubmitError("Email and password are required.");
+        return;
+      }
 
-    try {
-      setSubmitError(null);
-      setIsSubmitting(true);
+      if (isSubmitting || isLoading) return;
 
-      const response = await signup(
-        email.trim(),
-        password,
-        displayName.trim() || undefined
-      );
-      console.log("[Signup] API response:", response);
+      try {
+        setSubmitError(null);
+        setIsSubmitting(true);
+        clearError();
 
-      // Use accessToken for token
-      let expiresAt = response.expiresAt;
-      if (!expiresAt && response.accessToken) {
-        try {
-          const payload = JSON.parse(atob(response.accessToken.split(".")[1]));
-          expiresAt = payload.exp;
-        } catch (e) {
-          console.warn("[Signup] Failed to parse JWT for expiresAt", e);
+        console.log("[Signup] Starting signup via AuthContext...");
+
+        // FIX: Use AuthContext's signup method
+        // This method:
+        // 1. Calls the signup API
+        // 2. Persists the session to storage
+        // 3. Dispatches AUTH_SUCCESS to update React state
+        // 4. Sets isAuthenticated = true
+        await signup(email.trim(), password, displayName.trim() || undefined);
+
+        console.log("[Signup] Signup successful, AuthContext state updated");
+
+        // Now onSuccess can safely navigate to /dashboard
+        // because useAuth().isAuthenticated will be true
+        if (onSuccess) {
+          console.log("[Signup] Calling onSuccess callback");
+          onSuccess();
         }
+      } catch (err) {
+        console.error("[Signup] Signup failed:", err);
+        setSubmitError(getErrorMessage(err));
+      } finally {
+        setIsSubmitting(false);
       }
-      const sessionObj = {
-        token: response.accessToken,
-        expiresAt,
-        user: {
-          userId: response.user?.userId ?? email.trim().toLowerCase(),
-          email: response.user?.email ?? email.trim(),
-          displayName:
-            response.user?.displayName ??
-            (displayName.trim() || email.trim().split("@")[0]) ??
-            "Member",
-        },
-      };
-      console.log("[Signup] Persisting session:", sessionObj);
-      persistSession(sessionObj);
+    },
+    [
+      email,
+      password,
+      displayName,
+      isSubmitting,
+      isLoading,
+      signup,
+      clearError,
+      onSuccess,
+    ]
+  );
 
-      if (onSuccess) {
-        console.log("[Signup] Calling onSuccess callback");
-        onSuccess();
-      }
-    } catch (error) {
-      setSubmitError(getErrorMessage(error));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  // Display AuthContext error or local error
+  const displayError = submitError || error?.message;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-neutral-950/90 px-4 py-12 text-neutral-100">
-      <div className="w-full max-w-md space-y-8 rounded-3xl border border-white/10 bg-neutral-900/70 p-8 shadow-2xl">
+    <div className="flex flex-col items-center justify-center min-h-screen px-4 py-12 bg-neutral-950/90 text-neutral-100">
+      <div className="w-full max-w-md p-8 space-y-8 border shadow-2xl rounded-3xl border-white/10 bg-neutral-900/70">
         <header className="space-y-3 text-center">
           <p className="text-xs uppercase tracking-[0.35em] text-cotton-candy">
             Babes Club
@@ -95,70 +113,111 @@ const SignupScreen = ({ onSuccess }: { onSuccess?: () => void }) => {
             Create your account
           </h1>
           <p className="text-sm text-neutral-400">
-            Create an account to access orders, NFTs, and membership perks.
+            Create an account to access orders and membership perks.
           </p>
         </header>
 
-        {submitError ? (
-          <p className="rounded-xl border border-rose-400/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-            {submitError}
-          </p>
-        ) : null}
+        {displayError && (
+          <div
+            className="p-4 text-sm border rounded-xl border-rose-500/30 bg-rose-500/10 text-rose-300"
+            role="alert"
+          >
+            {displayError}
+          </div>
+        )}
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <label className="block text-left text-xs font-semibold uppercase tracking-wide text-neutral-300">
-            Display name
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Display Name */}
+          <div className="space-y-2">
+            <label
+              htmlFor="signup-name"
+              className="text-sm font-medium text-neutral-300"
+            >
+              Display name <span className="text-neutral-500">(optional)</span>
+            </label>
             <input
+              id="signup-name"
               type="text"
-              name="displayName"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-neutral-950/70 px-4 py-3 text-sm text-white placeholder:text-neutral-500 focus:border-cotton-candy focus:outline-none"
               placeholder="Your name"
+              autoComplete="name"
+              disabled={isSubmitting || isLoading}
+              className="w-full px-4 py-3 text-white transition-all border rounded-xl border-white/10 bg-white/5 placeholder:text-neutral-500 focus:border-cotton-candy/50 focus:outline-none focus:ring-2 focus:ring-cotton-candy/20 disabled:opacity-50"
             />
-          </label>
+          </div>
 
-          <label className="block text-left text-xs font-semibold uppercase tracking-wide text-neutral-300">
-            Email
+          {/* Email */}
+          <div className="space-y-2">
+            <label
+              htmlFor="signup-email"
+              className="text-sm font-medium text-neutral-300"
+            >
+              Email address
+            </label>
             <input
+              id="signup-email"
               type="email"
-              name="email"
-              autoComplete="email"
-              required
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-neutral-950/70 px-4 py-3 text-sm text-white placeholder:text-neutral-500 focus:border-cotton-candy focus:outline-none"
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-            />
-          </label>
-
-          <label className="block text-left text-xs font-semibold uppercase tracking-wide text-neutral-300">
-            Password
-            <input
-              type="password"
-              name="password"
-              autoComplete="new-password"
+              autoComplete="email"
+              disabled={isSubmitting || isLoading}
               required
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="mt-2 w-full rounded-2xl border border-white/10 bg-neutral-950/70 px-4 py-3 text-sm text-white placeholder:text-neutral-500 focus:border-cotton-candy focus:outline-none"
-              placeholder="Create a strong password"
+              className="w-full px-4 py-3 text-white transition-all border rounded-xl border-white/10 bg-white/5 placeholder:text-neutral-500 focus:border-cotton-candy/50 focus:outline-none focus:ring-2 focus:ring-cotton-candy/20 disabled:opacity-50"
             />
-          </label>
+          </div>
 
+          {/* Password */}
+          <div className="space-y-2">
+            <label
+              htmlFor="signup-password"
+              className="text-sm font-medium text-neutral-300"
+            >
+              Password
+            </label>
+            <input
+              id="signup-password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Create a secure password"
+              autoComplete="new-password"
+              disabled={isSubmitting || isLoading}
+              required
+              className="w-full px-4 py-3 text-white transition-all border rounded-xl border-white/10 bg-white/5 placeholder:text-neutral-500 focus:border-cotton-candy/50 focus:outline-none focus:ring-2 focus:ring-cotton-candy/20 disabled:opacity-50"
+            />
+          </div>
+
+          {/* Submit Button */}
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-full bg-cotton-candy px-4 py-3 text-sm font-semibold text-neutral-900 shadow-md transition hover:bg-babe-pink/80 disabled:cursor-not-allowed disabled:opacity-70"
+            disabled={isSubmitting || isLoading || !email || !password}
+            className="w-full rounded-xl bg-gradient-to-r from-cotton-candy to-babe-pink py-3.5 font-semibold text-neutral-900 shadow-lg shadow-cotton-candy/20 transition-all hover:shadow-xl hover:shadow-cotton-candy/30 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg"
           >
-            {isSubmitting ? "Creating account…" : "Create account"}
+            {isSubmitting || isLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="inline-block w-4 h-4 border-2 rounded-full animate-spin border-neutral-900 border-t-transparent" />
+                Creating account...
+              </span>
+            ) : (
+              "Create account"
+            )}
           </button>
         </form>
 
-        <p className="text-center text-xs text-neutral-500">
-          By creating an account you agree to our terms. Need help? Contact
-          support@thebabesclub.com.
-        </p>
+        {/* Login Link */}
+        <div className="pt-4 text-center">
+          <p className="text-sm text-neutral-500">
+            Already have an account?{" "}
+            <a
+              href="/login"
+              className="font-medium transition-colors text-cotton-candy hover:text-babe-pink"
+            >
+              Sign in
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );

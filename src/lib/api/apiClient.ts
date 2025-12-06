@@ -62,6 +62,59 @@ apiClient.interceptors.response.use(
     });
     const originalRequest = error.config;
 
+    // Network/CORS error: error.response is undefined
+    if (!error.response) {
+      // Only log and propagate network/CORS errors, do NOT clear session
+      if (error.code === "ERR_NETWORK") {
+        console.error(
+          "[apiClient] Network error - possible CORS issue:",
+          error.message
+        );
+      }
+      return Promise.reject(error);
+    }
+
+    // On 401/403, try to refresh token before logging out
+    if (error.response.status === 401 || error.response.status === 403) {
+      try {
+        const {
+          getStoredRefreshToken,
+          persistSession,
+          readStoredSession,
+          clearSession,
+        } = await import("@/lib/auth/session");
+        const refreshToken = getStoredRefreshToken();
+        if (refreshToken) {
+          // Attempt to refresh the access token
+          const refreshResp = await axios.post(
+            `${API_BASE_URL}/auth/refresh`,
+            { refresh_token: refreshToken },
+            { headers: { "Content-Type": "application/json" } }
+          );
+          const { access_token, user } = refreshResp.data;
+          if (access_token) {
+            // Update session with new access token
+            const payload = await import("@/lib/auth/jwt").then((m) =>
+              m.decodeJWT(access_token)
+            );
+            const expiresAt =
+              payload?.exp || Math.floor(Date.now() / 1000) + 3600;
+            persistSession(access_token, expiresAt, user, true, refreshToken);
+            // Retry the original request with new token
+            originalRequest.headers = originalRequest.headers || {};
+            originalRequest.headers["Authorization"] = `Bearer ${access_token}`;
+            return apiClient(originalRequest);
+          }
+        }
+        // If refresh fails, clear session and log out
+        clearSession();
+      } catch (e) {
+        console.error("[apiClient] Token refresh failed, clearing session", e);
+        const { clearSession } = await import("@/lib/auth/session");
+        clearSession();
+      }
+    }
+
     // Only retry if we haven't reached MAX_RETRIES
     if (retries < MAX_RETRIES && error.response?.status >= 500) {
       retries++;

@@ -1,32 +1,99 @@
+/**
+ * Dashboard Layout for The Babes Club
+ *
+ * Main layout component for the dashboard with sidebar navigation,
+ * header actions, and panel content areas.
+ */
+
 import { useMemo, useState, type ReactNode } from "react";
 import clsx from "clsx";
 import { useDashboardData } from "./DashboardDataProvider";
+import { ChronicLeafIcon, InlineSpinner } from "@/components/LoadingIcon";
 
-export type DashboardPanelKey = "profile" | "orders" | "nfts";
+// ============================================================================
+// Types
+// ============================================================================
+
+export type DashboardPanelKey = "profile" | "orders";
 
 interface DashboardLayoutProps {
   profilePanel: ReactNode;
   ordersPanel: ReactNode;
-  nftsPanel: ReactNode;
   headerActions?: ReactNode;
   sidebarFooter?: ReactNode;
   className?: string;
 }
 
+// ============================================================================
+// Constants
+// ============================================================================
+
 const PANEL_LABELS: Record<DashboardPanelKey, string> = {
   profile: "Profile",
   orders: "Orders",
-  nfts: "NFTs",
 };
 
-const DashboardLayout = ({
+// ============================================================================
+// Loading State Component
+// ============================================================================
+
+const DashboardContentLoading: React.FC = () => (
+  <div className="flex h-full min-h-[400px] flex-col items-center justify-center gap-4">
+    <ChronicLeafIcon
+      size={48}
+      label="Loading dashboard data..."
+      showLabel={true}
+      enableRotation={true}
+      enableGlow={true}
+      colors={["#fe3ba1", "#f5dcee", "#ffc6e3"]}
+    />
+  </div>
+);
+
+// ============================================================================
+// Error State Component
+// ============================================================================
+
+interface DashboardContentErrorProps {
+  message?: string;
+  onRetry?: () => void;
+}
+
+const DashboardContentError: React.FC<DashboardContentErrorProps> = ({
+  message = "Something went wrong loading the dashboard.",
+  onRetry,
+}) => (
+  <div className="flex h-full min-h-[400px] flex-col items-center justify-center gap-4 text-center">
+    <ChronicLeafIcon
+      size={40}
+      showLabel={false}
+      enableRotation={false}
+      enableGlow={true}
+      colors={["#fca5a5", "#f87171"]}
+    />
+    <p className="max-w-sm text-sm text-neutral-500">{message}</p>
+    {onRetry && (
+      <button
+        onClick={onRetry}
+        className="px-4 py-2 text-sm font-medium transition-colors border rounded-md border-babe-pink text-babe-pink hover:bg-babe-pink hover:text-white"
+      >
+        Try Again
+      </button>
+    )}
+  </div>
+);
+
+// ============================================================================
+// Main Component
+// ============================================================================
+
+const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   profilePanel,
   ordersPanel,
-  nftsPanel,
   headerActions,
   sidebarFooter,
   className,
-}: DashboardLayoutProps) => {
+}) => {
   const { profile, status, error, refresh } = useDashboardData();
   const [activePanel, setActivePanel] = useState<DashboardPanelKey>("profile");
 
@@ -34,34 +101,21 @@ const DashboardLayout = ({
     () => ({
       profile: profilePanel,
       orders: ordersPanel,
-      nfts: nftsPanel,
     }),
-    [profilePanel, ordersPanel, nftsPanel]
+    [profilePanel, ordersPanel]
   );
 
   const renderMainContent = () => {
     if (status === "loading") {
-      return (
-        <div className="flex h-full items-center justify-center text-sm text-neutral-500">
-          Loading dashboard data...
-        </div>
-      );
+      return <DashboardContentLoading />;
     }
 
     if (status === "error") {
       return (
-        <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-          <p className="text-sm text-neutral-500">
-            {error?.message ?? "Something went wrong loading the dashboard."}
-          </p>
-          <button
-            type="button"
-            onClick={refresh}
-            className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
-          >
-            Try again
-          </button>
-        </div>
+        <DashboardContentError
+          message={error?.message}
+          // onRetry={refresh} // Uncomment to enable retry button
+        />
       );
     }
 
@@ -74,64 +128,65 @@ const DashboardLayout = ({
 
   return (
     <div className={clsx("flex min-h-screen bg-neutral-50", className)}>
-      <aside className="hidden w-72 flex-col border-r border-neutral-200 bg-white p-6 md:flex">
+      {/* Sidebar */}
+      <aside className="flex-col hidden p-6 bg-white border-r w-72 border-neutral-200 md:flex">
         <div className="flex flex-col gap-1">
-          <span className="text-xs uppercase tracking-wide text-neutral-400">
+          <span className="text-xs tracking-wide uppercase text-neutral-400">
             Dashboard
           </span>
           <h1 className="text-lg font-semibold text-neutral-900">
             {summaryLabel}
           </h1>
         </div>
-        <nav className="mt-6 flex flex-col gap-2">
-          {((Object.keys(panels) as DashboardPanelKey[]) || []).map(
-            (panelKey) => (
-              <button
-                key={panelKey}
-                type="button"
-                onClick={() => setActivePanel(panelKey)}
-                className={clsx(
-                  "rounded-md px-3 py-2 text-left text-sm font-medium transition-colors",
-                  activePanel === panelKey
-                    ? "bg-black text-white"
-                    : "text-neutral-600 hover:bg-neutral-100",
-                  status === "loading" && "pointer-events-none opacity-60"
-                )}
-              >
-                {PANEL_LABELS[panelKey]}
-              </button>
-            )
-          )}
+
+        {/* Navigation */}
+        <nav className="flex flex-col gap-2 mt-6">
+          {(Object.keys(panels) as DashboardPanelKey[]).map((panelKey) => (
+            <button
+              key={panelKey}
+              type="button"
+              onClick={() => setActivePanel(panelKey)}
+              className={clsx(
+                "flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors",
+                activePanel === panelKey
+                  ? "bg-black text-white"
+                  : "text-neutral-600 hover:bg-neutral-100",
+                status === "loading" && "pointer-events-none opacity-60"
+              )}
+            >
+              {status === "loading" && activePanel === panelKey && (
+                <InlineSpinner size={14} color="currentColor" />
+              )}
+              {PANEL_LABELS[panelKey]}
+            </button>
+          ))}
         </nav>
-        {sidebarFooter ? (
-          <div className="mt-auto pt-6 text-sm">{sidebarFooter}</div>
-        ) : null}
+
+        {/* Sidebar Footer */}
+        {sidebarFooter && (
+          <div className="pt-6 mt-auto text-sm">{sidebarFooter}</div>
+        )}
       </aside>
-      <main className="flex flex-1 flex-col">
-        <header className="flex flex-col gap-4 border-b border-neutral-200 bg-white px-4 py-4 md:flex-row md:items-center md:justify-between md:px-8">
+
+      {/* Main Content */}
+      <main className="flex flex-col flex-1">
+        {/* Header */}
+        <header className="flex flex-col gap-4 px-4 py-4 bg-white border-b border-neutral-200 md:flex-row md:items-center md:justify-between md:px-8">
           <div className="flex flex-col gap-1">
             <h2 className="text-xl font-semibold text-neutral-900">
               {PANEL_LABELS[activePanel]}
             </h2>
-            {profile ? (
+            {profile && (
               <p className="text-sm text-neutral-500">
                 Updated {new Date(profile.updatedAt).toLocaleString()}
               </p>
-            ) : null}
+            )}
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={refresh}
-              className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
-              disabled={status === "loading"}
-            >
-              Refresh
-            </button>
-            {headerActions}
-          </div>
+          <div className="flex items-center gap-3">{headerActions}</div>
         </header>
-        <section className="flex flex-1 flex-col px-4 py-6 md:px-8">
+
+        {/* Content Area */}
+        <section className="flex flex-col flex-1 px-4 py-6 md:px-8">
           {renderMainContent()}
         </section>
       </main>

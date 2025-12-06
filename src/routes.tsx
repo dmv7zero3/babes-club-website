@@ -1,6 +1,8 @@
 import { Navigate, RouteObject } from "react-router-dom";
+import DashboardRouteGuard from "@/components/Dashboard/DashboardRouteGuard";
 
 import NotFoundPage from "@/error/NotFoundPage";
+import DashboardLoginPage from "@/pages/Dashboard/DashboardLoginPage";
 import HomePage from "@/pages/HomePage";
 import ShopPage from "@/pages/ShopPage";
 import EarringsPage from "@/pages/Products/EarringsPage";
@@ -15,8 +17,13 @@ import AboutPage from "@/pages/AboutPage";
 import GalleryPage from "@/pages/GalleryPage";
 import ContactPage from "@/pages/ContactPage";
 import DashboardPage from "@/pages/Dashboard/DashboardPage";
-import DashboardLoginPage from "@/pages/Dashboard/DashboardLoginPage";
-import SignupPage from "@/pages/Auth/SignupPage";
+import {
+  AuthPage,
+  LoginPage,
+  SignupPage,
+  ProtectedRoute,
+  PublicOnlyRoute,
+} from "@/components";
 
 const routes: RouteObject[] = [
   {
@@ -57,11 +64,19 @@ const routes: RouteObject[] = [
   },
   {
     path: "/signup",
-    element: <SignupPage />,
+    element: (
+      <PublicOnlyRoute>
+        <SignupPage />
+      </PublicOnlyRoute>
+    ),
   },
   {
     path: "/dashboard",
-    element: <DashboardPage />,
+    element: (
+      <ProtectedRoute>
+        <DashboardPage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/checkout/success",

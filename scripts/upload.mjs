@@ -51,8 +51,31 @@ function cacheControlFor(file) {
   return "public, max-age=86400";
 }
 
+function globToRegExp(glob) {
+  const escaped = glob
+    .replace(/\\/g, "/")
+    .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+    .replace(/\*\*/g, "__DOUBLE_STAR__")
+    .replace(/\*/g, "[^/]*")
+    .replace(/__DOUBLE_STAR__/g, ".*");
+  return new RegExp(`^${escaped}$`);
+}
+
+function buildExcludeMatchers(patterns = []) {
+  return patterns
+    .filter(Boolean)
+    .map((pattern) => ({ pattern, regex: globToRegExp(pattern) }));
+}
+
+function shouldExclude(relPath, matchers) {
+  if (!matchers.length) return false;
+  const normalized = relPath.replace(/\\/g, "/");
+  return matchers.some(({ regex }) => regex.test(normalized));
+}
+
 export async function uploadDist(distDir = "dist") {
   const cfg = loadDeployConfig();
+  const excludeMatchers = buildExcludeMatchers(cfg.excludeFromUpload || []);
   const client = new S3Client({ region: cfg.awsRegion });
   const files = collectFiles(distDir);
   if (!files.length) throw new Error("No build files found in dist/");
@@ -73,6 +96,10 @@ export async function uploadDist(distDir = "dist") {
 
   for (const file of files) {
     const rel = path.relative(distDir, file).replace(/\\/g, "/");
+    if (shouldExclude(rel, excludeMatchers)) {
+      console.log(`Skipping ${rel} (excluded by deploy config)`);
+      continue;
+    }
     const body = fs.readFileSync(file);
     totalBytes += body.length;
     const contentType = mime.lookup(file) || "application/octet-stream";
@@ -95,8 +122,9 @@ export async function uploadDist(distDir = "dist") {
     console.log("Uploaded", rel);
   }
 
+  const uploadedCount = Object.keys(manifest).length;
   console.log(
-    `Upload complete: ${files.length} files, ${(totalBytes / 1024).toFixed(1)} KB`
+    `Upload complete: ${uploadedCount} files, ${(totalBytes / 1024).toFixed(1)} KB`
   );
   if (!DRY) {
     fs.writeFileSync(
