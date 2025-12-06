@@ -38,7 +38,7 @@ const Hero: React.FC = () => {
               
             Result: 75% GPU memory reduction, 92% frame time improvement
           */}
-          
+
           {/* Primary halo - White glow (was blur-[110px]) */}
           <div
             aria-hidden="true"
@@ -57,7 +57,7 @@ const Hero: React.FC = () => {
               userSelect: "none",
             }}
           />
-          
+
           {/* Secondary halo - Pink glow (was blur-[140px]) */}
           <div
             aria-hidden="true"
@@ -76,7 +76,7 @@ const Hero: React.FC = () => {
               userSelect: "none",
             }}
           />
-          
+
           <img
             src="/images/models/model-1.png"
             alt="Back pose model with vertical tattoo design"

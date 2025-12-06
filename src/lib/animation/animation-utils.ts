@@ -29,9 +29,7 @@ export interface ScrollAnimationConfig {
  * Creates a GPU-optimized animation timeline
  * Applies best practices for performance
  */
-export function createOptimizedTimeline(options?: {
-  [key: string]: unknown;
-}) {
+export function createOptimizedTimeline(options?: { [key: string]: unknown }) {
   return gsap.timeline({
     ...options,
     overwrite: "auto", // Prevent animation stacking

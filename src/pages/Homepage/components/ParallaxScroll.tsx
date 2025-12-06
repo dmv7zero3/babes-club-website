@@ -20,7 +20,7 @@ const IMAGES: string[] = [
 
 const ParallaxScroll: React.FC = () => {
   const sectionRef = useRef<HTMLElement | null>(null);
-  
+
   // FIX: Animation state guard to prevent multiple animations on scroll direction changes
   const animationStateRef = useRef(new AnimationStateGuard());
 
