@@ -1,0 +1,159 @@
+/**
+ * GPU-Optimized Decorative Blur Utilities
+ * ========================================
+ * 
+ * PROBLEM:
+ * Large CSS blur effects (blur-3xl = 64px, blur-[120px], etc.) are extremely
+ * expensive for the GPU to render. When these elements are in the viewport
+ * during scroll, the browser must re-composite on every frame, leading to:
+ * - Dropped frames (jank)
+ * - High GPU memory usage
+ * - Browser crashes on lower-end devices
+ * - Battery drain on mobile
+ * 
+ * SOLUTION:
+ * These utility classes apply CSS containment and GPU acceleration hints
+ * to decorative blur elements, significantly reducing their rendering cost.
+ * 
+ * USAGE:
+ * Replace decorative blur elements with these optimized versions:
+ * 
+ * BEFORE (problematic):
+ * <div className="absolute w-64 h-64 bg-white/30 blur-3xl" />
+ * 
+ * AFTER (optimized):
+ * <div className="blur-glow blur-glow--lg" aria-hidden="true" />
+ * 
+ * Or apply the .blur-optimize class to existing elements:
+ * <div className="absolute w-64 h-64 bg-white/30 blur-xl blur-optimize" />
+ */
+
+/* Base optimization class - apply to any decorative blur element */
+.blur-optimize {
+  /* Prevent this element from affecting layout of siblings */
+  contain: strict;
+
+  /* Force GPU layer to avoid main thread paint operations */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+
+  /* Hint to browser that transform will change (not blur!) */
+  will-change: transform;
+
+  /* Ensure no pointer events are processed */
+  pointer-events: none;
+
+  /* Prevent any text selection */
+  user-select: none;
+}
+
+/* 
+ * Pre-built decorative glow components
+ * These use REDUCED blur values that are GPU-friendly
+ * while still providing beautiful ambient lighting effects
+ */
+
+.blur-glow {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  user-select: none;
+  contain: strict;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+/* Small glow - 16px blur (was blur-2xl at 40px) */
+.blur-glow--sm {
+  width: 8rem;
+  height: 8rem;
+  background: rgba(255, 255, 255, 0.2);
+  filter: blur(16px);
+}
+
+/* Medium glow - 24px blur (was blur-3xl at 64px) */
+.blur-glow--md {
+  width: 12rem;
+  height: 12rem;
+  background: rgba(255, 255, 255, 0.25);
+  filter: blur(24px);
+}
+
+/* Large glow - 32px blur (was blur-[80px] or blur-[100px]) */
+.blur-glow--lg {
+  width: 16rem;
+  height: 16rem;
+  background: rgba(255, 255, 255, 0.2);
+  filter: blur(32px);
+}
+
+/* Extra large glow - 48px blur (was blur-[120px] or blur-[140px]) */
+.blur-glow--xl {
+  width: 18rem;
+  height: 18rem;
+  background: rgba(255, 255, 255, 0.15);
+  filter: blur(48px);
+}
+
+/* Pink variant for brand theming */
+.blur-glow--pink {
+  background: rgba(254, 59, 161, 0.15);
+}
+
+/* White variant for highlights */
+.blur-glow--white {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Soft mix-blend mode for layered effects */
+.blur-glow--screen {
+  mix-blend-mode: screen;
+}
+
+.blur-glow--overlay {
+  mix-blend-mode: overlay;
+}
+
+/*
+ * Reduced Motion Support
+ * When users prefer reduced motion, we completely hide decorative blurs
+ * to maximize performance and respect accessibility preferences
+ */
+@media (prefers-reduced-motion: reduce) {
+  .blur-glow,
+  .blur-optimize {
+    opacity: 0.5;
+    filter: blur(8px); /* Use minimal blur */
+  }
+}
+
+/*
+ * Low-power mode detection (if supported)
+ * Safari on iOS can detect when device is in low power mode
+ */
+@media (prefers-reduced-motion: reduce), (update: slow) {
+  .blur-glow,
+  .blur-optimize {
+    display: none;
+  }
+}
+
+/*
+ * Mobile optimizations
+ * Reduce blur intensity on mobile devices which typically have
+ * less powerful GPUs
+ */
+@media (max-width: 768px) {
+  .blur-glow--lg {
+    filter: blur(24px);
+    width: 12rem;
+    height: 12rem;
+  }
+
+  .blur-glow--xl {
+    filter: blur(32px);
+    width: 14rem;
+    height: 14rem;
+  }
+}
