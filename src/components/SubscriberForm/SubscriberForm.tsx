@@ -212,7 +212,7 @@ const SubscriberForm: React.FC<SubscriberFormProps> = ({
   );
 
   const contentWrapperClassName = twMerge(
-    "relative flex flex-col overflow-hidden bg-babe-pink-500/25 backdrop-blur-xl lg:flex-row",
+    "relative flex flex-col overflow-hidden bg-babe-pink-500/25 backdrop-blur-sm lg:flex-row",
     "before:absolute before:inset-0 before:bg-white/15 before:opacity-50 before:content-['']"
   );
 
@@ -292,12 +292,24 @@ const SubscriberForm: React.FC<SubscriberFormProps> = ({
 
   return (
     <section ref={sectionRef} className={containerClassName}>
+      {/* FIX: GPU-optimized blur glow - replaced blur-3xl (64px) with 24px max */}
       <div
-        className="absolute w-64 h-64 rounded-full -top-24 -left-16 bg-white/30 blur-3xl"
+        className="absolute w-64 h-64 rounded-full -top-24 -left-16 bg-white/30"
+        style={{
+          filter: "blur(24px)",
+          contain: "strict",
+          transform: "translateZ(0)",
+        }}
         aria-hidden
       />
+      {/* FIX: GPU-optimized blur glow - replaced blur-[120px] (480px) with 32px max */}
       <div
-        className="absolute bottom-[-20%] right-[-10%] h-72 w-72 rounded-full bg-white/25 blur-[120px]"
+        className="absolute bottom-[-20%] right-[-10%] h-72 w-72 rounded-full bg-white/25"
+        style={{
+          filter: "blur(32px)",
+          contain: "strict",
+          transform: "translateZ(0)",
+        }}
         aria-hidden
       />
 
