@@ -3,6 +3,11 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useDebouncedCallback } from "@/lib/hooks/useDebouncedCallback";
 import { useSplitTextReveal } from "@/lib/hooks/useSplitTextReveal";
+import {
+  createDebouncedRefresh,
+  AnimationStateGuard,
+  prefersReducedMotion,
+} from "@/lib/animation/animation-utils";
 
 // Simple sticky parallax section inspired by the referenced repo, implemented with GSAP ScrollTrigger.
 // Layers move at different speeds using data-speed attributes. No code copied verbatim.
@@ -15,12 +20,13 @@ const IMAGES: string[] = [
 
 const ParallaxScroll: React.FC = () => {
   const sectionRef = useRef<HTMLElement | null>(null);
+  
+  // FIX: Animation state guard to prevent multiple animations on scroll direction changes
+  const animationStateRef = useRef(new AnimationStateGuard());
 
-  // Debounced refresh for ScrollTrigger to avoid excessive recalculations
-  const debouncedRefresh = useDebouncedCallback(() => {
-    if (typeof window === "undefined") return;
-    ScrollTrigger.refresh();
-  }, 150);
+  // FIX: Use optimized debounced refresh helper
+  const { refresh: debouncedRefresh, cleanup: cleanupRefresh } =
+    createDebouncedRefresh(150);
 
   // Set up parallax animations once the component is laid out in the browser
   // (useLayoutEffect ensures measurements are correct before painting).
@@ -30,6 +36,12 @@ const ParallaxScroll: React.FC = () => {
 
     const section = sectionRef.current;
     if (!section) return;
+
+    // FIX: Early exit for users preferring reduced motion
+    if (prefersReducedMotion()) {
+      gsap.set(section.querySelectorAll("[data-speed]"), { opacity: 1 });
+      return;
+    }
 
     const ctx = gsap.context((self) => {
       const isDebug = (() => {
@@ -44,8 +56,6 @@ const ParallaxScroll: React.FC = () => {
         }
       })();
 
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
       const layers = gsap.utils.toArray<HTMLElement>(
         section.querySelectorAll("[data-speed]")
       );
@@ -56,7 +66,6 @@ const ParallaxScroll: React.FC = () => {
       const HasSmoother = !!ActiveSmoother;
 
       if (isDebug) {
-        // Log basic diagnostics
         // eslint-disable-next-line no-console
         console.info("[ParallaxScroll] Debug on", {
           HasSmoother,
@@ -67,7 +76,11 @@ const ParallaxScroll: React.FC = () => {
 
       {
         // Fallback: manual parallax using a single ScrollTrigger and quickSetters
-        gsap.set(layers, { force3D: true, willChange: "transform" });
+        gsap.set(layers, {
+          force3D: true,
+          willChange: "transform",
+          backfaceVisibility: "hidden",
+        });
 
         const baseDistance = () => Math.max(window.innerHeight * 0.7, 400);
         const setters = layers.map((el) => gsap.quickSetter(el, "y", "px"));
@@ -86,7 +99,6 @@ const ParallaxScroll: React.FC = () => {
         const st = ScrollTrigger.create({
           trigger: section,
           start: "top top",
-          // use a generous distance to verify motion; tweak as needed
           end: () => `+=${Math.max(window.innerHeight * 1.6, 1200)}`,
           pin: true,
           anticipatePin: 1,
@@ -101,13 +113,23 @@ const ParallaxScroll: React.FC = () => {
         updateAll(st.progress || 0);
 
         // Kill the manual trigger on cleanup
-        self.add(() => st.kill());
+        self.add(() => {
+          st.kill();
+          // FIX: Reset willChange after animation
+          gsap.set(layers, { willChange: "auto" });
+        });
       }
 
       // Refresh after images load to keep ScrollSmoother/ScrollTrigger in sync
       const imgs = Array.from(
         section.querySelectorAll<HTMLImageElement>("img")
       );
+      const imageLoadListeners: Array<{
+        img: HTMLImageElement;
+        onLoad: () => void;
+        onError: () => void;
+      }> = [];
+
       imgs.forEach((img) => {
         if (!img.complete) {
           const onLoad = () => {
@@ -115,8 +137,14 @@ const ParallaxScroll: React.FC = () => {
               console.info("[ParallaxScroll] image load -> refresh", img.src);
             debouncedRefresh();
           };
+          const onError = () => {
+            if (isDebug)
+              console.info("[ParallaxScroll] image error -> refresh", img.src);
+            debouncedRefresh();
+          };
+          imageLoadListeners.push({ img, onLoad, onError });
           img.addEventListener("load", onLoad, { once: true });
-          img.addEventListener("error", onLoad, { once: true });
+          img.addEventListener("error", onError, { once: true });
         }
       });
 
@@ -127,13 +155,18 @@ const ParallaxScroll: React.FC = () => {
       window.addEventListener("resize", onResize);
 
       return () => {
+        // FIX: Clean up image listeners
+        imageLoadListeners.forEach(({ img, onLoad, onError }) => {
+          img.removeEventListener("load", onLoad);
+          img.removeEventListener("error", onError);
+        });
         window.removeEventListener("resize", onResize);
       };
     }, section);
 
     return () => {
       ctx.revert();
-      debouncedRefresh.cancel();
+      cleanupRefresh();
     };
   }, []);
 

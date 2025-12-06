@@ -7,7 +7,8 @@
  */
 
 import gsap from "gsap";
-import { RefObject } from "react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import React from "react";
 
 /**
  * Configuration for scroll-triggered animations
@@ -28,7 +29,9 @@ export interface ScrollAnimationConfig {
  * Creates a GPU-optimized animation timeline
  * Applies best practices for performance
  */
-export function createOptimizedTimeline(options?: gsap.TimelineProps) {
+export function createOptimizedTimeline(options?: {
+  [key: string]: unknown;
+}) {
   return gsap.timeline({
     ...options,
     overwrite: "auto", // Prevent animation stacking
@@ -40,13 +43,13 @@ export function createOptimizedTimeline(options?: gsap.TimelineProps) {
  * Returns a cleanup function to kill the trigger
  */
 export function createScrollTrigger(config: ScrollAnimationConfig): {
-  trigger: gsap.plugins.ScrollTrigger | null;
+  trigger: any;
   cleanup: () => void;
 } {
-  let trigger: gsap.plugins.ScrollTrigger | null = null;
+  let trigger: any = null;
 
   try {
-    trigger = gsap.plugins.ScrollTrigger.create({
+    trigger = ScrollTrigger.create({
       trigger: config.trigger,
       start: config.start || "top 80%",
       end: config.end,
@@ -115,7 +118,7 @@ export function createDebouncedRefresh(delay: number = 150) {
   const refresh = () => {
     if (timeoutId) clearTimeout(timeoutId);
     timeoutId = setTimeout(() => {
-      gsap.plugins.ScrollTrigger.refresh();
+      ScrollTrigger.refresh();
       timeoutId = null;
     }, delay);
   };
@@ -136,9 +139,9 @@ export function createDebouncedRefresh(delay: number = 150) {
  */
 export function cleanupAnimations(options: {
   ctx?: gsap.Context;
-  timelineRef?: RefObject<gsap.core.Timeline | null>;
-  triggerRef?: RefObject<gsap.plugins.ScrollTrigger | null>;
-  splitRevertRef?: RefObject<(() => void) | null>;
+  timelineRef?: React.MutableRefObject<gsap.core.Timeline | null>;
+  triggerRef?: React.MutableRefObject<any>;
+  splitRevertRef?: React.MutableRefObject<(() => void) | null>;
   element?: Element;
 }) {
   const { ctx, timelineRef, triggerRef, splitRevertRef, element } = options;
@@ -146,13 +149,13 @@ export function cleanupAnimations(options: {
   // 1. Kill timeline
   if (timelineRef?.current) {
     timelineRef.current.kill();
-    timelineRef.current = null;
+    (timelineRef as any).current = null;
   }
 
   // 2. Kill trigger
   if (triggerRef?.current) {
     triggerRef.current.kill();
-    triggerRef.current = null;
+    (triggerRef as any).current = null;
   }
 
   // 3. Kill any tweens on the element
@@ -163,7 +166,7 @@ export function cleanupAnimations(options: {
   // 4. Revert text splits
   if (splitRevertRef?.current) {
     splitRevertRef.current();
-    splitRevertRef.current = null;
+    (splitRevertRef as any).current = null;
   }
 
   // 5. Revert context last
@@ -246,7 +249,7 @@ export class AnimationStateGuard {
 export interface BatchAnimationOptions {
   targets: gsap.TweenTarget;
   vars: gsap.TweenVars;
-  stagger?: number | boolean;
+  stagger?: number;
   duration?: number;
   delay?: number;
 }
@@ -254,14 +257,14 @@ export interface BatchAnimationOptions {
 export function createBatchAnimation(
   options: BatchAnimationOptions,
   timeline: gsap.core.Timeline
-): gsap.core.Tween {
+): any {
   return timeline.to(options.targets, {
     ...options.vars,
     stagger: options.stagger,
     duration: options.duration || 0.6,
     delay: options.delay,
     overwrite: true,
-  });
+  } as gsap.TweenVars);
 }
 
 /**
@@ -270,9 +273,9 @@ export function createBatchAnimation(
  */
 export function createAnimationCleanup(options: {
   ctx?: gsap.Context;
-  timelineRef?: RefObject<gsap.core.Timeline | null>;
-  triggerRef?: RefObject<gsap.plugins.ScrollTrigger | null>;
-  splitRevertRef?: RefObject<(() => void) | null>;
+  timelineRef?: React.MutableRefObject<gsap.core.Timeline | null>;
+  triggerRef?: React.MutableRefObject<any>;
+  splitRevertRef?: React.MutableRefObject<(() => void) | null>;
   element?: Element;
   onResize?: () => void;
   removeResizeListener?: boolean;
