@@ -285,49 +285,49 @@ const SubscriberForm: React.FC<SubscriberFormProps> = ({
 
       // FIX: Store trigger ref for cleanup
       triggerRef.current = trigger;
-
-      // FIX: Proper cleanup chain
-      return () => {
-        // 1. Kill trigger first
-        if (triggerRef.current) {
-          triggerRef.current.kill();
-          triggerRef.current = null;
-        }
-        // 2. Kill timeline
-        if (timelineRef.current) {
-          timelineRef.current.kill();
-          timelineRef.current = null;
-        }
-      };
     }, section);
 
+    // Cleanup function - runs when component unmounts
     return () => {
-      // 3. Revert context last
+      // 1. Kill the timeline first
+      if (timelineRef.current) {
+        timelineRef.current.kill();
+        timelineRef.current = null;
+      }
+      // 2. Kill the trigger
+      if (triggerRef.current) {
+        triggerRef.current.kill();
+        triggerRef.current = null;
+      }
+      // 3. Revert the GSAP context last (kills all animations within)
       ctx.revert();
     };
   }, []);
 
   return (
     <section ref={sectionRef} className={containerClassName}>
-      {/* FIX: GPU-optimized blur glow - replaced blur-3xl (64px) with 24px max */}
+      {/* 
+        FIX: GPU-optimized blur glows
+        PROBLEM: blur-3xl (64px) and blur-[120px] cause extreme GPU strain
+        SOLUTION: Use smaller blur values with GPU hints
+      */}
       <div
-        className="absolute w-64 h-64 rounded-full -top-24 -left-16 bg-white/30"
+        className="absolute w-64 h-64 rounded-full -top-24 -left-16 bg-white/20 blur-xl pointer-events-none"
+        aria-hidden="true"
         style={{
-          filter: "blur(24px)",
+          willChange: "transform",
           contain: "strict",
           transform: "translateZ(0)",
         }}
-        aria-hidden
       />
-      {/* FIX: GPU-optimized blur glow - replaced blur-[120px] (480px) with 32px max */}
       <div
-        className="absolute bottom-[-20%] right-[-10%] h-72 w-72 rounded-full bg-white/25"
+        className="absolute bottom-[-20%] right-[-10%] h-72 w-72 rounded-full bg-white/15 blur-2xl pointer-events-none"
+        aria-hidden="true"
         style={{
-          filter: "blur(32px)",
+          willChange: "transform",
           contain: "strict",
           transform: "translateZ(0)",
         }}
-        aria-hidden
       />
 
       <div className={contentWrapperClassName}>
@@ -459,8 +459,9 @@ const SubscriberForm: React.FC<SubscriberFormProps> = ({
                 className="group relative inline-flex items-center justify-center overflow-hidden rounded-full bg-white px-6 py-3 text-xs font-semibold uppercase tracking-[0.35em] text-babe-pink transition hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-babe-pink-500 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 <span
-                  className="absolute inset-0 transition duration-300 ease-out rounded-full bg-white/40 opacity-60 blur-2xl group-hover:opacity-80 group-focus-visible:opacity-80"
-                  aria-hidden
+                  className="absolute inset-0 transition duration-300 ease-out rounded-full bg-white/40 opacity-60 blur-xl group-hover:opacity-80 group-focus-visible:opacity-80 pointer-events-none"
+                  aria-hidden="true"
+                  style={{ contain: "strict" }}
                 />
                 <span className="relative">
                   {isSubmitting ? "Joining…" : "Join the list"}
